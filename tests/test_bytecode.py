@@ -1,0 +1,3 @@
+
+class TestBytecode(object):
+    pass
