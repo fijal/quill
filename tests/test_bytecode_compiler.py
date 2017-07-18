@@ -48,3 +48,28 @@ class TestBytecodeCompiler(BaseTest):
             RETURN
             """)
         assert bc.stack_depth == 2
+
+    def test_loop(self):
+        body = """
+        var i;
+        i = 0;
+        while i < 10 {
+           i = i + 1;
+        }
+        """
+        bc = self.compile(body)
+        self.assert_equals(bc, """
+            LOAD_CONSTANT 0
+            STORE 0
+            LOAD_VARIABLE 0
+            LOAD_CONSTANT 1
+            LT
+            JUMP_IF_FALSE 20
+            LOAD_VARIABLE 0
+            LOAD_CONSTANT 2
+            ADD
+            STORE 0
+            JUMP_ABSOLUTE 4
+            LOAD_NONE
+            RETURN
+            """)

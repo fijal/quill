@@ -19,8 +19,15 @@ opcodes = [
     Opcode('LOAD_CONSTANT', 1, 1, 'load constant onto stack'),
     Opcode('STORE', 1, -1, 'store top of the stack into variable'),
     Opcode('DISCARD', 1, -1, 'discard top of the stack'),
+    # binary ops
     Opcode('ADD', 0, -1, 'load two values from the stack and store the result'
                          ' of addition'),
+    Opcode('LT', 0, -1, 'load two value from the stack and store the result'
+                        ' of lower than comparison'),
+    # jumps
+    Opcode('JUMP_IF_FALSE', 1, -1, 'pop value from the stack and jump if false'
+                                   ' to a given position'),
+    Opcode('JUMP_ABSOLUTE', 1, 0, 'jump to an absolute position'),
     Opcode('RETURN', 0, -1, 'return the top of stack')
 ]
 

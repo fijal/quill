@@ -78,11 +78,11 @@ class UndeclaredVariable(Exception):
     def __init__(self, name):
         self.name = name
 
-class _CompileBuilder(object):
+class _BytecodeBuilder(object):
     def __init__(self):
         self.vars = {}
         self.varnames = []
-        self.builder = StringBuilder()
+        self.builder = []
         self.constants = [] # XXX implement interning of integers, strings etc.
 
     def add_constant(self, const):
@@ -116,13 +116,24 @@ class _CompileBuilder(object):
             self.builder.append(chr(arg1))
         assert numargs <= 2
 
+    def get_position(self):
+        return len(self.builder)
+
+    def get_patch_position(self):
+        return len(self.builder) - 1 # XXX move to -2 for longer args
+
+    def patch_position(self, pos, target):
+        assert target < 256
+        self.builder[pos] = chr(target)
+
     def build(self, source):
-        return Bytecode(source, self.varnames, self.constants, self.builder.build())
+        return Bytecode(source, self.varnames, self.constants,
+                        "".join(self.builder))
 
 def compile_bytecode(ast, source):
     """ Compile the bytecode from produced AST.
     """
-    builder = _CompileBuilder()
+    builder = _BytecodeBuilder()
     ast.compile(builder)
     # hack to enable building for now
     builder.emit(opcodes.LOAD_NONE)
