@@ -38,3 +38,17 @@ class TestBytecodeCompiler(object):
             LOAD_CONSTANT 0
             STORE 0
             """)
+
+    def test_bytecode_bit_more_complext(self):
+        body = """
+        x = 3;
+        x = x + 1;
+        """
+        self.assert_equals(self.compile(body),"""
+            LOAD_CONSTANT 0
+            STORE 0
+            LOAD_VARIABLE 0
+            LOAD_CONSTANT 1
+            ADD
+            STORE 0
+            """)

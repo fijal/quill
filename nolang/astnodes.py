@@ -36,6 +36,11 @@ class Add(AstNode):
         self.left = left
         self.right = right
 
+    def compile(self, state):
+        self.left.compile(state)
+        self.right.compile(state)
+        state.emit(opcodes.ADD)
+
 class Program(AstNode):
     def __init__(self, elements):
         self.elements = elements
@@ -75,6 +80,10 @@ class VarDeclaration(AstNode):
 class Variable(AstNode):
     def __init__(self, name):
         self.name = name
+
+    def compile(self, state):
+        no = state.get_variable(self.name)
+        state.emit(opcodes.LOAD_VARIABLE, no)
  
 class Assignment(AstNode):
     def __init__(self, varname, expr):
