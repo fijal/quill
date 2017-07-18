@@ -67,9 +67,17 @@ def get_parser():
     def statement_expression(state, p):
         return ast.Statement(p[0])
 
-    @pg.production('statement : VAR IDENTIFIER SEMICOLON')
-    def statement_variable(state, p):
-        return ast.VarDeclaration([p[1].getstr()])
+    @pg.production('statement : VAR IDENTIFIER var_decl SEMICOLON')
+    def statement_var_decl(state, p):
+        return ast.VarDeclaration([p[1].getstr()] + p[2].get_names())
+
+    @pg.production('var_decl : ')
+    def var_decl_empty(state, p):
+        return ast.VarDeclPartial([])
+
+    @pg.production('var_decl : COMMA IDENTIFIER var_decl')
+    def var_decl_identifier(state, p):
+        return ast.VarDeclPartial([p[1].getstr()] + p[2].get_names())
 
     @pg.production('statement : IDENTIFIER EQUALS expression SEMICOLON')
     def statement_identifier_equals_expr(state, p):
@@ -78,6 +86,11 @@ def get_parser():
     @pg.production('statement : RETURN expression SEMICOLON')
     def statement_return(state, p):
         return ast.Return(p[1])
+
+    @pg.production('statement : WHILE expression LEFT_CURLY_BRACE function_body'
+                   ' RIGHT_CURLY_BRACE')
+    def statement_while_loop(state, p):
+        return ast.While(p[1], p[3].get_element_list())
 
     @pg.production('arglist : LEFT_PAREN RIGHT_PAREN')
     def arglist(state, p):
@@ -93,6 +106,10 @@ def get_parser():
 
     @pg.production('expression : expression PLUS expression')
     def expression_plus_expression(state, p):
-        return ast.Add(p[0], p[2])
+        return ast.BinOp('+', p[0], p[2])
+
+    @pg.production('expression : expression LT expression')
+    def expression_lt_expression(state, p):
+        return ast.BinOp('<', p[0], p[2])
 
     return pg.build()

@@ -31,15 +31,21 @@ class Number(AstNode):
         no = state.add_int_constant(self.value)
         state.emit(opcodes.LOAD_CONSTANT, no)
 
-class Add(AstNode):
-    def __init__(self, left, right):
+class BinOp(AstNode):
+    def __init__(self, op, left, right):
+        self.op = op
         self.left = left
         self.right = right
 
     def compile(self, state):
         self.left.compile(state)
         self.right.compile(state)
-        state.emit(opcodes.ADD)
+        if self.op == '+':
+            state.emit(opcodes.ADD)
+        elif self.op == '<':
+            state.emit(opcodes.LT)
+        else:
+            assert False
 
 class Program(AstNode):
     def __init__(self, elements):
@@ -57,6 +63,11 @@ class Function(AstNode):
     def compile(self, state):
         for item in self.body:
             item.compile(state)
+
+class While(AstNode):
+    def __init__(self, expr, block):
+        self.expr = expr
+        self.block = block
 
 class Statement(AstNode):
     def __init__(self, expr):
@@ -107,3 +118,9 @@ class Return(AstNode):
         self.expr.compile(state)
         state.emit(opcodes.RETURN)
 
+class VarDeclPartial(AstNode):
+    def __init__(self, names):
+        self.names = names
+
+    def get_names(self):
+        return self.names

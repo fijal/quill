@@ -20,7 +20,10 @@ def reformat_code(body):
         if line[:lgt] != " " * lgt:
             raise Exception("bad formatting, line: %d\n%s" % (i, line))
         newlines.append(" " * 4 + line[lgt:])
-    return "function foo () {\n" + "\n".join(newlines) + "}"
+    return "\n".join(newlines)
+
+def reformat_expr(code):
+    return "function foo () {\n" + reformat_code(code) + "}"
 
 class BaseTest(object):
     def setup_class(self):
@@ -28,6 +31,6 @@ class BaseTest(object):
         self.lexer = get_lexer()
 
     def compile(self, body):
-        program = reformat_code(body)
+        program = reformat_expr(body)
         ast = self.parser.parse(self.lexer.lex(program), ParsingState(program))
         return compile_bytecode(ast.elements[0], program)
