@@ -44,7 +44,8 @@ class TestBytecodeCompiler(object):
         x = 3;
         x = x + 1;
         """
-        self.assert_equals(self.compile(body),"""
+        bc = self.compile(body)
+        self.assert_equals(bc,"""
             LOAD_CONSTANT 0
             STORE 0
             LOAD_VARIABLE 0
@@ -52,3 +53,4 @@ class TestBytecodeCompiler(object):
             ADD
             STORE 0
             """)
+        assert bc.stack_depth == 2

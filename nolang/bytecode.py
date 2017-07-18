@@ -14,11 +14,15 @@ class IntegerConstant(BaseConstant):
     def __init__(self, v):
         self._intval = v
 
+class InvalidStackDepth(Exception):
+    pass
+
 class Bytecode(object):
     def __init__(self, varnames, constants, bytecode):
         self.varnames = varnames
         self.constants = constants
         self.bytecode = bytecode
+        self.stack_depth = self.compute_stack_depth(bytecode)
 
     def repr(self):
         i = 0
@@ -36,8 +40,30 @@ class Bytecode(object):
                 assert opcode.numargs == 2
                 res.append("  %s %d %d" % (opcode.name, ord(bc[i + 2]),
                                            ord(bc[i + 3])))
+                i += 3
             res.append("\n")
         return res.build()
+
+    @staticmethod
+    def compute_stack_depth(bc):
+        i = 0
+        stack_depth = 0
+        max_stack_depth = 0
+        while i < len(bc):
+            opcode = opcodes.opcodes[ord(bc[i])]
+            stack_depth += opcode.stack_effect
+            if opcode.numargs == 0:
+                i += 1
+            elif opcode.numargs == 1:
+                i += 2
+            else:
+                assert opcode.numargs == 2
+                i += 3
+            max_stack_depth = max(max_stack_depth, stack_depth)
+        if stack_depth != 0:
+            raise InvalidStackDepth()
+        return max_stack_depth
+
 
 class _CompileBuilder(object):
     def __init__(self):
