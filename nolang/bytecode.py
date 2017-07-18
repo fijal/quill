@@ -14,15 +14,25 @@ class IntegerConstant(BaseConstant):
     def __init__(self, v):
         self._intval = v
 
+    def wrap(self, space):
+        return space.newint(self._intval)
+
 class InvalidStackDepth(Exception):
     pass
 
 class Bytecode(object):
-    def __init__(self, varnames, constants, bytecode):
+    def __init__(self, source, varnames, constants, bytecode):
+        self.source = source
         self.varnames = varnames
-        self.constants = constants
+        self._constants = constants
+        self.constants = None
         self.bytecode = bytecode
         self.stack_depth = self.compute_stack_depth(bytecode)
+
+    def setup(self, space):
+        self.constants = [None] * len(self._constants)
+        for i, constant in enumerate(self._constants):
+            self.constants[i] = constant.wrap(space)
 
     def repr(self):
         i = 0
@@ -101,12 +111,15 @@ class _CompileBuilder(object):
             self.builder.append(chr(arg1))
         assert numargs <= 2
 
-    def build(self):
-        return Bytecode(self.varnames, self.constants, self.builder.build())
+    def build(self, source):
+        return Bytecode(source, self.varnames, self.constants, self.builder.build())
 
-def compile_bytecode(ast):
+def compile_bytecode(ast, source):
     """ Compile the bytecode from produced AST.
     """
     builder = _CompileBuilder()
     ast.compile(builder)
-    return builder.build()
+    # hack to enable building for now
+    builder.emit(opcodes.LOAD_NONE)
+    builder.emit(opcodes.RETURN)
+    return builder.build(source)

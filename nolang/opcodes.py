@@ -14,12 +14,14 @@ class Opcode(object):
 
 opcodes = [
     Opcode('INVALID', 0, 0, 'invalid opcode'),
+    Opcode('LOAD_NONE', 0, 1, 'load None onto stack'),
     Opcode('LOAD_VARIABLE', 1, 1, 'load variable onto stack'),
     Opcode('LOAD_CONSTANT', 1, 1, 'load constant onto stack'),
     Opcode('STORE', 1, -1, 'store top of the stack into variable'),
     Opcode('DISCARD', 1, -1, 'discard top of the stack'),
     Opcode('ADD', 0, -1, 'load two values from the stack and store the result'
                          ' of addition'),
+    Opcode('RETURN', 0, -1, 'return the top of stack')
 ]
 
 def setup():
