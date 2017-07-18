@@ -30,14 +30,14 @@ class TestInterpreterBasic(BaseTest):
         ''')
         assert self.space.int_w(w_res) == 3
 
-    # def test_while_loop(self):
-    #     w_r = self.interpret('''
-    #         var i, s;
-    #         i = 0;
-    #         while i < 10 {
-    #             i = i + 1;
-    #             s = s + i;
-    #         }
-    #         return s;
-    #         ''')
-        
+    def test_while_loop(self):
+        w_r = self.interpret('''
+            var i, s;
+            i = 0;
+            while i < 10 {
+                i = i + 1;
+                s = s + i;
+            }
+            return s;
+            ''')
+        assert self.space.int_w(w_r) == 45        
