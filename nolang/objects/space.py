@@ -13,3 +13,7 @@ class Space(object):
     # newxxx methods
     def newint(self, intval):
         return W_IntObject(intval)
+
+    # xxx_w methods
+    def int_w(self, w_obj):
+        return w_obj.int_w(self)

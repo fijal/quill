@@ -77,6 +77,10 @@ class VarDeclaration(AstNode):
     def __init__(self, varnames):
         self.varnames = varnames
 
+    def compile(self, state):
+        for varname in self.varnames:
+            state.register_variable(varname)
+
 class Variable(AstNode):
     def __init__(self, name):
         self.name = name
@@ -94,3 +98,12 @@ class Assignment(AstNode):
         self.expr.compile(state)
         varno = state.get_variable(self.varname)
         state.emit(opcodes.STORE, varno)
+
+class Return(AstNode):
+    def __init__(self, expr):
+        self.expr = expr
+
+    def compile(self, state):
+        self.expr.compile(state)
+        state.emit(opcodes.RETURN)
+

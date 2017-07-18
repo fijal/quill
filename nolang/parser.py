@@ -75,6 +75,10 @@ def get_parser():
     def statement_identifier_equals_expr(state, p):
         return ast.Assignment(p[0].getstr(), p[2])
 
+    @pg.production('statement : RETURN expression SEMICOLON')
+    def statement_return(state, p):
+        return ast.Return(p[1])
+
     @pg.production('arglist : LEFT_PAREN RIGHT_PAREN')
     def arglist(state, p):
         return ast.Arglist()

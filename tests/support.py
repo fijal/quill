@@ -15,6 +15,8 @@ def reformat_code(body):
     lgt = len(m.group(0))
     newlines = []
     for i, line in enumerate(bodylines):
+        if line.strip(" ") == "":
+            continue
         if line[:lgt] != " " * lgt:
             raise Exception("bad formatting, line: %d\n%s" % (i, line))
         newlines.append(" " * 4 + line[lgt:])

@@ -6,6 +6,7 @@ RULES = [
     ('PLUS', r'\+'),
     ('EQUALS', r'='),
     ('FUNCTION', r'function'),
+    ('RETURN', r'return'),
     ('VAR', r'var'),
     ('IDENTIFIER', r'[a-zA-Z_][a-zA-Z0-9_]*'),
     ('LEFT_CURLY_BRACE', r'\{'),

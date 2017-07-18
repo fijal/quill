@@ -74,6 +74,9 @@ class Bytecode(object):
             raise InvalidStackDepth()
         return max_stack_depth
 
+class UndeclaredVariable(Exception):
+    def __init__(self, name):
+        self.name = name
 
 class _CompileBuilder(object):
     def __init__(self):
@@ -94,11 +97,13 @@ class _CompileBuilder(object):
         try:
             return self.vars[name]
         except KeyError:
-            no = len(self.vars)
-            self.varnames.append(no) # XXX should we rely on dicts being ordered?
-            self.vars[name] = no
-            assert len(self.vars) == len(self.varnames)
-            return no
+            raise UndeclaredVariable(name)
+
+    def register_variable(self, v):
+        no = len(self.vars)
+        self.varnames.append(no) # XXX should we rely on dicts being ordered?
+        self.vars[v] = no
+        assert len(self.vars) == len(self.varnames)
 
     def emit(self, opcode, arg0=0, arg1=0):
         self.builder.append(chr(opcode))

@@ -15,6 +15,9 @@ class InvalidOpcode(Exception):
         except IndexError:
             return "<InvalidOpcode %d>" % self.opcode
 
+class UninitializedVariable(Exception):
+    pass # XXX add logic to present the error
+
 class Interpreter(object):
     def __init__(self):
         pass
@@ -37,6 +40,8 @@ class Interpreter(object):
                 frame.push(space.w_None)
             elif op == opcodes.LOAD_CONSTANT:
                 frame.push(bytecode.constants[arg0])
+            elif op == opcodes.LOAD_VARIABLE:
+                self.load_variable(space, frame, index, arg0)
             elif op == opcodes.STORE:
                 frame.store_var(arg0)
             elif op == opcodes.RETURN:
@@ -50,3 +55,9 @@ class Interpreter(object):
                 index += 2
             else:
                 index += 3
+
+    def load_variable(self, space, frame, bytecode_index, no):
+        w_res = frame.locals_w[no]
+        if w_res is None:
+            raise UninitializedVariable()
+        frame.push(w_res)

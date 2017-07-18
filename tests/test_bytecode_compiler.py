@@ -20,6 +20,7 @@ class TestBytecodeCompiler(BaseTest):
 
     def test_bytecode_simple(self):
         body = """
+        var x;
         x = 3;
         """
         self.assert_equals(self.compile(body), """
@@ -31,6 +32,7 @@ class TestBytecodeCompiler(BaseTest):
 
     def test_bytecode_bit_more_complext(self):
         body = """
+        var x;
         x = 3;
         x = x + 1;
         """

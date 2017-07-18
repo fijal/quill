@@ -3,8 +3,12 @@
 objects of everything wrapped and presented to the user
 """
 
-class W_Root(object):
+class UnimplementedOperation(Exception):
     pass
+
+class W_Root(object):
+    def int_w(self, space):
+        raise UnimplementedOperation
 
 class W_None(object):
     pass
