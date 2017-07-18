@@ -2,7 +2,9 @@
 from nolang.lexer import get_lexer
 from nolang.parser import get_parser, ParsingState
 from nolang import astnodes as ast
-import re
+
+from tests.support import reformat_code
+
 
 class BaseTest(object):
     def setup_class(self):
@@ -20,19 +22,7 @@ class TestExpressionParser(BaseTest):
 
 class TestParseFunctionBody(BaseTest):
     def parse(self, body):
-        bodylines = body.split("\n")
-        cut = 0
-        while bodylines[cut].strip(" ") == '':
-            cut += 1
-            bodylines = bodylines[cut:]
-        m = re.match(" +", bodylines[0])
-        lgt = len(m.group(0))
-        newlines = []
-        for i, line in enumerate(bodylines):
-            if line[:lgt] != " " * lgt:
-                raise Exception("bad formatting, line: %d\n%s" % (i, line))
-            newlines.append(" " * 4 + line[lgt:])
-        program = "function foo () {\n" + "\n".join(newlines) + "}"
+        program = reformat_code(body)
         ast = self.parser.parse(self.lexer.lex(program), ParsingState(program))
         return ast.elements[0].body
 

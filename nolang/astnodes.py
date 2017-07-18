@@ -1,7 +1,16 @@
 
+""" AST nodes and corresponding compile functions. The basic AstNode comes
+with compile() interface that produces bytecode
+"""
+
+from nolang import opcodes
+
 from rply.token import BaseBox
 
 class AstNode(BaseBox):
+    def compile(self, state):
+        raise NotImplementedError("abstract base class")
+
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__, ", ".join([
             "%s=%s" % (k, v) for k, v in self.__dict__.iteritems()]))
@@ -17,6 +26,10 @@ class AstNode(BaseBox):
 class Number(AstNode):
     def __init__(self, value):
         self.value = value
+
+    def compile(self, state):
+        no = state.add_int_constant(self.value)
+        state.emit(opcodes.LOAD_CONSTANT, no)
 
 class Add(AstNode):
     def __init__(self, left, right):
@@ -35,6 +48,10 @@ class Function(AstNode):
         self.name = name
         self.arglist = arglist
         self.body = body
+
+    def compile(self, state):
+        for item in self.body:
+            item.compile(state)
 
 class Statement(AstNode):
     def __init__(self, expr):
@@ -63,3 +80,8 @@ class Assignment(AstNode):
     def __init__(self, varname, expr):
         self.varname = varname
         self.expr = expr
+
+    def compile(self, state):
+        self.expr.compile(state)
+        varno = state.get_variable(self.varname)
+        state.emit(opcodes.STORE, varno)
