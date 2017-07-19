@@ -42,8 +42,19 @@ class Interpreter(object):
                 frame.push(bytecode.constants[arg0])
             elif op == opcodes.LOAD_VARIABLE:
                 self.load_variable(space, frame, index, arg0)
+            elif op == opcodes.ADD:
+                self.binop_add(space, frame)
+            elif op == opcodes.LT:
+                self.binop_lt(space, frame)
             elif op == opcodes.STORE:
                 frame.store_var(arg0)
+            elif op == opcodes.JUMP_IF_FALSE:
+                if not space.is_true(frame.pop()):
+                    index = arg0
+                    continue
+            elif op == opcodes.JUMP_ABSOLUTE:
+                index = arg0
+                continue
             elif op == opcodes.RETURN:
                 return frame.pop()
             else:
@@ -61,3 +72,13 @@ class Interpreter(object):
         if w_res is None:
             raise UninitializedVariable()
         frame.push(w_res)
+
+    def binop_lt(self, space, frame):
+        w_right = frame.pop()
+        w_left = frame.pop()
+        frame.push(space.binop_lt(w_left, w_right))
+
+    def binop_add(self, space, frame):
+        w_right = frame.pop()
+        w_left = frame.pop()
+        frame.push(space.binop_add(w_left, w_right))
