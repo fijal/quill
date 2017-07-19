@@ -3,7 +3,7 @@ from nolang.lexer import get_lexer
 from nolang.parser import get_parser, ParsingState
 from nolang import astnodes as ast
 
-from tests.support import reformat_expr
+from tests.support import reformat_expr, reformat_code
 
 
 class BaseTest(object):
@@ -57,18 +57,25 @@ class TestParseFunctionBody(BaseTest):
                      ast.Return(ast.Variable('s'))]
 
 
-# class TestFullProgram(BaseTest):
+class TestFullProgram(BaseTest):
 
-#     def parse(self, code):
-#         program = xxx
+    def parse(self, code):
+        program = reformat_code(code)
+        return self.parser.parse(self.lexer.lex(program), ParsingState(program))
 
-#     def test_function_declaration(self):
-#         r = self.parse('''
-#             function foo() {
-#                 var x;
-#             }
+    def test_function_declaration(self):
+        r = self.parse('''
+            function foo() {
+                var x;
+            }
 
-#             function main() {
-#             }
-#             ''')
-#         assert r == 3
+            function main() {
+            }
+            ''')
+        expected = ast.Program([
+            ast.Function('foo', [], [
+                ast.VarDeclaration(['x'])
+                ]),
+            ast.Function('main', [], [])
+            ])
+        assert r == expected

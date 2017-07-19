@@ -83,9 +83,12 @@ class Statement(AstNode):
     def __init__(self, expr):
         self.expr = expr
 
-class Arglist(AstNode):
-    def __init___(self):
-        pass
+class ArgList(AstNode):
+    def __init__(self, arglist):
+        self.arglist = arglist
+
+    def get_element_list(self):
+        return self.arglist
 
 class FunctionBody(AstNode):
     def __init__(self, elements):

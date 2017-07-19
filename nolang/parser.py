@@ -52,7 +52,8 @@ def get_parser():
     @pg.production('function : FUNCTION IDENTIFIER arglist LEFT_CURLY_BRACE'
                    ' function_body RIGHT_CURLY_BRACE')
     def function_function_body(state, p):
-        return ast.Function(p[1], p[2], p[4].get_element_list())
+        return ast.Function(p[1].getstr(), p[2].get_element_list(),
+                            p[4].get_element_list())
 
     @pg.production('function_body :')
     def function_body_empty(state, p):
@@ -94,7 +95,7 @@ def get_parser():
 
     @pg.production('arglist : LEFT_PAREN RIGHT_PAREN')
     def arglist(state, p):
-        return ast.Arglist()
+        return ast.ArgList([])
 
     @pg.production('expression : INTEGER')
     def expression_number(state, p):
