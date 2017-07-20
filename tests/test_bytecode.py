@@ -1,3 +1,3 @@
 
-class TestBytecode(object):
+class TestCompiler(object):
     pass

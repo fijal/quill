@@ -1,12 +1,13 @@
 
-from support import BaseTest
+from support import BaseTest, reformat_code
 from nolang.interpreter import Interpreter
+from nolang.compiler import compile_module
 from nolang.frameobject import Frame
 from nolang.objects.space import Space
 
 class TestInterpreterBasic(BaseTest):
     def setup_method(self, meth):
-        self.space = Space()
+        self.space = Space(None)
 
     def interpret(self, code):
         interpreter = Interpreter()
@@ -42,3 +43,21 @@ class TestInterpreterBasic(BaseTest):
             return s;
             ''')
         assert self.space.int_w(w_r) == 55
+
+class TestInterpreter(BaseTest):
+    def interpret(self, code):
+        interpreter = Interpreter()
+        source = reformat_code(code)
+        ast = self.parse(source)
+        w_mod = compile_module(source, ast)
+        self.space = Space(interpreter)
+        w_mod.initialize(self.space)
+        return self.space.call_method(w_mod, 'main')
+
+    def test_basic(self):
+        w_res = self.interpret('''
+            function main() {
+                return 3;
+            }
+            ''')
+        assert self.space.int_w(w_res) == 3
