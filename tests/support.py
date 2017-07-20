@@ -33,7 +33,7 @@ class BaseTest(object):
     def compile(self, body):
         program = reformat_expr(body)
         ast = self.parse(program)
-        return compile_bytecode(ast.elements[0], program)
+        return compile_bytecode(ast.elements[0], program, None)
 
     def parse(self, program):
         return self.parser.parse(self.lexer.lex(program), ParsingState(program))

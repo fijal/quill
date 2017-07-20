@@ -52,7 +52,7 @@ class TestInterpreter(BaseTest):
         w_mod = compile_module(source, ast)
         self.space = Space(interpreter)
         w_mod.initialize(self.space)
-        return self.space.call_method(w_mod, 'main')
+        return self.space.call_method(w_mod, 'main', [])
 
     def test_basic(self):
         w_res = self.interpret('''
@@ -61,3 +61,15 @@ class TestInterpreter(BaseTest):
             }
             ''')
         assert self.space.int_w(w_res) == 3
+
+    def test_function_declaration_and_call(self):
+        w_res = self.interpret('''
+            function foo() {
+                return 3;
+            }
+
+            function main() {
+                return foo() + 1;
+            }
+            ''')
+        assert self.space.int_w(w_res) == 4

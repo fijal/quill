@@ -2,6 +2,8 @@
 class Frame(object):
     def __init__(self, bytecode):
         self.bytecode = bytecode
+        if bytecode.module is not None: # for tests
+            self.globals_w = bytecode.module.functions
         self.locals_w = [None] * len(bytecode.varnames)
         self.stack_w = [None] * bytecode.stack_depth
         self.pos = 0

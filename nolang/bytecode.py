@@ -21,9 +21,10 @@ class InvalidStackDepth(Exception):
     pass
 
 class Bytecode(object):
-    def __init__(self, source, varnames, constants, bytecode):
+    def __init__(self, source, varnames, module, constants, bytecode):
         self.source = source
         self.varnames = varnames
+        self.module = module
         self._constants = constants
         self.constants = None
         self.bytecode = bytecode
@@ -61,7 +62,10 @@ class Bytecode(object):
         max_stack_depth = 0
         while i < len(bc):
             opcode = opcodes.opcodes[ord(bc[i])]
-            stack_depth += opcode.stack_effect
+            if opcode.stack_effect == 255:
+                stack_depth += ord(bc[i + 1])
+            else:
+                stack_depth += opcode.stack_effect
             if opcode.numargs == 0:
                 i += 1
             elif opcode.numargs == 1:
@@ -79,11 +83,12 @@ class UndeclaredVariable(Exception):
         self.name = name
 
 class _BytecodeBuilder(object):
-    def __init__(self):
+    def __init__(self, w_mod):
         self.vars = {}
         self.varnames = []
         self.builder = []
         self.constants = [] # XXX implement interning of integers, strings etc.
+        self.w_mod = w_mod
 
     def add_constant(self, const):
         no = len(self.constants)
@@ -95,9 +100,14 @@ class _BytecodeBuilder(object):
 
     def get_variable(self, name):
         try:
-            return self.vars[name]
+            return opcodes.LOAD_VARIABLE, self.vars[name]
         except KeyError:
-            raise UndeclaredVariable(name)
+            pass
+        try:
+            return opcodes.LOAD_GLOBAL, self.w_mod.name2index[name]
+        except KeyError:
+            pass
+        raise UndeclaredVariable(name)
 
     def register_variable(self, v):
         no = len(self.vars)
@@ -127,13 +137,13 @@ class _BytecodeBuilder(object):
         self.builder[pos] = chr(target)
 
     def build(self, source):
-        return Bytecode(source, self.varnames, self.constants,
+        return Bytecode(source, self.varnames, self.w_mod, self.constants,
                         "".join(self.builder))
 
-def compile_bytecode(ast, source):
+def compile_bytecode(ast, source, w_mod):
     """ Compile the bytecode from produced AST.
     """
-    builder = _BytecodeBuilder()
+    builder = _BytecodeBuilder(w_mod)
     ast.compile(builder)
     # hack to enable building for now
     builder.emit(opcodes.LOAD_NONE)

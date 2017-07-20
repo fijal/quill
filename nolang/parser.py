@@ -103,7 +103,16 @@ def get_parser():
 
     @pg.production('expression : IDENTIFIER')
     def expression_identifier(state, p):
-        return ast.Variable(p[0].getstr())
+        return ast.Identifier(p[0].getstr())
+
+    @pg.production('expression : expression LEFT_PAREN expression_list '
+                   'RIGHT_PAREN')
+    def expression_call(state, p):
+        return ast.Call(p[0], p[2].get_element_list())
+
+    @pg.production('expression : LEFT_PAREN expression RIGHT_PAREN')
+    def expression_paren_expression_paren(state, p):
+        return p[1]
 
     @pg.production('expression : expression PLUS expression')
     def expression_plus_expression(state, p):
@@ -112,5 +121,21 @@ def get_parser():
     @pg.production('expression : expression LT expression')
     def expression_lt_expression(state, p):
         return ast.BinOp('<', p[0], p[2])
+
+    @pg.production('expression_list : ')
+    def expression_list_empty(state, p):
+        return ast.ExpressionListPartial([])
+
+    @pg.production('expression_list : expression expression_sublist')
+    def expression_list_expression(state, p):
+        return ast.ExpressionListPartial([p[0]] + p[1].get_element_list())
+
+    @pg.production('expression_sublist : ')
+    def expression_sublist_empty(state, p):
+        return ast.ExpressionListPartial([])
+
+    @pg.production('expression_sublist : COMMA expression expression_sublist')
+    def expression_sublist_expression(state, p):
+        return ast.ExpressionListPartial([p[1]] + p[2].get_element_list())
 
     return pg.build()

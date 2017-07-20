@@ -7,6 +7,9 @@ from nolang import opcodes
 
 from rply.token import BaseBox
 
+class StoringIntoGlobal(Exception):
+    pass
+
 class AstNode(BaseBox):
     def compile(self, state):
         raise NotImplementedError("abstract base class")
@@ -105,13 +108,13 @@ class VarDeclaration(AstNode):
         for varname in self.varnames:
             state.register_variable(varname)
 
-class Variable(AstNode):
+class Identifier(AstNode):
     def __init__(self, name):
         self.name = name
 
     def compile(self, state):
-        no = state.get_variable(self.name)
-        state.emit(opcodes.LOAD_VARIABLE, no)
+        op, no = state.get_variable(self.name)
+        state.emit(op, no)
  
 class Assignment(AstNode):
     def __init__(self, varname, expr):
@@ -120,8 +123,21 @@ class Assignment(AstNode):
 
     def compile(self, state):
         self.expr.compile(state)
-        varno = state.get_variable(self.varname)
+        op, varno = state.get_variable(self.varname)
+        if op == opcodes.LOAD_GLOBAL:
+            raise StoringIntoGlobal()
         state.emit(opcodes.STORE, varno)
+
+class Call(AstNode):
+    def __init__(self, expr, arglist):
+        self.left_hand = expr
+        self.arglist = arglist
+
+    def compile(self, state):
+        self.left_hand.compile(state)
+        for arg in self.arglist:
+            arg.compile(state)
+        state.emit(opcodes.CALL)
 
 class Return(AstNode):
     def __init__(self, expr):
@@ -130,6 +146,13 @@ class Return(AstNode):
     def compile(self, state):
         self.expr.compile(state)
         state.emit(opcodes.RETURN)
+
+class ExpressionListPartial(AstNode):
+    def __init__(self, elements):
+        self.elements = elements
+
+    def get_element_list(self):
+        return self.elements
 
 class VarDeclPartial(AstNode):
     def __init__(self, names):

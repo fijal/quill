@@ -12,4 +12,4 @@ class TestCompiler(BaseTest):
         ''')
         w_mod = compile_module(code, self.parse(code))
         assert isinstance(w_mod, W_Module)
-        assert w_mod.dict_w.keys() == ['foo']
+        assert w_mod.name2index == {'foo': 0}

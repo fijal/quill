@@ -20,6 +20,14 @@ class TestExpressionParser(BaseTest):
     def test_add(self):
         assert self.parse('1 + 1') == ast.BinOp('+', ast.Number(1), ast.Number(1))
 
+    def test_various_kinds_of_calls(self):
+        r = self.parse('x(1, 2, 3)')
+        assert r == ast.Call(ast.Identifier('x'), [ast.Number(1), ast.Number(2),
+            ast.Number(3)])
+        r = self.parse('(1)(2)')
+        assert r == ast.Call(ast.Number(1), [ast.Number(2)])
+
+
 class TestParseFunctionBody(BaseTest):
     def parse(self, body):
         program = reformat_expr(body)
@@ -34,7 +42,7 @@ class TestParseFunctionBody(BaseTest):
             ''')
         assert r == [ast.VarDeclaration(['x']), ast.Assignment('x',
                  ast.Number(3)), ast.Assignment('x', ast.BinOp('+',
-                    ast.Variable('x'), ast.Number(1)))]
+                    ast.Identifier('x'), ast.Number(1)))]
 
     def test_while_loop(self):
         r = self.parse('''
@@ -48,13 +56,13 @@ class TestParseFunctionBody(BaseTest):
             ''')
         assert r == [ast.VarDeclaration(['i', 's']),
                      ast.Assignment('i', ast.Number(0)),
-                     ast.While(ast.BinOp('<', ast.Variable('i'),
+                     ast.While(ast.BinOp('<', ast.Identifier('i'),
                         ast.Number(10)), [
                           ast.Assignment('i', ast.BinOp('+',
-                            ast.Variable('i'), ast.Number(1))),
+                            ast.Identifier('i'), ast.Number(1))),
                           ast.Assignment('s', ast.BinOp('+',
-                            ast.Variable('s'), ast.Variable('i')))]),
-                     ast.Return(ast.Variable('s'))]
+                            ast.Identifier('s'), ast.Identifier('i')))]),
+                     ast.Return(ast.Identifier('s'))]
 
 
 class TestFullProgram(BaseTest):

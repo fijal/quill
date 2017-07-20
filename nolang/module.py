@@ -5,12 +5,13 @@
 from nolang.objects.root import W_Root
 
 class W_Module(W_Root):
-    def __init__(self, dict_w):
-        self.dict_w = dict_w
+    def __init__(self, name2index, functions):
+        self.name2index = name2index
+        self.functions = functions
 
     def initialize(self, space):
-        for item in self.dict_w.values():
+        for item in self.functions:
             item.setup(space)
 
     def getattr_w(self, name):
-        return self.dict_w[name] # XXX error handling
+        return self.functions[self.name2index[name]] # XXX error handling
