@@ -41,7 +41,7 @@ class Space(object):
     # various calls
     def call_method(self, w_object, method_name, args):
         w_obj = w_object.getattr_w(method_name)
-        return w_obj.call(self, self.interpreter)
+        return w_obj.call(self, self.interpreter, args)
 
     def call(self, w_object, args):
-        return w_object.call(self, self.interpreter)
+        return w_object.call(self, self.interpreter, args)

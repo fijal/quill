@@ -73,3 +73,15 @@ class TestInterpreter(BaseTest):
             }
             ''')
         assert self.space.int_w(w_res) == 4
+
+    def test_function_call_args(self):
+        w_res = self.interpret('''
+            function foo(a0, a1)
+            {
+                return a0 + a1;
+            }
+            function main() {
+                return foo(1, 3);
+            }
+            ''')
+        assert self.space.int_w(w_res) == 4

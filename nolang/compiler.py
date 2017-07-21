@@ -21,5 +21,5 @@ def compile_module(source, ast):
     w_mod = W_Module(name_mapping, functions)
     for item in ast.get_element_list():
         functions.append(W_Function(item.name, compile_bytecode(item, source,
-                                    w_mod)))
+                                    w_mod, item.arglist)))
     return w_mod

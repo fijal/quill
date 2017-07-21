@@ -87,3 +87,14 @@ class TestFullProgram(BaseTest):
             ast.Function('main', [], [])
             ])
         assert r == expected
+
+    def test_function_declaration_args(self):
+        r = self.parse('''
+            function foo(a0, a1) {
+            }
+            ''')
+        expected = ast.Program([
+            ast.Function('foo', ['a0', 'a1'], [
+                ])
+            ])
+        assert r == expected

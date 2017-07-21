@@ -97,6 +97,10 @@ def get_parser():
     def arglist(state, p):
         return ast.ArgList([])
 
+    @pg.production('arglist : LEFT_PAREN IDENTIFIER var_decl RIGHT_PAREN')
+    def arglist_non_empty(state, p):
+        return ast.ArgList([p[1].getstr()] + p[2].get_names())
+
     @pg.production('expression : INTEGER')
     def expression_number(state, p):
         return ast.Number(int(p[0].getstr()))

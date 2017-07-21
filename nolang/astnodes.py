@@ -137,7 +137,7 @@ class Call(AstNode):
         self.left_hand.compile(state)
         for arg in self.arglist:
             arg.compile(state)
-        state.emit(opcodes.CALL)
+        state.emit(opcodes.CALL, len(self.arglist))
 
 class Return(AstNode):
     def __init__(self, expr):

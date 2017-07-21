@@ -63,7 +63,7 @@ class Bytecode(object):
         while i < len(bc):
             opcode = opcodes.opcodes[ord(bc[i])]
             if opcode.stack_effect == 255:
-                stack_depth += ord(bc[i + 1])
+                stack_depth -= ord(bc[i + 1])
             else:
                 stack_depth += opcode.stack_effect
             if opcode.numargs == 0:
@@ -83,12 +83,14 @@ class UndeclaredVariable(Exception):
         self.name = name
 
 class _BytecodeBuilder(object):
-    def __init__(self, w_mod):
+    def __init__(self, w_mod, arglist):
         self.vars = {}
         self.varnames = []
         self.builder = []
         self.constants = [] # XXX implement interning of integers, strings etc.
         self.w_mod = w_mod
+        for name in arglist:
+            self.register_variable(name)
 
     def add_constant(self, const):
         no = len(self.constants)
@@ -140,10 +142,10 @@ class _BytecodeBuilder(object):
         return Bytecode(source, self.varnames, self.w_mod, self.constants,
                         "".join(self.builder))
 
-def compile_bytecode(ast, source, w_mod):
+def compile_bytecode(ast, source, w_mod, arglist=[]):
     """ Compile the bytecode from produced AST.
     """
-    builder = _BytecodeBuilder(w_mod)
+    builder = _BytecodeBuilder(w_mod, arglist)
     ast.compile(builder)
     # hack to enable building for now
     builder.emit(opcodes.LOAD_NONE)

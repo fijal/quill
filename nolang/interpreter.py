@@ -81,10 +81,11 @@ class Interpreter(object):
         frame.push(frame.globals_w[no])
 
     def call(self, space, frame, bytecode_index, no):
-        for i in range(no):
-            xxx
+        args = [None] * no
+        for i in range(no - 1, -1, -1):
+            args[i] = frame.pop()
         w_callable = frame.pop()
-        frame.push(space.call(w_callable, []))
+        frame.push(space.call(w_callable, args))
 
     def binop_lt(self, space, frame):
         w_right = frame.pop()

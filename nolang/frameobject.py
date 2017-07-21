@@ -8,6 +8,10 @@ class Frame(object):
         self.stack_w = [None] * bytecode.stack_depth
         self.pos = 0
 
+    def populate_args(self, args_w):
+        for i in range(len(args_w)):
+            self.locals_w[i] = args_w[i]
+
     def push(self, w_val):
         self.stack_w[self.pos] = w_val
         self.pos += 1
