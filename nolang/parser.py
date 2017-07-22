@@ -29,7 +29,14 @@ def errorhandler(state, lookahead):
                      len(lookahead.value) + sourcepos.colno - 1)
 
 def get_parser():
-    pg = rply.ParserGenerator(TOKENS, precedence=[])
+    pg = rply.ParserGenerator(TOKENS, precedence=[
+        ('left', ['AND']),
+        ('left', ['OR']),
+        ('left', ['EQ', 'LT']),
+        ('left', ['PLUS', 'MINUS']),
+        ('left', ['TRUEDIV', 'STAR']),
+        ('left', ['LEFT_PAREN']),
+        ])
     pg.error(errorhandler)
 
     @pg.production('program : body')
@@ -164,4 +171,7 @@ def get_parser():
     def expression_sublist_expression(state, p):
         return ast.ExpressionListPartial([p[1]] + p[2].get_element_list())
 
-    return pg.build()
+    res = pg.build()
+    if res.lr_table.sr_conflicts:
+        raise Exception("shift reduce conflicts")
+    return res

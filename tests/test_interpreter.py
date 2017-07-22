@@ -81,6 +81,14 @@ class TestInterpreterBasic(BaseTest):
         assert self.space.int_w(self.interpret('return 13 // 2;')) == 6
         assert self.space.int_w(self.interpret('return 2 * 6;')) == 12
 
+    def test_operator_precedence(self):
+        assert self.space.int_w(self.interpret('return 2 + 2 * 2;')) == 6
+        assert self.space.int_w(self.interpret('return 2 * 2 + 2;')) == 6
+        assert self.space.int_w(self.interpret('return 2 * 2 and 2;')) == 2
+        assert self.space.int_w(self.interpret('return 2 and 2 * 2;')) == 4
+        assert self.space.int_w(self.interpret('return (2 + 2) * 2;')) == 8
+        assert self.space.int_w(self.interpret('return 2 * (2 + 2);')) == 8
+
     def test_longer_blocks(self):
         code = '\n'.join(['if 0 < 3 {'] + ['    1;'] * 300 + ['}'])
         self.interpret(code) # assert did not crash
