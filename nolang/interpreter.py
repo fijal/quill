@@ -44,6 +44,10 @@ class Interpreter(object):
                 self.load_variable(space, frame, index, arg0)
             elif op == opcodes.LOAD_GLOBAL:
                 self.load_global(space, frame, index, arg0)
+            elif op == opcodes.LOAD_TRUE:
+                frame.push(space.w_True)
+            elif op == opcodes.LOAD_FALSE:
+                frame.push(space.w_False)
             elif op == opcodes.DISCARD:
                 frame.pop()
             elif op == opcodes.ADD:
@@ -54,6 +58,14 @@ class Interpreter(object):
                 frame.store_var(arg0)
             elif op == opcodes.JUMP_IF_FALSE:
                 if not space.is_true(frame.pop()):
+                    index = arg0
+                    continue
+            elif op == opcodes.JUMP_IF_TRUE_NOPOP:
+                if space.is_true(frame.peek()):
+                    index = arg0
+                    continue
+            elif op == opcodes.JUMP_IF_FALSE_NOPOP:
+                if not space.is_true(frame.peek()):
                     index = arg0
                     continue
             elif op == opcodes.JUMP_ABSOLUTE:

@@ -23,5 +23,8 @@ class Frame(object):
         self.pos = new_pos
         return w_res
 
+    def peek(self):
+        return self.stack_w[self.pos - 1]
+
     def store_var(self, index):
         self.locals_w[index] = self.pop()

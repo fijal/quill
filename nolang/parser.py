@@ -114,6 +114,22 @@ def get_parser():
     def expression_identifier(state, p):
         return ast.Identifier(p[0].getstr())
 
+    @pg.production('expression : expression OR expression')
+    def expression_or_expression(state, p):
+        return ast.Or(p[0], p[2])
+
+    @pg.production('expression : expression AND expression')
+    def expression_and_expression(state, p):
+        return ast.And(p[0], p[2])
+
+    @pg.production('expression : TRUE')
+    def expression_true(state, p):
+        return ast.True()
+
+    @pg.production('expression : FALSE')
+    def expression_false(state, p):
+        return ast.False()
+
     @pg.production('expression : expression LEFT_PAREN expression_list '
                    'RIGHT_PAREN')
     def expression_call(state, p):

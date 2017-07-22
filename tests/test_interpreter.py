@@ -52,6 +52,31 @@ class TestInterpreterBasic(BaseTest):
             ''')
         assert self.space.int_w(w_r) == 3
 
+    def test_logical_or_and(self):
+        w_r = self.interpret('''
+            return 0 or 1;
+            ''')
+        assert self.space.int_w(w_r) == 1
+        w_r = self.interpret('''
+            var x;
+            return 15 or x;
+            ''')
+        # unitialized x ignored (for now)
+        assert self.space.int_w(w_r) == 15
+        w_r = self.interpret('''
+            return 1 and 2;
+            ''')
+        assert self.space.int_w(w_r) == 2
+        w_r = self.interpret('''
+            var x;
+            return 0 and x;
+            ''')
+        assert self.space.int_w(w_r) == 0
+        w_r = self.interpret('''
+            return 1 and true;
+            ''')
+        assert self.space.w_True is w_r
+
     def test_longer_blocks(self):
         code = '\n'.join(['if 0 < 3 {'] + ['    1;'] * 300 + ['}'])
         self.interpret(code) # assert did not crash
@@ -97,3 +122,9 @@ class TestInterpreter(BaseTest):
             }
             ''')
         assert self.space.int_w(w_res) == 4
+
+    # def test_recursive_call(self):
+    #     w_res = self.interpret('''
+    #         function fib(n) {
+    #             if n == 0 or n == 1
+    #         }

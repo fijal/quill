@@ -50,6 +50,40 @@ class BinOp(AstNode):
         else:
             assert False
 
+class And(AstNode):
+    def __init__(self, left, right):
+        self.left = left
+        self.right = right
+
+    def compile(self, state):
+        self.left.compile(state)
+        state.emit(opcodes.JUMP_IF_FALSE_NOPOP, 0)
+        pos = state.get_patch_position()
+        state.emit(opcodes.DISCARD)
+        self.right.compile(state)
+        state.patch_position(pos, state.get_position())
+
+class Or(AstNode):
+    def __init__(self, left, right):
+        self.left = left
+        self.right = right
+
+    def compile(self, state):
+        self.left.compile(state)
+        state.emit(opcodes.JUMP_IF_TRUE_NOPOP, 0)
+        pos = state.get_patch_position()
+        state.emit(opcodes.DISCARD)
+        self.right.compile(state)
+        state.patch_position(pos, state.get_position())
+
+class True(AstNode):
+    def compile(self, state):
+        state.emit(opcodes.LOAD_TRUE)
+
+class False(AstNode):
+    def compile(self, state):
+        state.emit(opcodes.LOAD_FALSE)
+
 class Program(AstNode):
     def __init__(self, elements):
         self.elements = elements

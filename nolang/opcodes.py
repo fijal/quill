@@ -18,6 +18,8 @@ opcodes = [
     Opcode('LOAD_VARIABLE', 1, 1, 'load variable onto stack'),
     Opcode('LOAD_GLOBAL', 1, 1, 'load global variable'),
     Opcode('LOAD_CONSTANT', 1, 1, 'load constant onto stack'),
+    Opcode('LOAD_TRUE', 0, 1, 'load true onto stack'),
+    Opcode('LOAD_FALSE', 0, 1, 'load false onto stack'),
     Opcode('STORE', 1, -1, 'store top of the stack into variable'),
     Opcode('DISCARD', 1, -1, 'discard top of the stack'),
     # binary ops
@@ -28,6 +30,10 @@ opcodes = [
     # jumps
     Opcode('JUMP_IF_FALSE', 1, -1, 'pop value from the stack and jump if false'
                                    ' to a given position'),
+    Opcode('JUMP_IF_TRUE_NOPOP', 1, 0, 'peek value from the stack and jump if '
+                                   'true to a given position'),
+    Opcode('JUMP_IF_FALSE_NOPOP', 1, 0, 'peek value from the stack and jump if '
+                                   'false to a given position'),
     Opcode('JUMP_ABSOLUTE', 1, 0, 'jump to an absolute position'),
     Opcode('CALL', 1, 255, 'take N arguments from the stack, pack them into'
                            'args and call the next element'),
