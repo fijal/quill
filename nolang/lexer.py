@@ -26,6 +26,7 @@ RULES = [
     ('RIGHT_CURLY_BRACE', r'\}'),
     ('COMMA', r','),
     ('SEMICOLON', r';'),
+    ('STRING', r'"[^"]*"'),
 ]
 
 TOKENS = [x[0] for x in RULES]

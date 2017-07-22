@@ -138,4 +138,3 @@ class Interpreter(object):
         w_right = frame.pop()
         w_left = frame.pop()
         frame.push(space.binop_truediv(w_left, w_right))
-
