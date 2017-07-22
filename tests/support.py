@@ -11,7 +11,7 @@ def reformat_code(body):
     while bodylines[cut].strip(" ") == '':
         cut += 1
     bodylines = bodylines[cut:]
-    m = re.match(" +", bodylines[0])
+    m = re.match(" *", bodylines[0])
     lgt = len(m.group(0))
     newlines = []
     for i, line in enumerate(bodylines):

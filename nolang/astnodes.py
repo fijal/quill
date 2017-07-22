@@ -99,6 +99,10 @@ class Statement(AstNode):
     def __init__(self, expr):
         self.expr = expr
 
+    def compile(self, state):
+        self.expr.compile(state)
+        state.emit(opcodes.DISCARD)
+
 class ArgList(AstNode):
     def __init__(self, arglist):
         self.arglist = arglist

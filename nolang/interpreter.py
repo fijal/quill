@@ -32,9 +32,9 @@ class Interpreter(object):
             op = ord(bc[index])
             numargs = opcodes.opcodes[op].numargs
             if numargs >= 1:
-                arg0 = ord(bc[index + 1])
+                arg0 = (ord(bc[index + 1]) << 8) + ord(bc[index + 2])
             elif numargs >= 2:
-                arg1 = ord(bc[index + 2])
+                arg1 = (ord(bc[index + 3]) << 8) + ord(bc[index + 4])
 
             if op == opcodes.LOAD_NONE:
                 frame.push(space.w_None)
@@ -44,6 +44,8 @@ class Interpreter(object):
                 self.load_variable(space, frame, index, arg0)
             elif op == opcodes.LOAD_GLOBAL:
                 self.load_global(space, frame, index, arg0)
+            elif op == opcodes.DISCARD:
+                frame.pop()
             elif op == opcodes.ADD:
                 self.binop_add(space, frame)
             elif op == opcodes.LT:
@@ -67,9 +69,9 @@ class Interpreter(object):
             if numargs == 0:
                 index += 1
             elif numargs == 1:
-                index += 2
-            else:
                 index += 3
+            else:
+                index += 5
 
     def load_variable(self, space, frame, bytecode_index, no):
         w_res = frame.locals_w[no]

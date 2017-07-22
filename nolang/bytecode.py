@@ -45,13 +45,15 @@ class Bytecode(object):
                 res.append("  " + opcode.name)
                 i += 1
             elif opcode.numargs == 1:
-                res.append("  %s %d" % (opcode.name, ord(bc[i + 1])))
-                i += 2
+                argval = (ord(bc[i + 1]) << 8) + ord(bc[i + 2])
+                res.append("  %s %d" % (opcode.name, argval))
+                i += 3
             else:
                 assert opcode.numargs == 2
-                res.append("  %s %d %d" % (opcode.name, ord(bc[i + 2]),
-                                           ord(bc[i + 3])))
-                i += 3
+                arg1 = (ord(bc[i + 1]) << 8) + ord(bc[i + 2])
+                arg2 = (ord(bc[i + 3]) << 8) + ord(bc[i + 4])
+                res.append("  %s %d %d" % (opcode.name, arg1, arg2))
+                i += 5
             res.append("\n")
         return res.build()
 
@@ -63,16 +65,17 @@ class Bytecode(object):
         while i < len(bc):
             opcode = opcodes.opcodes[ord(bc[i])]
             if opcode.stack_effect == 255:
-                stack_depth -= ord(bc[i + 1])
+                var = (ord(bc[i + 1]) << 8) + ord(bc[i + 2])
+                stack_depth -= var
             else:
                 stack_depth += opcode.stack_effect
             if opcode.numargs == 0:
                 i += 1
             elif opcode.numargs == 1:
-                i += 2
+                i += 3
             else:
                 assert opcode.numargs == 2
-                i += 3
+                i += 5
             max_stack_depth = max(max_stack_depth, stack_depth)
         if stack_depth != 0:
             raise InvalidStackDepth()
@@ -119,24 +122,27 @@ class _BytecodeBuilder(object):
 
     def emit(self, opcode, arg0=0, arg1=0):
         self.builder.append(chr(opcode))
-        assert arg0 < 256
-        assert arg1 < 256
+        assert arg0 < 0x10000
+        assert arg1 < 0x10000
         numargs = opcodes.opcodes[opcode].numargs
         if numargs > 0:
-            self.builder.append(chr(arg0))
+            self.builder.append(chr(arg0 >> 8))
+            self.builder.append(chr(arg0 & 0xff))
         if numargs > 1:
-            self.builder.append(chr(arg1))
+            self.builder.append(chr(arg1 >> 8))
+            self.builder.append(chr(arg1 & 0xff))
         assert numargs <= 2
 
     def get_position(self):
         return len(self.builder)
 
     def get_patch_position(self):
-        return len(self.builder) - 1 # XXX move to -2 for longer args
+        return len(self.builder) - 2
 
     def patch_position(self, pos, target):
-        assert target < 256
-        self.builder[pos] = chr(target)
+        assert target < 0x10000
+        self.builder[pos] = chr(target >> 8)
+        self.builder[pos + 1] = chr(target & 0xff)
 
     def build(self, source):
         return Bytecode(source, self.varnames, self.w_mod, self.constants,

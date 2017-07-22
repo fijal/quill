@@ -52,6 +52,10 @@ class TestInterpreterBasic(BaseTest):
             ''')
         assert self.space.int_w(w_r) == 3
 
+    def test_longer_blocks(self):
+        code = '\n'.join(['if 0 < 3 {'] + ['    1;'] * 300 + ['}'])
+        self.interpret(code) # assert did not crash
+
 class TestInterpreter(BaseTest):
     def interpret(self, code):
         interpreter = Interpreter()

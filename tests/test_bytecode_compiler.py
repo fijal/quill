@@ -64,12 +64,12 @@ class TestBytecodeCompiler(BaseTest):
             LOAD_VARIABLE 0
             LOAD_CONSTANT 1
             LT
-            JUMP_IF_FALSE 20
+            JUMP_IF_FALSE 29
             LOAD_VARIABLE 0
             LOAD_CONSTANT 2
             ADD
             STORE 0
-            JUMP_ABSOLUTE 4
+            JUMP_ABSOLUTE 6
             LOAD_NONE
             RETURN
             """)
