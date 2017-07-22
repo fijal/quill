@@ -141,9 +141,8 @@ def get_parser():
 
     @pg.production('expression : expression PLUS expression')
     @pg.production('expression : expression MINUS expression')
-    def expression_plus_expression(state, p):
-        return ast.BinOp(p[1].getstr(), p[0], p[2])
-
+    @pg.production('expression : expression STAR expression')
+    @pg.production('expression : expression TRUEDIV expression')
     @pg.production('expression : expression LT expression')
     @pg.production('expression : expression EQ expression')
     def expression_lt_expression(state, p):

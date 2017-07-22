@@ -27,6 +27,10 @@ opcodes = [
                          ' of addition'),
     Opcode('SUB', 0, -1, 'load two values from the stack and store the result'
                          ' of subtraction'),
+    Opcode('MUL', 0, -1, 'load two values from the stack and store the result'
+                         ' of multiplication'),
+    Opcode('TRUEDIV', 0, -1, 'load two values from the stack and store the result'
+                         ' of integer division'),
     Opcode('LT', 0, -1, 'load two value from the stack and store the result'
                         ' of lower than comparison'),
     Opcode('EQ', 0, -1, 'load two value from the stack and store the result'

@@ -77,6 +77,10 @@ class TestInterpreterBasic(BaseTest):
             ''')
         assert self.space.w_True is w_r
 
+    def test_mul_div(self):
+        assert self.space.int_w(self.interpret('return 13 // 2;')) == 6
+        assert self.space.int_w(self.interpret('return 2 * 6;')) == 12
+
     def test_longer_blocks(self):
         code = '\n'.join(['if 0 < 3 {'] + ['    1;'] * 300 + ['}'])
         self.interpret(code) # assert did not crash

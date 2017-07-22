@@ -6,6 +6,8 @@ RULES = [
     ('PLUS', r'\+'),
     ('MINUS', r'\-'),
     ('LT', r'\<'),
+    ('STAR', r'\*'),
+    ('TRUEDIV', r'\/\/'),
     ('EQ', r'=='),
     ('ASSIGN', r'='),
     ('FUNCTION', r'function'),

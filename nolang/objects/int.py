@@ -23,5 +23,11 @@ class W_IntObject(W_Root):
     def sub(self, space, w_other):
         return space.newint(self._intval - w_other._intval)
 
+    def mul(self, space, w_other):
+        return space.newint(self._intval * w_other._intval)
+
+    def truediv(self, space, w_other):
+        return space.newint(self._intval // w_other._intval)
+
     def is_true(self, space):
         return self._intval != 0

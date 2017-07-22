@@ -47,6 +47,10 @@ class BinOp(AstNode):
             state.emit(opcodes.ADD)
         elif self.op == '-':
             state.emit(opcodes.SUB)
+        elif self.op == '//':
+            state.emit(opcodes.TRUEDIV)
+        elif self.op == '*':
+            state.emit(opcodes.MUL)
         elif self.op == '<':
             state.emit(opcodes.LT)
         elif self.op == '==':

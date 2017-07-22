@@ -44,6 +44,12 @@ class Space(object):
     def binop_sub(self, w_one, w_two):
         return w_one.sub(self, w_two)
 
+    def binop_mul(self, w_one, w_two):
+        return w_one.mul(self, w_two)
+
+    def binop_truediv(self, w_one, w_two):
+        return w_one.truediv(self, w_two)
+
     # various calls
     def call_method(self, w_object, method_name, args):
         w_obj = w_object.getattr_w(method_name)
