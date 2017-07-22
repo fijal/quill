@@ -21,7 +21,7 @@ class InvalidStackDepth(Exception):
     pass
 
 class Bytecode(object):
-    def __init__(self, source, varnames, module, constants, bytecode):
+    def __init__(self, source, varnames, module, constants, bytecode, arglist):
         self.source = source
         self.varnames = varnames
         self.module = module
@@ -29,6 +29,7 @@ class Bytecode(object):
         self.constants = None
         self.bytecode = bytecode
         self.stack_depth = self.compute_stack_depth(bytecode)
+        self.arglist = arglist
 
     def setup(self, space):
         self.constants = [None] * len(self._constants)
@@ -94,6 +95,7 @@ class _BytecodeBuilder(object):
         self.w_mod = w_mod
         for name in arglist:
             self.register_variable(name)
+        self.arglist = arglist
 
     def add_constant(self, const):
         no = len(self.constants)
@@ -146,7 +148,7 @@ class _BytecodeBuilder(object):
 
     def build(self, source):
         return Bytecode(source, self.varnames, self.w_mod, self.constants,
-                        "".join(self.builder))
+                        "".join(self.builder), self.arglist)
 
 def compile_bytecode(ast, source, w_mod, arglist=[]):
     """ Compile the bytecode from produced AST.
