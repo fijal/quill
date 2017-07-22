@@ -4,8 +4,10 @@ from rply import LexerGenerator
 RULES = [
     ('INTEGER', r'\d+'),
     ('PLUS', r'\+'),
+    ('MINUS', r'\-'),
     ('LT', r'\<'),
-    ('EQUALS', r'='),
+    ('EQ', r'=='),
+    ('ASSIGN', r'='),
     ('FUNCTION', r'function'),
     ('RETURN', r'return'),
     ('VAR', r'var'),

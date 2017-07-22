@@ -52,8 +52,12 @@ class Interpreter(object):
                 frame.pop()
             elif op == opcodes.ADD:
                 self.binop_add(space, frame)
+            elif op == opcodes.SUB:
+                self.binop_sub(space, frame)
             elif op == opcodes.LT:
                 self.binop_lt(space, frame)
+            elif op == opcodes.EQ:
+                self.binop_eq(space, frame)
             elif op == opcodes.STORE:
                 frame.store_var(arg0)
             elif op == opcodes.JUMP_IF_FALSE:
@@ -106,7 +110,17 @@ class Interpreter(object):
         w_left = frame.pop()
         frame.push(space.binop_lt(w_left, w_right))
 
+    def binop_eq(self, space, frame):
+        w_right = frame.pop()
+        w_left = frame.pop()
+        frame.push(space.binop_eq(w_left, w_right))
+
     def binop_add(self, space, frame):
         w_right = frame.pop()
         w_left = frame.pop()
         frame.push(space.binop_add(w_left, w_right))
+
+    def binop_sub(self, space, frame):
+        w_right = frame.pop()
+        w_left = frame.pop()
+        frame.push(space.binop_sub(w_left, w_right))

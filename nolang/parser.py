@@ -80,8 +80,8 @@ def get_parser():
     def var_decl_identifier(state, p):
         return ast.VarDeclPartial([p[1].getstr()] + p[2].get_names())
 
-    @pg.production('statement : IDENTIFIER EQUALS expression SEMICOLON')
-    def statement_identifier_equals_expr(state, p):
+    @pg.production('statement : IDENTIFIER ASSIGN expression SEMICOLON')
+    def statement_identifier_assign_expr(state, p):
         return ast.Assignment(p[0].getstr(), p[2])
 
     @pg.production('statement : RETURN expression SEMICOLON')
@@ -124,11 +124,11 @@ def get_parser():
 
     @pg.production('expression : TRUE')
     def expression_true(state, p):
-        return ast.True()
+        return ast.TrueNode()
 
     @pg.production('expression : FALSE')
     def expression_false(state, p):
-        return ast.False()
+        return ast.FalseNode()
 
     @pg.production('expression : expression LEFT_PAREN expression_list '
                    'RIGHT_PAREN')
@@ -140,12 +140,14 @@ def get_parser():
         return p[1]
 
     @pg.production('expression : expression PLUS expression')
+    @pg.production('expression : expression MINUS expression')
     def expression_plus_expression(state, p):
-        return ast.BinOp('+', p[0], p[2])
+        return ast.BinOp(p[1].getstr(), p[0], p[2])
 
     @pg.production('expression : expression LT expression')
+    @pg.production('expression : expression EQ expression')
     def expression_lt_expression(state, p):
-        return ast.BinOp('<', p[0], p[2])
+        return ast.BinOp(p[1].getstr(), p[0], p[2])
 
     @pg.production('expression_list : ')
     def expression_list_empty(state, p):

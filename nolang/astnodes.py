@@ -45,8 +45,12 @@ class BinOp(AstNode):
         self.right.compile(state)
         if self.op == '+':
             state.emit(opcodes.ADD)
+        elif self.op == '-':
+            state.emit(opcodes.SUB)
         elif self.op == '<':
             state.emit(opcodes.LT)
+        elif self.op == '==':
+            state.emit(opcodes.EQ)
         else:
             assert False
 
@@ -76,11 +80,11 @@ class Or(AstNode):
         self.right.compile(state)
         state.patch_position(pos, state.get_position())
 
-class True(AstNode):
+class TrueNode(AstNode):
     def compile(self, state):
         state.emit(opcodes.LOAD_TRUE)
 
-class False(AstNode):
+class FalseNode(AstNode):
     def compile(self, state):
         state.emit(opcodes.LOAD_FALSE)
 

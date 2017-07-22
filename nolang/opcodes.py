@@ -25,8 +25,12 @@ opcodes = [
     # binary ops
     Opcode('ADD', 0, -1, 'load two values from the stack and store the result'
                          ' of addition'),
+    Opcode('SUB', 0, -1, 'load two values from the stack and store the result'
+                         ' of subtraction'),
     Opcode('LT', 0, -1, 'load two value from the stack and store the result'
                         ' of lower than comparison'),
+    Opcode('EQ', 0, -1, 'load two value from the stack and store the result'
+                        ' of comparison'),
     # jumps
     Opcode('JUMP_IF_FALSE', 1, -1, 'pop value from the stack and jump if false'
                                    ' to a given position'),

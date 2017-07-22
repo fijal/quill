@@ -35,8 +35,14 @@ class Space(object):
     def binop_lt(self, w_one, w_two):
         return w_one.lt(self, w_two)
 
+    def binop_eq(self, w_one, w_two):
+        return w_one.eq(self, w_two)
+
     def binop_add(self, w_one, w_two):
         return w_one.add(self, w_two)
+
+    def binop_sub(self, w_one, w_two):
+        return w_one.sub(self, w_two)
 
     # various calls
     def call_method(self, w_object, method_name, args):

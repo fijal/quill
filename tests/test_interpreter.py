@@ -123,8 +123,16 @@ class TestInterpreter(BaseTest):
             ''')
         assert self.space.int_w(w_res) == 4
 
-    # def test_recursive_call(self):
-    #     w_res = self.interpret('''
-    #         function fib(n) {
-    #             if n == 0 or n == 1
-    #         }
+    def test_recursive_call(self):
+        w_res = self.interpret('''
+            function fib(n) {
+                if (n == 0) or (n == 1) {
+                    return 1;
+                }
+                return fib(n - 1) + fib(n - 2);
+            }
+            function main() {
+                return fib(5);
+            }
+            ''')
+        assert self.space.int_w(w_res) == 8
