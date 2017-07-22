@@ -44,6 +44,14 @@ class TestInterpreterBasic(BaseTest):
             ''')
         assert self.space.int_w(w_r) == 55
 
+    def test_simple_if(self):
+        w_r = self.interpret('''
+            if 0 < 3 {
+                return 3;
+            }
+            ''')
+        assert self.space.int_w(w_r) == 3
+
 class TestInterpreter(BaseTest):
     def interpret(self, code):
         interpreter = Interpreter()

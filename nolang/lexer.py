@@ -10,6 +10,7 @@ RULES = [
     ('RETURN', r'return'),
     ('VAR', r'var'),
     ('WHILE', r'while'),
+    ('IF', r'if'),
     ('IDENTIFIER', r'[a-zA-Z_][a-zA-Z0-9_]*'),
     ('LEFT_CURLY_BRACE', r'\{'),
     ('LEFT_PAREN', r'\('),

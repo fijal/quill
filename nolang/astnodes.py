@@ -82,6 +82,19 @@ class While(AstNode):
         state.emit(opcodes.JUMP_ABSOLUTE, jump_pos)
         state.patch_position(patch_pos, state.get_position())
 
+class If(AstNode):
+    def __init__(self, expr, block):
+        self.expr = expr
+        self.block = block
+
+    def compile(self, state):
+        self.expr.compile(state)
+        state.emit(opcodes.JUMP_IF_FALSE, 0)
+        patch_pos = state.get_patch_position()
+        for item in self.block:
+            item.compile(state)
+        state.patch_position(patch_pos, state.get_position())
+
 class Statement(AstNode):
     def __init__(self, expr):
         self.expr = expr

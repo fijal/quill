@@ -93,6 +93,11 @@ def get_parser():
     def statement_while_loop(state, p):
         return ast.While(p[1], p[3].get_element_list())
 
+    @pg.production('statement : IF expression LEFT_CURLY_BRACE function_body'
+                   ' RIGHT_CURLY_BRACE')
+    def statement_if_block(state, p):
+        return ast.If(p[1], p[3].get_element_list())
+
     @pg.production('arglist : LEFT_PAREN RIGHT_PAREN')
     def arglist(state, p):
         return ast.ArgList([])
