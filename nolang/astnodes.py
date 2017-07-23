@@ -118,16 +118,18 @@ class Function(AstNode):
                           w_mod, self.arglist))
 
 class ClassDefinition(AstNode):
-    def __init__(self, name, body):
+    def __init__(self, name, body, parent=None):
         self.name = name
         self.body = body
+        self.parent = parent
 
     def get_element_list(self):
         return self.body.get_element_list()
 
     def wrap_as_global_symbol(self, source, w_mod):
-        class_elements_w = compile_class(source, self, w_mod)
-        return W_UserType(self.name, class_elements_w)
+        class_elements_w, w_parent = compile_class(source, self, w_mod,
+                                                   self.parent)
+        return W_UserType(self.name, class_elements_w, w_parent)
 
 class While(AstNode):
     def __init__(self, expr, block):

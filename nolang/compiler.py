@@ -24,8 +24,12 @@ def compile_module(source, ast):
         globals_w.append(item.wrap_as_global_symbol(source, w_mod))
     return w_mod
 
-def compile_class(source, ast, w_mod):
+def compile_class(source, ast, w_mod, parent=None):
     class_elements_w = []
+    if parent is not None:
+        w_parent = w_mod.functions[w_mod.name2index[parent]]
+    else:
+        w_parent = None
     for item in ast.get_element_list():
         class_elements_w.append(item.wrap_as_global_symbol(source, w_mod))
-    return class_elements_w
+    return class_elements_w, w_parent

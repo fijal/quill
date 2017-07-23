@@ -7,10 +7,13 @@ from nolang.error import ArgumentMismatchError
 from nolang.objects.userobject import W_UserObject
 
 class W_UserType(W_Root):
-    def __init__(self, name, class_elements_w):
+    def __init__(self, name, class_elements_w, w_parent):
         self.name = name
-        self.dict_w = {}
         self.class_elements_w = class_elements_w
+        if w_parent is not None:
+            self.dict_w = w_parent.dict_w.copy()
+        else:
+            self.dict_w = {}
         for item in class_elements_w:
             self.dict_w[item.name] = item
 
