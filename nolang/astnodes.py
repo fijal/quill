@@ -4,6 +4,10 @@ with compile() interface that produces bytecode
 """
 
 from nolang import opcodes
+from nolang.function import W_Function
+from nolang.objects.usertype import W_UserType
+from nolang.bytecode import compile_bytecode
+from nolang.compiler import compile_class
 
 from rply.token import BaseBox
 
@@ -109,6 +113,22 @@ class Function(AstNode):
         for item in self.body:
             item.compile(state)
 
+    def wrap_as_global_symbol(self, source, w_mod):
+        return W_Function(self.name, compile_bytecode(self, source,
+                          w_mod, self.arglist))
+
+class ClassDefinition(AstNode):
+    def __init__(self, name, body):
+        self.name = name
+        self.body = body
+
+    def get_element_list(self):
+        return self.body.get_element_list()
+
+    def wrap_as_global_symbol(self, source, w_mod):
+        class_elements_w = compile_class(source, self, w_mod)
+        return W_UserType(self.name, class_elements_w)
+
 class While(AstNode):
     def __init__(self, expr, block):
         self.expr = expr
@@ -144,6 +164,28 @@ class Statement(AstNode):
     def compile(self, state):
         self.expr.compile(state)
         state.emit(opcodes.DISCARD)
+
+class Getattr(AstNode):
+    def __init__(self, lhand, identifier):
+        self.lhand = lhand
+        self.identifier = identifier
+
+    def compile(self, state):
+        self.lhand.compile(state)
+        no = state.add_str_constant(self.identifier)
+        state.emit(opcodes.GETATTR, no)
+
+class Setattr(AstNode):
+    def __init__(self, lhand, identifier, rhand):
+        self.lhand = lhand
+        self.identifier = identifier
+        self.rhand = rhand
+
+    def compile(self, state):
+        self.lhand.compile(state)
+        self.rhand.compile(state)
+        no = state.add_str_constant(self.identifier)
+        state.emit(opcodes.SETATTR, no)
 
 class ArgList(AstNode):
     def __init__(self, arglist):

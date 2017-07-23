@@ -22,6 +22,9 @@ opcodes = [
     Opcode('LOAD_FALSE', 0, 1, 'load false onto stack'),
     Opcode('STORE', 1, -1, 'store top of the stack into variable'),
     Opcode('DISCARD', 1, -1, 'discard top of the stack'),
+    Opcode('GETATTR', 1, 0, 'get attribut from the object on top of the stack '
+                            'with string constant as an argument'),
+    Opcode('SETATTR', 1, -2, 'set attribute on an object'),
     # binary ops
     Opcode('ADD', 0, -1, 'load two values from the stack and store the result'
                          ' of addition'),

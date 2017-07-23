@@ -6,6 +6,7 @@ on objects
 from nolang.objects.root import W_None
 from nolang.objects.int import W_IntObject
 from nolang.objects.bool import W_BoolObject
+from nolang.objects.unicode import W_StrObject
 
 class Space(object):
     def __init__(self, interpreter):
@@ -13,6 +14,12 @@ class Space(object):
         self.w_True = W_BoolObject(True)
         self.w_False = W_BoolObject(False)
         self.interpreter = interpreter
+
+    def setattr(self, w_obj, attrname, w_value):
+        w_obj.setattr(attrname, w_value)
+
+    def getattr(self, w_obj, attrname):
+        return w_obj.getattr(attrname)
 
     # newfoo wrappers
     def newint(self, intval):
@@ -23,9 +30,15 @@ class Space(object):
             return self.w_True
         return self.w_False
 
+    def newtext(self, utf8val):
+        return W_StrObject(utf8val)
+
     # foo_w unwrappers
     def int_w(self, w_obj):
         return w_obj.int_w(self)
+
+    def utf8_w(self, w_obj):
+        return w_obj.utf8_w(self)
 
     # unary operations
     def is_true(self, w_obj):

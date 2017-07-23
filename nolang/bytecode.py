@@ -17,6 +17,13 @@ class IntegerConstant(BaseConstant):
     def wrap(self, space):
         return space.newint(self._intval)
 
+class StringConstant(BaseConstant):
+    def __init__(self, v):
+        self._strval = v
+
+    def wrap(self, space):
+        return space.newtext(self._strval)
+
 class InvalidStackDepth(Exception):
     pass
 
@@ -104,6 +111,9 @@ class _BytecodeBuilder(object):
 
     def add_int_constant(self, v):
         return self.add_constant(IntegerConstant(v))
+
+    def add_str_constant(self, v):
+        return self.add_constant(StringConstant(v))
 
     def get_variable(self, name):
         try:

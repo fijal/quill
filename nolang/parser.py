@@ -56,6 +56,15 @@ def get_parser():
     def body_function(state, p):
         return p[0]
 
+    @pg.production('body_element : class_definition')
+    def body_element_class_definition(state, p):
+        return p[0]
+
+    @pg.production('class_definition : CLASS IDENTIFIER LEFT_CURLY_BRACE body '
+                   'RIGHT_CURLY_BRACE')
+    def class_definition(state, p):
+        return ast.ClassDefinition(p[1].getstr(), p[3])
+
     @pg.production('function : FUNCTION IDENTIFIER arglist LEFT_CURLY_BRACE'
                    ' function_body RIGHT_CURLY_BRACE')
     def function_function_body(state, p):
@@ -90,6 +99,10 @@ def get_parser():
     @pg.production('statement : IDENTIFIER ASSIGN expression SEMICOLON')
     def statement_identifier_assign_expr(state, p):
         return ast.Assignment(p[0].getstr(), p[2])
+
+    @pg.production('statement : expression DOT IDENTIFIER ASSIGN expression SEMICOLON')
+    def statement_setattr(state, p):
+        return ast.Setattr(p[0], p[2].getstr(), p[4])
 
     @pg.production('statement : RETURN expression SEMICOLON')
     def statement_return(state, p):
@@ -145,6 +158,10 @@ def get_parser():
     @pg.production('expression : LEFT_PAREN expression RIGHT_PAREN')
     def expression_paren_expression_paren(state, p):
         return p[1]
+
+    @pg.production('expression : expression DOT IDENTIFIER')
+    def expression_dot_identifier(state, p):
+        return ast.Getattr(p[0], p[2].getstr())
 
     @pg.production('expression : expression PLUS expression')
     @pg.production('expression : expression MINUS expression')

@@ -64,6 +64,10 @@ class Interpreter(object):
                 self.binop_eq(space, frame)
             elif op == opcodes.STORE:
                 frame.store_var(arg0)
+            elif op == opcodes.SETATTR:
+                self.setattr(space, frame, bytecode, arg0)
+            elif op == opcodes.GETATTR:
+                self.getattr(space, frame, bytecode, arg0)
             elif op == opcodes.JUMP_IF_FALSE:
                 if not space.is_true(frame.pop()):
                     index = arg0
@@ -108,6 +112,15 @@ class Interpreter(object):
             args[i] = frame.pop()
         w_callable = frame.pop()
         frame.push(space.call(w_callable, args))
+
+    def setattr(self, space, frame, bytecode, no):
+        w_arg = frame.pop()
+        w_lhand = frame.pop()
+        space.setattr(w_lhand, space.utf8_w(bytecode.constants[no]), w_arg)
+
+    def getattr(self, space, frame, bytecode, no):
+        w_lhand = frame.pop()
+        frame.push(space.getattr(w_lhand, space.utf8_w(bytecode.constants[no])))
 
     def binop_lt(self, space, frame):
         w_right = frame.pop()

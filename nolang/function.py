@@ -4,9 +4,7 @@
 
 from nolang.objects.root import W_Root
 from nolang.frameobject import Frame
-
-class ArgumentMismatchError(Exception):
-    pass
+from nolang.error import ArgumentMismatchError
 
 class W_Function(W_Root):
     def __init__(self, name, bytecode):

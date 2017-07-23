@@ -4,7 +4,6 @@ from support import BaseTest
 
 class TestClasses(BaseTest):
     def test_simple_class(self):
-        py.test.skip("unimplemented")
         w_res = self.interpret('''
             class X {
                 def __init__(self) {
@@ -13,6 +12,7 @@ class TestClasses(BaseTest):
             }
 
             def main() {
+                var x;
                 x = X();
                 return x.x;
             }
