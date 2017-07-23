@@ -21,6 +21,9 @@ class Space(object):
     def getattr(self, w_obj, attrname):
         return w_obj.getattr(self, attrname)
 
+    def str(self, w_obj):
+        return w_obj.str(self)
+
     # newfoo wrappers
     def newint(self, intval):
         return W_IntObject(intval)
