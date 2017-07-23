@@ -109,6 +109,9 @@ class Function(AstNode):
         self.arglist = arglist
         self.body = body
 
+    def get_name(self):
+        return self.name
+
     def compile(self, state):
         for item in self.body:
             item.compile(state)
@@ -122,6 +125,9 @@ class ClassDefinition(AstNode):
         self.name = name
         self.body = body
         self.parent = parent
+
+    def get_name(self):
+        return self.name
 
     def get_element_list(self):
         return self.body.get_element_list()
@@ -193,7 +199,7 @@ class ArgList(AstNode):
     def __init__(self, arglist):
         self.arglist = arglist
 
-    def get_element_list(self):
+    def get_names(self):
         return self.arglist
 
 class FunctionBody(AstNode):

@@ -14,9 +14,9 @@ def _gather_names(ast, builtins):
         for item in builtins:
             name_mapping[item.name] = len(name_mapping)
     for item in ast.get_element_list():
-        if item.name in name_mapping:
-            raise NameAlreadyDefined(item.name)
-        name_mapping[item.name] = len(name_mapping)
+        if item.get_name() in name_mapping:
+            raise NameAlreadyDefined(item.get_name())
+        name_mapping[item.get_name()] = len(name_mapping)
     return name_mapping
 
 def compile_module(source, ast, builtins=None):

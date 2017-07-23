@@ -10,5 +10,5 @@ class W_Root(object):
     def int_w(self, space):
         raise UnimplementedOperation
 
-class W_None(object):
+class W_None(W_Root):
     pass

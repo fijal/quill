@@ -22,6 +22,11 @@ def entry_point(argv):
 def magic_print(space, args_w):
     print space.str(args_w[0])
 
+parser = get_parser()
+lexer = get_lexer()
+interpreter = Interpreter()
+space = Space(interpreter)
+
 def main(fname):
     try:
         source = open(fname).read()
@@ -29,13 +34,9 @@ def main(fname):
         print "Error reading file %s" % fname
         return 1
     # XXX error handling
-    interpreter = Interpreter()
-    parser = get_parser()
-    lexer = get_lexer()
     ast = parser.parse(lexer.lex(source), ParsingState(source))
     builtins = [BuiltinFunction('print', magic_print, 1)]
     w_mod = compile_module(source, ast, builtins)
-    space = Space(interpreter)
     w_mod.initialize(space)
     space.call_method(w_mod, 'main', [])
     return 0

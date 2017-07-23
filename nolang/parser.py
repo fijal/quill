@@ -74,7 +74,7 @@ def get_parser():
     @pg.production('function : FUNCTION IDENTIFIER arglist LEFT_CURLY_BRACE'
                    ' function_body RIGHT_CURLY_BRACE')
     def function_function_body(state, p):
-        return ast.Function(p[1].getstr(), p[2].get_element_list(),
+        return ast.Function(p[1].getstr(), p[2].get_names(),
                             p[4].get_element_list())
 
     @pg.production('function_body :')
