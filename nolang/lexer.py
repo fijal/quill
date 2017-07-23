@@ -11,6 +11,7 @@ RULES = [
     ('EQ', r'=='),
     ('ASSIGN', r'='),
     ('FUNCTION', r'function'),
+    ('CLASS', r'class'),
     ('RETURN', r'return'),
     ('VAR', r'var'),
     ('WHILE', r'while'),
