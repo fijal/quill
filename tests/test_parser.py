@@ -13,7 +13,7 @@ class BaseTest(object):
 
 class TestExpressionParser(BaseTest):
     def parse(self, expr):
-        program = "function foo () { " + expr + "; }"
+        program = "def foo () { " + expr + "; }"
         ast = self.parser.parse(self.lexer.lex(program), ParsingState(program))
         return ast.elements[0].body[0].expr
 
@@ -73,11 +73,11 @@ class TestFullProgram(BaseTest):
 
     def test_function_declaration(self):
         r = self.parse('''
-            function foo() {
+            def foo() {
                 var x;
             }
 
-            function main() {
+            def main() {
             }
             ''')
         expected = ast.Program([
@@ -90,7 +90,7 @@ class TestFullProgram(BaseTest):
 
     def test_function_declaration_args(self):
         r = self.parse('''
-            function foo(a0, a1) {
+            def foo(a0, a1) {
             }
             ''')
         expected = ast.Program([

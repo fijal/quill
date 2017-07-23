@@ -7,12 +7,12 @@ class TestClasses(BaseTest):
         py.test.skip("unimplemented")
         w_res = self.interpret('''
             class X {
-                function __init__(self) {
+                def __init__(self) {
                     self.x = 13;
                 }
             }
 
-            function main() {
+            def main() {
                 x = X();
                 return x.x;
             }

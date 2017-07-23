@@ -3,16 +3,16 @@ class Animal {
   Str name
   Int age
 
-  function __init__(self, Str name, Int age) {
+  def __init__(self, Str name, Int age) {
     self.name = name
     self.age = age
   }
 
-  function __str__(self) -> Str {
+  def __str__(self) -> Str {
     return "an animal named {}".format(self.name)
   }
 
-  function __repr__(self) -> Str {
+  def __repr__(self) -> Str {
     return "<Animal {:?}>".format(self.name)
   }
 }
@@ -20,13 +20,13 @@ class Animal {
 class Dog(Animal) {
   Bool is_barking
 
-  function __init__(self, Str name, Int age) {
+  def __init__(self, Str name, Int age) {
     Animal.__init__(self, name, age)
     self.is_barking = false
   }
 }
 
-functions main() {
+def main() {
   var items = [ # dynamic typing
     Dog('Lumpi', 3),
     Dog('Joe', 7),

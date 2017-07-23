@@ -10,7 +10,7 @@ RULES = [
     ('TRUEDIV', r'\/\/'),
     ('EQ', r'=='),
     ('ASSIGN', r'='),
-    ('FUNCTION', r'function'),
+    ('FUNCTION', r'def'),
     ('CLASS', r'class'),
     ('RETURN', r'return'),
     ('VAR', r'var'),

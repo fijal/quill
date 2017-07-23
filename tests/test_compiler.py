@@ -6,7 +6,7 @@ from nolang.module import W_Module
 class TestCompiler(BaseTest):
     def test_compile_module(self):
         code = reformat_code('''
-            function foo() {
+            def foo() {
                 return 3;
             }
         ''')

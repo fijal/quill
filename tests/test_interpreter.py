@@ -95,7 +95,7 @@ class TestInterpreterBasic(BaseTest):
 class TestInterpreter(BaseTest):
     def test_basic(self):
         w_res = self.interpret('''
-            function main() {
+            def main() {
                 return 3;
             }
             ''')
@@ -103,11 +103,11 @@ class TestInterpreter(BaseTest):
 
     def test_function_declaration_and_call(self):
         w_res = self.interpret('''
-            function foo() {
+            def foo() {
                 return 3;
             }
 
-            function main() {
+            def main() {
                 return foo() + 1;
             }
             ''')
@@ -115,11 +115,11 @@ class TestInterpreter(BaseTest):
 
     def test_function_call_args(self):
         w_res = self.interpret('''
-            function foo(a0, a1)
+            def foo(a0, a1)
             {
                 return a0 + a1;
             }
-            function main() {
+            def main() {
                 return foo(1, 3);
             }
             ''')
@@ -127,13 +127,13 @@ class TestInterpreter(BaseTest):
 
     def test_recursive_call(self):
         w_res = self.interpret('''
-            function fib(n) {
+            def fib(n) {
                 if (n == 0) or (n == 1) {
                     return 1;
                 }
                 return fib(n - 1) + fib(n - 2);
             }
-            function main() {
+            def main() {
                 return fib(5);
             }
             ''')
