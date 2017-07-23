@@ -1,7 +1,6 @@
 
-from support import BaseTest, reformat_code
+from support import BaseTest
 from nolang.interpreter import Interpreter
-from nolang.compiler import compile_module
 from nolang.frameobject import Frame
 from nolang.objects.space import Space
 
@@ -94,15 +93,6 @@ class TestInterpreterBasic(BaseTest):
         self.interpret(code) # assert did not crash
 
 class TestInterpreter(BaseTest):
-    def interpret(self, code):
-        interpreter = Interpreter()
-        source = reformat_code(code)
-        ast = self.parse(source)
-        w_mod = compile_module(source, ast)
-        self.space = Space(interpreter)
-        w_mod.initialize(self.space)
-        return self.space.call_method(w_mod, 'main', [])
-
     def test_basic(self):
         w_res = self.interpret('''
             function main() {
