@@ -26,3 +26,6 @@ class W_UserType(W_Root):
             if len(args_w) != 0:
                 raise ArgumentMismatchError
         return w_obj
+
+    def getattr(self, space, attrname):
+        return self.dict_w[attrname]

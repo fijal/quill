@@ -16,10 +16,10 @@ class Space(object):
         self.interpreter = interpreter
 
     def setattr(self, w_obj, attrname, w_value):
-        w_obj.setattr(attrname, w_value)
+        w_obj.setattr(self, attrname, w_value)
 
     def getattr(self, w_obj, attrname):
-        return w_obj.getattr(attrname)
+        return w_obj.getattr(self, attrname)
 
     # newfoo wrappers
     def newint(self, intval):

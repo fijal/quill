@@ -35,6 +35,7 @@ def get_parser():
         ('left', ['EQ', 'LT']),
         ('left', ['PLUS', 'MINUS']),
         ('left', ['TRUEDIV', 'STAR']),
+        ('left', ['DOT']),
         ('left', ['LEFT_PAREN']),
         ])
     pg.error(errorhandler)
@@ -100,7 +101,7 @@ def get_parser():
     def statement_identifier_assign_expr(state, p):
         return ast.Assignment(p[0].getstr(), p[2])
 
-    @pg.production('statement : expression DOT IDENTIFIER ASSIGN expression SEMICOLON')
+    @pg.production('statement : atom DOT IDENTIFIER ASSIGN expression SEMICOLON')
     def statement_setattr(state, p):
         return ast.Setattr(p[0], p[2].getstr(), p[4])
 
@@ -130,9 +131,9 @@ def get_parser():
     def expression_number(state, p):
         return ast.Number(int(p[0].getstr()))
 
-    @pg.production('expression : IDENTIFIER')
-    def expression_identifier(state, p):
-        return ast.Identifier(p[0].getstr())
+    @pg.production('expression : atom')
+    def expression_atom(state, p):
+        return p[0]
 
     @pg.production('expression : expression OR expression')
     def expression_or_expression(state, p):
@@ -142,25 +143,29 @@ def get_parser():
     def expression_and_expression(state, p):
         return ast.And(p[0], p[2])
 
-    @pg.production('expression : TRUE')
-    def expression_true(state, p):
+    @pg.production('atom : TRUE')
+    def atom_true(state, p):
         return ast.TrueNode()
 
-    @pg.production('expression : FALSE')
-    def expression_false(state, p):
+    @pg.production('atom : IDENTIFIER')
+    def atom_identifier(state, p):
+        return ast.Identifier(p[0].getstr())
+
+    @pg.production('atom : FALSE')
+    def atom_false(state, p):
         return ast.FalseNode()
 
-    @pg.production('expression : expression LEFT_PAREN expression_list '
+    @pg.production('atom : atom LEFT_PAREN expression_list '
                    'RIGHT_PAREN')
-    def expression_call(state, p):
+    def atom_call(state, p):
         return ast.Call(p[0], p[2].get_element_list())
 
-    @pg.production('expression : LEFT_PAREN expression RIGHT_PAREN')
-    def expression_paren_expression_paren(state, p):
+    @pg.production('atom : LEFT_PAREN expression RIGHT_PAREN')
+    def atom_paren_expression_paren(state, p):
         return p[1]
 
-    @pg.production('expression : expression DOT IDENTIFIER')
-    def expression_dot_identifier(state, p):
+    @pg.production('atom : atom DOT IDENTIFIER')
+    def atom_dot_identifier(state, p):
         return ast.Getattr(p[0], p[2].getstr())
 
     @pg.production('expression : expression PLUS expression')

@@ -20,3 +20,11 @@ class W_Function(W_Root):
             raise ArgumentMismatchError()
         frame.populate_args(args_w)
         return interpreter.interpret(space, self.bytecode, frame)
+
+class W_BoundMethod(W_Root):
+    def __init__(self, w_self, w_function):
+        self.w_self = w_self
+        self.w_function = w_function
+
+    def call(self, space, interpreter, args_w):
+        return space.call(self.w_function, [self.w_self] + args_w)
