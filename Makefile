@@ -12,7 +12,9 @@ nolang-c:
 clean:
 	rm -rf venv
 
-test: venv
+test-only:
 	venv/bin/pytest tests --tb=short
 
-.PHONY: all venv clean test
+test: venv test-only
+
+.PHONY: all venv clean test test-only
