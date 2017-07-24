@@ -25,6 +25,10 @@ opcodes = [
     Opcode('GETATTR', 1, 0, 'get attribut from the object on top of the stack '
                             'with string constant as an argument'),
     Opcode('SETATTR', 1, -2, 'set attribute on an object'),
+    # exception handling
+    Opcode('PUSH_RESUME_STACK', 1, 0, 'add a new resume point to the stack'),
+    Opcode('POP_RESUME_STACK', 0, 0, 'pop one from resumt stack'),
+    Opcode('RAISE', 0, -1, 'raise the top of the stack'),
     # binary ops
     Opcode('ADD', 0, -1, 'load two values from the stack and store the result'
                          ' of addition'),

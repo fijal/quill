@@ -28,15 +28,18 @@ class InvalidStackDepth(Exception):
     pass
 
 class Bytecode(object):
-    def __init__(self, source, varnames, module, constants, bytecode, arglist):
+    def __init__(self, source, varnames, module, constants, bytecode, arglist,
+                 exception_blocks):
         self.source = source
         self.varnames = varnames
         self.module = module
         self._constants = constants
         self.constants = None
         self.bytecode = bytecode
-        self.stack_depth = self.compute_stack_depth(bytecode)
+        r = self.compute_stack_depth(bytecode)
+        self.stack_depth, self.resume_stack_depth = r
         self.arglist = arglist
+        self.exception_blocks = exception_blocks
 
     def setup(self, space):
         self.constants = [None] * len(self._constants)
@@ -70,6 +73,8 @@ class Bytecode(object):
         i = 0
         stack_depth = 0
         max_stack_depth = 0
+        resume_stack_depth = 0
+        max_resume_stack_depth = 0
         while i < len(bc):
             opcode = opcodes.opcodes[ord(bc[i])]
             if opcode.stack_effect == 255:
@@ -77,6 +82,12 @@ class Bytecode(object):
                 stack_depth -= var
             else:
                 stack_depth += opcode.stack_effect
+            if ord(bc[i]) == opcodes.PUSH_RESUME_STACK:
+                resume_stack_depth += 1
+                max_resume_stack_depth = max(max_resume_stack_depth,
+                                             resume_stack_depth)
+            if ord(bc[i]) == opcodes.POP_RESUME_STACK:
+                resume_stack_depth -= 1
             if opcode.numargs == 0:
                 i += 1
             elif opcode.numargs == 1:
@@ -85,13 +96,24 @@ class Bytecode(object):
                 assert opcode.numargs == 2
                 i += 5
             max_stack_depth = max(max_stack_depth, stack_depth)
-        if stack_depth != 0:
+        if stack_depth != 0 or resume_stack_depth != 0:
             raise InvalidStackDepth()
-        return max_stack_depth
+        return max_stack_depth, max_resume_stack_depth
 
 class UndeclaredVariable(Exception):
     def __init__(self, name):
         self.name = name
+
+class ExceptionBlock(object):
+    def __init__(self, types_w):
+        self.types_w = types_w
+        self.position = 0
+
+    def match(self, space, w_exception):
+        for w_type in self.types_w:
+            if space.issubclass(space.type(w_exception), w_type):
+                return True
+        return False
 
 class _BytecodeBuilder(object):
     def __init__(self, w_mod, arglist):
@@ -99,6 +121,7 @@ class _BytecodeBuilder(object):
         self.varnames = []
         self.builder = []
         self.constants = [] # XXX implement interning of integers, strings etc.
+        self.exception_blocks = []
         self.w_mod = w_mod
         for name in arglist:
             self.register_variable(name)
@@ -132,6 +155,13 @@ class _BytecodeBuilder(object):
         self.vars[v] = no
         assert len(self.vars) == len(self.varnames)
 
+    def register_exception_setup(self, exc_names):
+        types_w = []
+        for name in exc_names:
+            types_w.append(self.w_mod.functions[self.w_mod.name2index[name]])
+        self.exception_blocks.append(ExceptionBlock(types_w))
+        return len(self.exception_blocks) - 1
+
     def emit(self, opcode, arg0=0, arg1=0):
         self.builder.append(chr(opcode))
         assert arg0 < 0x10000
@@ -158,7 +188,8 @@ class _BytecodeBuilder(object):
 
     def build(self, source):
         return Bytecode(source, self.varnames, self.w_mod, self.constants,
-                        "".join(self.builder), self.arglist)
+                        "".join(self.builder), self.arglist,
+                        self.exception_blocks)
 
 def compile_bytecode(ast, source, w_mod, arglist=[]):
     """ Compile the bytecode from produced AST.

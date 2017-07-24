@@ -173,6 +173,34 @@ class If(AstNode):
             item.compile(state)
         state.patch_position(patch_pos, state.get_position())
 
+class TryExcept(AstNode):
+    def __init__(self, block, exception_names, except_block, varname):
+        self.block = block
+        self.exception_names = exception_names
+        self.except_block = except_block
+        self.varname = varname
+
+    def compile(self, state):
+        no = state.register_exception_setup(self.exception_names)
+        state.emit(opcodes.PUSH_RESUME_STACK, no)
+        for item in self.block:
+            item.compile(state)
+        state.emit(opcodes.POP_RESUME_STACK)
+        state.emit(opcodes.JUMP_ABSOLUTE, 0)
+        jump_pos = state.get_patch_position()
+        state.exception_blocks[no].position = state.get_position()
+        for item in self.except_block:
+            item.compile(state)
+        state.patch_position(jump_pos, state.get_position())
+
+class Raise(AstNode):
+    def __init__(self, expr):
+        self.expr = expr
+
+    def compile(self, state):
+        self.expr.compile(state)
+        state.emit(opcodes.RAISE)
+
 class Statement(AstNode):
     def __init__(self, expr):
         self.expr = expr

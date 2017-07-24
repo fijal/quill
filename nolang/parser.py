@@ -124,6 +124,17 @@ def get_parser():
     def statement_if_block(state, p):
         return ast.If(p[1], p[3].get_element_list())
 
+    @pg.production('statement : RAISE expression SEMICOLON')
+    def statement_raise(state, p):
+        return ast.Raise(p[1])
+
+    @pg.production('statement : TRY LEFT_CURLY_BRACE function_body '
+                   'RIGHT_CURLY_BRACE EXCEPT IDENTIFIER LEFT_CURLY_BRACE '
+                   'function_body RIGHT_CURLY_BRACE')
+    def statement_try_except(state, p):
+        return ast.TryExcept(p[2].get_element_list(), [p[5].getstr()],
+                             p[7].get_element_list(), None)
+
     @pg.production('arglist : LEFT_PAREN RIGHT_PAREN')
     def arglist(state, p):
         return ast.ArgList([])

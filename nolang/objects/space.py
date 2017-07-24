@@ -33,6 +33,13 @@ class Space(object):
     def str(self, w_obj):
         return w_obj.str(self)
 
+    # object stuff, hacks so far
+    def issubclass(self, w_left, w_right):
+        return w_left.issubclass(w_right)
+
+    def type(self, w_obj):
+        return w_obj.w_type
+
     # newfoo wrappers
     def newint(self, intval):
         return W_IntObject(intval)

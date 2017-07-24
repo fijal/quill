@@ -16,6 +16,7 @@ class W_UserType(W_Root):
             self.dict_w = {}
         for item in class_elements_w:
             self.dict_w[item.name] = item
+        self.w_parent = w_parent
 
     def setup(self, space):
         for item in self.class_elements_w:
@@ -32,3 +33,11 @@ class W_UserType(W_Root):
 
     def getattr(self, space, attrname):
         return self.dict_w[attrname]
+
+    def issubclass(self, w_type):
+        cur = self
+        while cur is not None:
+            if cur is w_type:
+                return True
+            cur = cur.w_parent
+        return False

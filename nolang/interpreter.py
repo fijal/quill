@@ -4,6 +4,7 @@ dispatch loop.
 """
 
 from nolang import opcodes
+from nolang.error import AppError
 
 class InvalidOpcode(Exception):
     def __init__(self, opcode):
@@ -24,78 +25,98 @@ class Interpreter(object):
 
     def interpret(self, space, bytecode, frame):
         index = 0
+        # make annotator happy
         arg0 = 0
         arg1 = 0
         bc = bytecode.bytecode
-        # make annotator happy
         while True:
-            op = ord(bc[index])
-            numargs = opcodes.opcodes[op].numargs
-            if numargs >= 1:
-                arg0 = (ord(bc[index + 1]) << 8) + ord(bc[index + 2])
-            elif numargs >= 2:
-                arg1 = (ord(bc[index + 3]) << 8) + ord(bc[index + 4])
+            try:
+                op = ord(bc[index])
+                numargs = opcodes.opcodes[op].numargs
+                if numargs >= 1:
+                    arg0 = (ord(bc[index + 1]) << 8) + ord(bc[index + 2])
+                elif numargs >= 2:
+                    arg1 = (ord(bc[index + 3]) << 8) + ord(bc[index + 4])
 
-            if op == opcodes.LOAD_NONE:
-                frame.push(space.w_None)
-            elif op == opcodes.LOAD_CONSTANT:
-                frame.push(bytecode.constants[arg0])
-            elif op == opcodes.LOAD_VARIABLE:
-                self.load_variable(space, frame, index, arg0)
-            elif op == opcodes.LOAD_GLOBAL:
-                self.load_global(space, frame, index, arg0)
-            elif op == opcodes.LOAD_TRUE:
-                frame.push(space.w_True)
-            elif op == opcodes.LOAD_FALSE:
-                frame.push(space.w_False)
-            elif op == opcodes.DISCARD:
-                frame.pop()
-            elif op == opcodes.ADD:
-                self.binop_add(space, frame)
-            elif op == opcodes.SUB:
-                self.binop_sub(space, frame)
-            elif op == opcodes.MUL:
-                self.binop_mul(space, frame)
-            elif op == opcodes.TRUEDIV:
-                self.binop_truediv(space, frame)
-            elif op == opcodes.LT:
-                self.binop_lt(space, frame)
-            elif op == opcodes.EQ:
-                self.binop_eq(space, frame)
-            elif op == opcodes.STORE:
-                frame.store_var(arg0)
-            elif op == opcodes.SETATTR:
-                self.setattr(space, frame, bytecode, arg0)
-            elif op == opcodes.GETATTR:
-                self.getattr(space, frame, bytecode, arg0)
-            elif op == opcodes.JUMP_IF_FALSE:
-                if not space.is_true(frame.pop()):
+                if op == opcodes.LOAD_NONE:
+                    frame.push(space.w_None)
+                elif op == opcodes.LOAD_CONSTANT:
+                    frame.push(bytecode.constants[arg0])
+                elif op == opcodes.LOAD_VARIABLE:
+                    self.load_variable(space, frame, index, arg0)
+                elif op == opcodes.LOAD_GLOBAL:
+                    self.load_global(space, frame, index, arg0)
+                elif op == opcodes.LOAD_TRUE:
+                    frame.push(space.w_True)
+                elif op == opcodes.LOAD_FALSE:
+                    frame.push(space.w_False)
+                elif op == opcodes.DISCARD:
+                    frame.pop()
+                elif op == opcodes.ADD:
+                    self.binop_add(space, frame)
+                elif op == opcodes.SUB:
+                    self.binop_sub(space, frame)
+                elif op == opcodes.MUL:
+                    self.binop_mul(space, frame)
+                elif op == opcodes.TRUEDIV:
+                    self.binop_truediv(space, frame)
+                elif op == opcodes.LT:
+                    self.binop_lt(space, frame)
+                elif op == opcodes.EQ:
+                    self.binop_eq(space, frame)
+                elif op == opcodes.STORE:
+                    frame.store_var(arg0)
+                elif op == opcodes.SETATTR:
+                    self.setattr(space, frame, bytecode, arg0)
+                elif op == opcodes.GETATTR:
+                    self.getattr(space, frame, bytecode, arg0)
+                elif op == opcodes.PUSH_RESUME_STACK:
+                    self.push_resume_stack(space, frame, bytecode, arg0, arg1)
+                elif op == opcodes.RAISE:
+                    raise AppError(frame.pop())
+                elif op == opcodes.JUMP_IF_FALSE:
+                    if not space.is_true(frame.pop()):
+                        index = arg0
+                        continue
+                elif op == opcodes.JUMP_IF_TRUE_NOPOP:
+                    if space.is_true(frame.peek()):
+                        index = arg0
+                        continue
+                elif op == opcodes.JUMP_IF_FALSE_NOPOP:
+                    if not space.is_true(frame.peek()):
+                        index = arg0
+                        continue
+                elif op == opcodes.JUMP_ABSOLUTE:
                     index = arg0
                     continue
-            elif op == opcodes.JUMP_IF_TRUE_NOPOP:
-                if space.is_true(frame.peek()):
-                    index = arg0
-                    continue
-            elif op == opcodes.JUMP_IF_FALSE_NOPOP:
-                if not space.is_true(frame.peek()):
-                    index = arg0
-                    continue
-            elif op == opcodes.JUMP_ABSOLUTE:
-                index = arg0
-                continue
-            elif op == opcodes.CALL:
-                self.call(space, frame, index, arg0)
-            elif op == opcodes.RETURN:
-                return frame.pop()
-            else:
-                raise InvalidOpcode(op)
+                elif op == opcodes.CALL:
+                    self.call(space, frame, index, arg0)
+                elif op == opcodes.RETURN:
+                    return frame.pop()
+                else:
+                    raise InvalidOpcode(op)
 
-            if numargs == 0:
-                index += 1
-            elif numargs == 1:
-                index += 3
-            else:
-                index += 5
+                if numargs == 0:
+                    index += 1
+                elif numargs == 1:
+                    index += 3
+                else:
+                    index += 5
+            except AppError as ae:
+                res = self.handle_error(space, frame, ae.w_exception)
+                if res:
+                    frame.stack_depth = 0 # clear stack
+                    index = res
+                    continue
+                raise ae # reraise the error if not handled
+
+    def handle_error(self, space, frame, w_exception):
+        while frame.resume_stack_depth:
+            frame.resume_stack_depth -= 1
+            block = frame.resume_stack[frame.resume_stack_depth]
+            if block.match(space, w_exception):
+                return block.position
+        return 0
 
     def load_variable(self, space, frame, bytecode_index, no):
         w_res = frame.locals_w[no]
@@ -121,6 +142,11 @@ class Interpreter(object):
     def getattr(self, space, frame, bytecode, no):
         w_lhand = frame.pop()
         frame.push(space.getattr(w_lhand, space.utf8_w(bytecode.constants[no])))
+
+    def push_resume_stack(self, space, frame, bytecode, arg0, arg1):
+        block = bytecode.exception_blocks[arg0]
+        frame.resume_stack[frame.resume_stack_depth] = block
+        frame.resume_stack_depth += 1
 
     def binop_lt(self, space, frame):
         w_right = frame.pop()
