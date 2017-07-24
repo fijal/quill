@@ -1,3 +1,5 @@
+all: test
+
 venv:
 	git submodule update --init
 	virtualenv venv -p `python -c "import sys; print('%s/bin/python' % getattr(sys, 'real_prefix', sys.prefix))"`
@@ -10,4 +12,4 @@ clean:
 test: venv
 	venv/bin/pytest tests --tb=short
 
-.PHONY: venv clean test
+.PHONY: all venv clean test
