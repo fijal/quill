@@ -163,7 +163,7 @@ class _BytecodeBuilder(object):
 def compile_bytecode(ast, source, w_mod, arglist=[]):
     """ Compile the bytecode from produced AST.
     """
-    builder = _BytecodeBuilder(w_mod, arglist)
+    builder = _BytecodeBuilder(w_mod, arglist[:])
     ast.compile(builder)
     # hack to enable building for now
     builder.emit(opcodes.LOAD_NONE)
