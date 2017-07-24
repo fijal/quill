@@ -150,7 +150,10 @@ def get_parser():
     @pg.production('expression : STRING')
     def expression_string(state, p):
         # XXX validate valid utf8
-        return ast.String(p[0].getstr()[1:-1])
+        s = p[0].getstr()
+        end = len(s) - 1
+        assert end >= 0
+        return ast.String(s[1:end])
 
     @pg.production('expression : atom')
     def expression_atom(state, p):
