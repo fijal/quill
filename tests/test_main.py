@@ -10,4 +10,9 @@ class TestMain(object):
             print(3);
         }
         """))
-        main(str(fname))
+        try:
+            main(str(fname))
+        except SystemExit as e:
+            assert e.code == 1
+        else:
+            raise Exception('did not get system exit')
