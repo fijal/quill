@@ -136,6 +136,11 @@ def get_parser():
     def expression_number(state, p):
         return ast.Number(int(p[0].getstr()))
 
+    @pg.production('expression : STRING')
+    def expression_string(state, p):
+        # XXX validate valid utf8
+        return ast.String(p[0].getstr()[1:-1])
+
     @pg.production('expression : atom')
     def expression_atom(state, p):
         return p[0]

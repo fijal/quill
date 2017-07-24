@@ -38,6 +38,14 @@ class Number(AstNode):
         no = state.add_int_constant(self.value)
         state.emit(opcodes.LOAD_CONSTANT, no)
 
+class String(AstNode):
+    def __init__(self, value):
+        self.value = value
+
+    def compile(self, state):
+        no = state.add_str_constant(self.value)
+        state.emit(opcodes.LOAD_CONSTANT, no)
+
 class BinOp(AstNode):
     def __init__(self, op, left, right):
         self.op = op

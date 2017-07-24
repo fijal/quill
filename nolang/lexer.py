@@ -1,5 +1,6 @@
 
 from rply import LexerGenerator
+from rply.lexer import Lexer
 
 RULES = [
     ('INTEGER', r'\d+'),
@@ -33,8 +34,15 @@ RULES = [
 
 TOKENS = [x[0] for x in RULES]
 
+class QuillLexer(Lexer):
+    pass
+
+class QuillLexerGenerator(LexerGenerator):
+    def build(self):
+        return QuillLexer(self.rules, self.ignore_rules)
+
 def get_lexer():
-    lg = LexerGenerator()
+    lg = QuillLexerGenerator()
 
     for name, rule in RULES:
         lg.add(name, rule)

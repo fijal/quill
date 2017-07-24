@@ -7,6 +7,9 @@ from nolang.objects.root import W_None
 from nolang.objects.int import W_IntObject
 from nolang.objects.bool import W_BoolObject
 from nolang.objects.unicode import W_StrObject
+from nolang.objects.usertype import W_UserType
+from nolang.function import BuiltinFunction
+from nolang.builtins.exception import exception_init
 
 class Space(object):
     def __init__(self, interpreter):
@@ -14,6 +17,12 @@ class Space(object):
         self.w_True = W_BoolObject(True)
         self.w_False = W_BoolObject(False)
         self.interpreter = interpreter
+        self.setup_exception()
+
+    def setup_exception(self):
+        self.w_exc_type = W_UserType("Exception", [
+            BuiltinFunction("__init__", exception_init, 1)],
+            None)
 
     def setattr(self, w_obj, attrname, w_value):
         w_obj.setattr(self, attrname, w_value)
