@@ -13,11 +13,13 @@ from nolang.function import BuiltinFunction
 from nolang.lexer import get_lexer
 from nolang.objects.space import Space
 
-def entry_point(argv):
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
     if len(argv) != 2:
         print __doc__
-        return 1
-    return main(argv[1])
+        sys.exit(1)
+    sys.exit(run_code(argv[1]))
 
 def magic_print(space, args_w):
     print space.str(args_w[0])
@@ -27,7 +29,7 @@ lexer = get_lexer()
 interpreter = Interpreter()
 space = Space(interpreter)
 
-def main(fname):
+def run_code(fname):
     try:
         source = open(fname).read()
     except (OSError, IOError):
@@ -42,4 +44,4 @@ def main(fname):
     return 0
 
 if __name__ == '__main__':
-    sys.exit(entry_point(sys.argv))
+    main()
