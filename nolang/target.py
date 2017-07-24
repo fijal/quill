@@ -7,5 +7,5 @@ def target(driver, args):
     parser = to_optparse(config, parserkwargs={'usage': SUPPRESS_USAGE })
     parser.parse_args(args)
 
-    from nolang.main import entry_point
-    return entry_point, None
+    from nolang.main import main
+    return main, None

@@ -18,8 +18,8 @@ def main(argv=None):
         argv = sys.argv
     if len(argv) != 2:
         print __doc__
-        sys.exit(1)
-    sys.exit(run_code(argv[1]))
+        return 1
+    return run_code(argv[1])
 
 def magic_print(space, args_w):
     print space.str(args_w[0])
@@ -44,4 +44,4 @@ def run_code(fname):
     return 0
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

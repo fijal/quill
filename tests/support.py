@@ -42,11 +42,11 @@ class BaseTest(object):
         return self.parser.parse(self.lexer.lex(program), ParsingState(program))
 
     def interpret(self, code):
+        builtins = []
         interpreter = Interpreter()
         source = reformat_code(code)
         ast = self.parse(source)
-        w_mod = compile_module(source, ast)
+        w_mod = compile_module(source, ast, builtins)
         self.space = Space(interpreter)
         w_mod.initialize(self.space)
         return self.space.call_method(w_mod, 'main', [])
-
