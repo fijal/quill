@@ -13,9 +13,7 @@ from nolang.function import BuiltinFunction
 from nolang.lexer import get_lexer
 from nolang.objects.space import Space
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv
+def main(argv):
     if len(argv) != 2:
         print __doc__
         return 1
@@ -44,4 +42,4 @@ def run_code(fname):
     return 0
 
 if __name__ == '__main__':
-    sys.exit(main())
+    sys.exit(main(sys.argv))
