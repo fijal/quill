@@ -1,0 +1,20 @@
+sudo: false
+language: python
+
+python: 2.7
+
+install:
+  - make venv
+
+script:
+  - make compile
+  - make test
+
+notifications:
+  irc:
+    channels:
+      - "chat.freenode.net#nolang"
+    on_success: change
+    on_failure: always
+    use_notice: true
+    skip_join: true
