@@ -1,7 +1,6 @@
 
 import re
 
-from nolang.frameobject import Frame
 from nolang.parser import get_parser, ParsingState
 from nolang.lexer import get_lexer
 from nolang.bytecode import compile_bytecode
@@ -27,7 +26,7 @@ def reformat_code(body):
     return "\n".join(newlines)
 
 def reformat_expr(code):
-    return "def foo () {\n" + reformat_code(code) + "}"
+    return "def main () {\n" + reformat_code(code) + "}"
 
 class BaseTest(object):
     def setup_class(self):
@@ -45,13 +44,10 @@ class BaseTest(object):
         return self.parser.parse(self.lexer.lex(program), ParsingState(program))
 
     def interpret_expr(self, code):
-        bytecode = self.compile(code)
-        bytecode.setup(self.space)
-        f = Frame(bytecode)
-        return self.interpreter.interpret(self.space, bytecode, f)
+        return self.interpret(reformat_expr(code))
 
     def interpret(self, code):
-        builtins = []
+        builtins = [self.space.w_exc_type]
         source = reformat_code(code)
         ast = self.parse(source)
         w_mod = compile_module(source, ast, builtins)

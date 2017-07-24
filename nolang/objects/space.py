@@ -21,7 +21,7 @@ class Space(object):
 
     def setup_exception(self):
         self.w_exc_type = W_UserType("Exception", [
-            BuiltinFunction("__init__", exception_init, 1)],
+            BuiltinFunction("__init__", exception_init, 2)],
             None)
 
     def setattr(self, w_obj, attrname, w_value):
