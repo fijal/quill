@@ -19,14 +19,12 @@ mutable.
 ### Semicolons / Braces
 
 Instead of using indentation based syntax like in Python we go with braces and
-semicolons like in Rust.  A semicolon evaluates to `none`.  Leaving out a
-semicolon as last item in a function sets the implied return value.
+semicolons like in Rust.
 
 The reason this is preferrable over no semicolons and indentation based syntax:
 
 * easier to write editor support for
 * clear ends of blocks (allows better syntax for anonymous functions)
-* syntax supports implied return values beteter than alternatives
 * supports trivial minification in places where this matters
 * permits easy code generation
 

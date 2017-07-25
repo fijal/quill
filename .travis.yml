@@ -13,7 +13,7 @@ script:
 notifications:
   irc:
     channels:
-      - "chat.freenode.net#nolang"
+      - "chat.freenode.net#quill"
     on_success: change
     on_failure: always
     use_notice: true
