@@ -17,8 +17,26 @@ class TestExceptions(BaseTest):
             ''')
         assert self.space.int_w(w_res) == 13
 
+    def test_exc_function_call(self):
+        pass
+        #w_res = self.interpret_expr('''
+        #    ''')
+
+    def test_exc_double_except(self):
+        py.test.skip("in progress")
+        w_res = self.interpret_expr('''
+            class A(Exception) {
+            }
+            class B(Exception) {
+            }
+
+            try {
+                raise Exception("foo");
+            }
+            ''')
+
     def test_exc_raise_catch_as_e(self):
-        py.test.skip(";ater")
+        py.test.skip("later")
         w_res = self.interpret_expr('''
             try {
                  raise Exception("foo");
