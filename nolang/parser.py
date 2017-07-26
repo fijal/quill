@@ -1,5 +1,6 @@
 
 import rply
+from rply.token import Token
 
 from nolang.lexer import TOKENS
 from nolang import astnodes as ast
@@ -26,6 +27,7 @@ def errorhandler(state, lookahead):
     lines = state.input.splitlines()
     sourcepos = lookahead.getsourcepos()
     line = lines[sourcepos.lineno - 1]
+    assert isinstance(lookahead, Token)
     raise ParseError(line, '<input>', sourcepos.lineno, sourcepos.colno - 1,
                      len(lookahead.value) + sourcepos.colno - 1)
 

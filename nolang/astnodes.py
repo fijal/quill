@@ -342,6 +342,7 @@ class BaseExcNode(AstNode):
         cur = self
         while cur.next is not None:
             cur = cur.next
+            assert isinstance(cur, BaseExcNode)
             count += 1
         lst = [None] * count
         lst[0] = self.get_exc_clause()
@@ -349,6 +350,7 @@ class BaseExcNode(AstNode):
         cur = self
         while cur.next is not None:
             cur = cur.next
+            assert isinstance(cur, BaseExcNode)
             lst[pos] = cur.get_exc_clause()
             pos += 1
         return lst
