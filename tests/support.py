@@ -26,7 +26,7 @@ def reformat_code(body):
     return "\n".join(newlines)
 
 def reformat_expr(code):
-    return "def main () {\n" + reformat_code(code) + "}"
+    return "def main () {\n" + reformat_code(code) + "\n}"
 
 class BaseTest(object):
     def setup_class(self):

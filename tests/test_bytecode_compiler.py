@@ -20,8 +20,8 @@ class TestBytecodeCompiler(BaseTest):
 
     def test_bytecode_simple(self):
         body = """
-        var x;
-        x = 3;
+        var x
+        x = 3
         """
         self.assert_equals(self.compile(body), """
             LOAD_CONSTANT 0
@@ -32,9 +32,9 @@ class TestBytecodeCompiler(BaseTest):
 
     def test_bytecode_bit_more_complex(self):
         body = """
-        var x;
-        x = 3;
-        x = x + 1;
+        var x
+        x = 3
+        x = x + 1
         """
         bc = self.compile(body)
         self.assert_equals(bc,"""
@@ -51,10 +51,11 @@ class TestBytecodeCompiler(BaseTest):
 
     def test_loop(self):
         body = """
-        var i;
-        i = 0;
+        var i
+        i = 0
+
         while i < 10 {
-           i = i + 1;
+           i = i + 1
         }
         """
         bc = self.compile(body)
@@ -99,7 +100,7 @@ class TestBytecodeCompiler(BaseTest):
         try {
         } except Exception {
         } finally {
-            return 3;
+            return 3
         }
         ''')
         self.assert_equals(bc, """
@@ -120,7 +121,7 @@ class TestBytecodeCompiler(BaseTest):
         bc = self.compile('''
         try {
         } finally {
-            return 3;
+            return 3
         }
         ''')
         self.assert_equals(bc, """

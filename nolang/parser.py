@@ -45,16 +45,15 @@ def get_parser():
 
     @pg.production('program : body')
     def program_body(state, p):
-        return p[0]
+        return ast.Program(p[0].get_element_list())
 
     @pg.production('body :')
     def body_empty(state, p):
-        return ast.Program([])
+        return ast.FunctionBody(None, None)
 
     @pg.production('body : body body_element')
     def body_body_element(state, p):
-        p[0].get_element_list().append(p[1])
-        return p[0]
+        return ast.FunctionBody(p[1], p[0])
 
     @pg.production('body_element : function')
     def body_function(state, p):
@@ -63,6 +62,10 @@ def get_parser():
     @pg.production('body_element : class_definition')
     def body_element_class_definition(state, p):
         return p[0]
+
+    @pg.production('body_element : SEMICOLON')
+    def body_element_semicolon(state, p):
+        return None
 
     @pg.production('class_definition : CLASS IDENTIFIER LEFT_CURLY_BRACE body '
                    'RIGHT_CURLY_BRACE')
@@ -82,16 +85,19 @@ def get_parser():
 
     @pg.production('function_body :')
     def function_body_empty(state, p):
-        return ast.FunctionBody([])
+        return ast.FunctionBody(None, None)
 
     @pg.production('function_body : function_body statement')
     def function_body_statement(state, p):
-        p[0].get_element_list().append(p[1])
-        return p[0]
+        return ast.FunctionBody(p[1], p[0])
 
     @pg.production('statement : expression SEMICOLON')
     def statement_expression(state, p):
         return ast.Statement(p[0])
+
+    @pg.production('statement : SEMICOLON')
+    def staement_empty(state, p):
+        return None
 
     @pg.production('statement : VAR IDENTIFIER var_decl SEMICOLON')
     def statement_var_decl(state, p):

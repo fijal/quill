@@ -102,8 +102,7 @@ class TestInterpreter(BaseTest):
 
     def test_function_call_args(self):
         w_res = self.interpret('''
-            def foo(a0, a1)
-            {
+            def foo(a0, a1) {
                 return a0 + a1;
             }
             def main() {

@@ -6,14 +6,14 @@ class TestClasses(BaseTest):
         w_res = self.interpret('''
             class X {
                 def __init__(self) {
-                    self.x = 13;
+                    self.x = 13
                 }
             }
 
             def main() {
-                var x;
-                x = X();
-                return x.x;
+                var x
+                x = X()
+                return x.x
             }
             ''')
         assert self.space.int_w(w_res) == 13
@@ -22,14 +22,14 @@ class TestClasses(BaseTest):
         w_res = self.interpret('''
             class X {
                 def method(self) {
-                    return 3;
+                    return 3
                 }
             }
 
             def main() {
-                var x;
-                x = X();
-                return x.method() + x.method();
+                var x
+                x = X()
+                return x.method() + x.method()
             }
             ''')
         assert self.space.int_w(w_res) == 6
@@ -38,15 +38,15 @@ class TestClasses(BaseTest):
         w_res = self.interpret('''
             class X {
                 def method(self) {
-                    return 3;
+                    return 3
                 }
             }
             class Y(X) {
             }
             def main() {
-                var x;
-                x = Y();
-                return x.method();
+                var x
+                x = Y()
+                return x.method()
             }
             ''')
         assert self.space.int_w(w_res) == 3
@@ -55,21 +55,21 @@ class TestClasses(BaseTest):
         w_res = self.interpret('''
             class X {
                 def method(self) {
-                    return 1;
+                    return 1
                 }
             }
 
             class Y(X) {
                 def method(self) {
-                    return 2;
+                    return 2
                 }
             }
 
             def main() {
-                var x, y;
-                x = X();
-                y = Y();
-                return x.method() * 10 + y.method();
+                var x, y
+                x = X()
+                y = Y()
+                return x.method() * 10 + y.method()
             }
             ''')
         assert self.space.int_w(w_res) == 12

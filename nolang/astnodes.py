@@ -215,8 +215,9 @@ class Statement(AstNode):
         self.expr = expr
 
     def compile(self, state):
-        self.expr.compile(state)
-        state.emit(opcodes.DISCARD)
+        if self.expr:
+            self.expr.compile(state)
+            state.emit(opcodes.DISCARD)
 
 class Getattr(AstNode):
     def __init__(self, lhand, identifier):
@@ -248,11 +249,32 @@ class ArgList(AstNode):
         return self.arglist
 
 class FunctionBody(AstNode):
-    def __init__(self, elements):
-        self.elements = elements
+    def __init__(self, elem, next):
+        self.elem = elem
+        self.next = next
 
     def get_element_list(self):
-        return self.elements
+        count = 0
+        cur = self
+        while cur.next is not None:
+            if cur.elem is not None:
+                count += 1
+            cur = cur.next
+            assert isinstance(cur, FunctionBody)
+        if cur.elem is not None:
+            count += 1
+        cur = self
+        lst = [None] * count
+        i = len(lst) - 1
+        while cur.next is not None:
+            if cur.elem is not None:
+                lst[i] = cur.elem
+                i -= 1
+            cur = cur.next
+            assert isinstance(cur, FunctionBody)
+        if cur.elem is not None:
+            lst[i] = cur.elem
+        return lst
 
 class VarDeclaration(AstNode):
     def __init__(self, varnames):
