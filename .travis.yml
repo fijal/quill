@@ -16,5 +16,5 @@ notifications:
       - "chat.freenode.net#quill"
     on_success: change
     on_failure: always
-    use_notice: true
-    skip_join: true
+    #use_notice: true
+    #skip_join: true
