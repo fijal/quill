@@ -7,7 +7,7 @@ nolang-c <program.no>
 import sys
 
 from nolang.interpreter import Interpreter
-from nolang.parser import get_parser, ParsingState
+from nolang.parser import get_parser, ParsingState, ParseError
 from nolang.compiler import compile_module
 from nolang.function import BuiltinFunction
 from nolang.lexer import get_lexer
@@ -27,6 +27,12 @@ lexer = get_lexer()
 interpreter = Interpreter()
 space = Space(interpreter)
 
+def format_parser_error(pe):
+    print "Error parsing input file %s, line %d: %s" % (pe.filename, pe.lineno,
+        pe.msg)
+    print "  " + pe.line
+    print "  " + " " * pe.start_colno + "^" * (pe.end_colno - pe.start_colno)
+
 def run_code(fname):
     try:
         source = open(fname).read()
@@ -34,7 +40,12 @@ def run_code(fname):
         print "Error reading file %s" % fname
         return 1
     # XXX error handling
-    ast = parser.parse(lexer.lex(source), ParsingState(source))
+    try:
+        ast = parser.parse(lexer.lex(fname, source), ParsingState(fname,
+                           source))
+    except ParseError as pe:
+        format_parser_error(pe)
+        return 1
     builtins = [BuiltinFunction('print', magic_print, 1)]
     w_mod = compile_module(source, ast, builtins)
     w_mod.initialize(space)

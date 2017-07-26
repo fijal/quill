@@ -2,7 +2,20 @@
 from rply import LexerGenerator
 from rply.lexer import Lexer, LexerStream
 from rply.token import SourcePosition, Token
-from rply.errors import LexingError
+
+class ParseError(Exception):
+    def __init__(self, msg, line, filename, lineno, start_colno, end_colno):
+        self.msg = msg
+        self.line = line
+        self.filename = filename
+        self.lineno = lineno
+        self.start_colno = start_colno
+        self.end_colno = end_colno
+
+    def __str__(self):
+        # 6 comes from formatting of ParseError by pytest
+        return (self.line + "\n" + " " * (self.start_colno - 6) +
+                "^" * (self.end_colno - self.start_colno))
 
 RULES = [
     ('INTEGER', r'\d+'),
@@ -44,6 +57,10 @@ TOKENS = [x[0] for x in RULES]
 class QuillLexerStream(LexerStream):
     _last_token = None
 
+    def __init__(self, lexer, filename, s):
+        self._filename = filename
+        LexerStream.__init__(self, lexer, s)
+
     def next(self):
         while True:
             if self.idx >= len(self.s):
@@ -79,12 +96,19 @@ class QuillLexerStream(LexerStream):
                 self._last_token = token
                 return token
         else:
-            raise LexingError(None, SourcePosition(self.idx, -1, -1))
+            last_nl = self.s.rfind("\n", 0, self.idx)
+            if last_nl < 0:
+                colno = self.idx - 1
+            else:
+                colno = self.idx - last_nl - 1
+            raise ParseError("unrecognized token",
+                             self.s.splitlines()[self._lineno - 1],
+                             self._filename, self._lineno, colno, colno + 1)
 
 
 class QuillLexer(Lexer):
-    def lex(self, s):
-        return QuillLexerStream(self, s)
+    def lex(self, filename, s):
+        return QuillLexerStream(self, filename, s)
 
 class QuillLexerGenerator(LexerGenerator):
     def build(self):

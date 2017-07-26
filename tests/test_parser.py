@@ -14,7 +14,8 @@ class BaseTest(object):
 class TestExpressionParser(BaseTest):
     def parse(self, expr):
         program = "def foo () { " + expr + "; }"
-        ast = self.parser.parse(self.lexer.lex(program), ParsingState(program))
+        ast = self.parser.parse(self.lexer.lex('test', program),
+                                ParsingState('test', program))
         return ast.elements[0].body[0].expr
 
     def test_add(self):
@@ -31,7 +32,8 @@ class TestExpressionParser(BaseTest):
 class TestParseFunctionBody(BaseTest):
     def parse(self, body):
         program = reformat_expr(body)
-        ast = self.parser.parse(self.lexer.lex(program), ParsingState(program))
+        ast = self.parser.parse(self.lexer.lex('test', program),
+                                ParsingState('test', program))
         return ast.elements[0].body
 
     def test_var(self):
@@ -69,7 +71,8 @@ class TestFullProgram(BaseTest):
 
     def parse(self, code):
         program = reformat_code(code)
-        return self.parser.parse(self.lexer.lex(program), ParsingState(program))
+        return self.parser.parse(self.lexer.lex('test', program),
+                                 ParsingState('test', program))
 
     def test_function_declaration(self):
         r = self.parse('''

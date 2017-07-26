@@ -42,7 +42,8 @@ class BaseTest(object):
         return compile_bytecode(ast.elements[0], program, w_mod)
 
     def parse(self, program):
-        return self.parser.parse(self.lexer.lex(program), ParsingState(program))
+        return self.parser.parse(self.lexer.lex('<test>', program),
+                                 ParsingState('<test>', program))
 
     def interpret_expr(self, code):
         return self.interpret(reformat_expr(code))

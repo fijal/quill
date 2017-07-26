@@ -2,33 +2,21 @@
 import rply
 from rply.token import Token
 
-from nolang.lexer import TOKENS
+from nolang.lexer import TOKENS, ParseError
 from nolang import astnodes as ast
 
 class ParsingState(object):
-    def __init__(self, input):
+    def __init__(self, filename, input):
         self.input = input
-        self.filename = '?'
-
-class ParseError(Exception):
-    def __init__(self, line, filename, lineno, start_colno, end_colno):
-        self.line = line
         self.filename = filename
-        self.lineno = lineno
-        self.start_colno = start_colno
-        self.end_colno = end_colno
-
-    def __str__(self):
-        # 6 comes from formatting of ParseError by pytest
-        return (self.line + "\n" + " " * (self.start_colno - 6) +
-                "^" * (self.end_colno - self.start_colno))
 
 def errorhandler(state, lookahead):
     lines = state.input.splitlines()
     sourcepos = lookahead.getsourcepos()
     line = lines[sourcepos.lineno - 1]
     assert isinstance(lookahead, Token)
-    raise ParseError(line, '<input>', sourcepos.lineno, sourcepos.colno - 1,
+    raise ParseError('Parsing error', line, state.filename, sourcepos.lineno,
+                     sourcepos.colno - 1,
                      len(lookahead.value) + sourcepos.colno - 1)
 
 def get_parser():
