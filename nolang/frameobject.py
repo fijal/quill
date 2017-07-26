@@ -6,7 +6,7 @@ class Frame(object):
             self.globals_w = bytecode.module.functions
         self.locals_w = [None] * len(bytecode.varnames)
         self.stack_w = [None] * bytecode.stack_depth
-        self.resume_stack = [None] * bytecode.resume_stack_depth
+        self.resume_stack = [0] * bytecode.resume_stack_depth
         self.resume_stack_depth = 0
         self.pos = 0
 

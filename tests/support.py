@@ -38,7 +38,8 @@ class BaseTest(object):
     def compile(self, body):
         program = reformat_expr(body)
         ast = self.parse(program)
-        return compile_bytecode(ast.elements[0], program, None)
+        w_mod = compile_module(program, ast, [self.space.w_exc_type])
+        return compile_bytecode(ast.elements[0], program, w_mod)
 
     def parse(self, program):
         return self.parser.parse(self.lexer.lex(program), ParsingState(program))

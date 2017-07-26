@@ -1,5 +1,4 @@
 
-import py
 from support import BaseTest
 
 class TestExceptions(BaseTest):
@@ -18,25 +17,65 @@ class TestExceptions(BaseTest):
         assert self.space.int_w(w_res) == 13
 
     def test_exc_function_call(self):
-        pass
-        #w_res = self.interpret_expr('''
-        #    ''')
+        w_res = self.interpret('''
+            class X(Exception) {
+
+            }
+            def foo() {
+                raise X("message 2");
+            }
+            def main() {
+                try {
+                    foo();
+                } except Exception {
+                    return 13;
+                }
+            }
+            ''')
+        assert self.space.int_w(w_res) == 13
+
+    def test_nested_exc_block(self):
+        w_res = self.interpret('''
+            class X(Exception) {
+
+            }
+
+            def main() {
+                try {
+                    try {
+                        raise Exception("foo");
+                    } except X {
+                        return 18;
+                    }
+                } except Exception {
+                    return 15;
+                }
+            }
+            ''')
+        assert self.space.int_w(w_res) == 15
 
     def test_exc_double_except(self):
-        py.test.skip("in progress")
-        w_res = self.interpret_expr('''
+        w_res = self.interpret('''
             class A(Exception) {
             }
             class B(Exception) {
             }
 
-            try {
-                raise Exception("foo");
+            def main() {
+                try {
+                    raise Exception("foo");
+                } except A {
+                    return 1;
+                } except B {
+                    return 2;
+                } except Exception {
+                    return 13;
+                }
             }
             ''')
+        assert self.space.int_w(w_res) == 13
 
     def test_exc_raise_catch_as_e(self):
-        py.test.skip("later")
         w_res = self.interpret_expr('''
             try {
                  raise Exception("foo");
@@ -44,4 +83,4 @@ class TestExceptions(BaseTest):
                  return e.message;
             }
             ''')
-        assert self.space.int_w(w_res) == 13
+        assert self.space.utf8_w(w_res) == "foo"

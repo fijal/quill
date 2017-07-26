@@ -46,25 +46,30 @@ class Bytecode(object):
         for i, constant in enumerate(self._constants):
             self.constants[i] = constant.wrap(space)
 
-    def repr(self):
+    def repr(self, numbers=True):
         i = 0
         res = StringBuilder()
         bc = self.bytecode
         while i < len(bc):
             opcode = opcodes.opcodes[ord(bc[i])]
+            c = i
             if opcode.numargs == 0:
-                res.append("  " + opcode.name)
+                r = "  " + opcode.name
                 i += 1
             elif opcode.numargs == 1:
                 argval = (ord(bc[i + 1]) << 8) + ord(bc[i + 2])
-                res.append("  %s %d" % (opcode.name, argval))
+                r = "  %s %d" % (opcode.name, argval)
                 i += 3
             else:
                 assert opcode.numargs == 2
                 arg1 = (ord(bc[i + 1]) << 8) + ord(bc[i + 2])
                 arg2 = (ord(bc[i + 3]) << 8) + ord(bc[i + 4])
-                res.append("  %s %d %d" % (opcode.name, arg1, arg2))
+                r = "  %s %d %d" % (opcode.name, arg1, arg2)
                 i += 5
+            if numbers:
+                res.append("%3d" % c + r)
+            else:
+                res.append(r)
             res.append("\n")
         return res.build()
 
@@ -154,6 +159,7 @@ class _BytecodeBuilder(object):
         self.varnames.append(no) # XXX should we rely on dicts being ordered?
         self.vars[v] = no
         assert len(self.vars) == len(self.varnames)
+        return no
 
     def register_exception_setup(self, exc_names):
         types_w = []

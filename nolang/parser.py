@@ -7,6 +7,7 @@ from nolang import astnodes as ast
 class ParsingState(object):
     def __init__(self, input):
         self.input = input
+        self.filename = '?'
 
 class ParseError(Exception):
     def __init__(self, line, filename, lineno, start_colno, end_colno):
@@ -129,11 +130,34 @@ def get_parser():
         return ast.Raise(p[1])
 
     @pg.production('statement : TRY LEFT_CURLY_BRACE function_body '
-                   'RIGHT_CURLY_BRACE EXCEPT IDENTIFIER LEFT_CURLY_BRACE '
-                   'function_body RIGHT_CURLY_BRACE')
+                   'RIGHT_CURLY_BRACE except_finally_clauses')
     def statement_try_except(state, p):
-        return ast.TryExcept(p[2].get_element_list(), [p[5].getstr()],
-                             p[7].get_element_list(), None)
+        if p[4] is None:
+            errorhandler(state, p[0])
+        lst = p[4].gather_list()
+        return ast.TryExcept(p[2].get_element_list(), lst)
+
+    @pg.production('except_finally_clauses : ')
+    def except_finally_clases_empty(state, p):
+        return None
+
+    @pg.production('except_finally_clauses : EXCEPT IDENTIFIER LEFT_CURLY_BRACE'
+                   ' function_body RIGHT_CURLY_BRACE except_finally_clauses')
+    def except_finally_clauses_except(state, p):
+        return ast.ExceptClauseList([p[1].getstr()], None,
+                                    p[3].get_element_list(), p[5])
+
+    @pg.production('except_finally_clauses : EXCEPT IDENTIFIER AS IDENTIFIER '
+                   'LEFT_CURLY_BRACE function_body RIGHT_CURLY_BRACE '
+                   'except_finally_clauses')
+    def except_finally_clauses_except_as_identifier(state, p):
+        return ast.ExceptClauseList([p[1].getstr()], p[3].getstr(),
+                                    p[5].get_element_list(), p[7])
+
+    @pg.production('except_finally_clauses : FINALLY LEFT_CURLY_BRACE '
+                   'function_body RIGHT_CURLY_BRACE')
+    def except_finally_clauses_finally(state, p):
+        return ast.FinallyClause(p[2].get_element_list())
 
     @pg.production('arglist : LEFT_PAREN RIGHT_PAREN')
     def arglist(state, p):

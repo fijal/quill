@@ -174,24 +174,33 @@ class If(AstNode):
         state.patch_position(patch_pos, state.get_position())
 
 class TryExcept(AstNode):
-    def __init__(self, block, exception_names, except_block, varname):
+    def __init__(self, block, except_blocks):
         self.block = block
-        self.exception_names = exception_names
-        self.except_block = except_block
-        self.varname = varname
+        if isinstance(except_blocks[-1], FinallyClause):
+            self.finally_clause = except_blocks[-1]
+            self.except_blocks = except_blocks[:-1]
+        else:
+            self.finally_clause = None
+            self.except_blocks = except_blocks
 
     def compile(self, state):
-        no = state.register_exception_setup(self.exception_names)
-        state.emit(opcodes.PUSH_RESUME_STACK, no)
+        state.emit(opcodes.PUSH_RESUME_STACK, 0)
+        pos = state.get_patch_position()
         for item in self.block:
             item.compile(state)
         state.emit(opcodes.POP_RESUME_STACK)
         state.emit(opcodes.JUMP_ABSOLUTE, 0)
         jump_pos = state.get_patch_position()
-        state.exception_blocks[no].position = state.get_position()
-        for item in self.except_block:
+        state.patch_position(pos, state.get_position())
+        state.accumulator = [jump_pos]
+        for item in self.except_blocks:
             item.compile(state)
-        state.patch_position(jump_pos, state.get_position())
+        for pos in state.accumulator:
+            state.patch_position(pos, state.get_position())
+        if self.finally_clause is not None:
+            self.finally_clause.compile(state)
+        state.emit(opcodes.RERAISE)
+        state.accumulator = None
 
 class Raise(AstNode):
     def __init__(self, expr):
@@ -305,3 +314,64 @@ class VarDeclPartial(AstNode):
 
     def get_names(self):
         return self.names
+
+class ExceptClause(AstNode):
+    def __init__(self, exception_names, varname, block):
+        self.exception_names = exception_names
+        self.varname = varname
+        self.block = block
+
+    def compile(self, state):
+        no = state.register_exception_setup(self.exception_names)
+        state.emit(opcodes.COMPARE_EXCEPTION, no, 0)
+        pos = state.get_patch_position()
+        if self.varname is not None:
+            state.emit(opcodes.PUSH_CURRENT_EXC)
+            no = state.register_variable(self.varname)
+            state.emit(opcodes.STORE, no)
+        for item in self.block:
+            item.compile(state)
+        state.emit(opcodes.CLEAR_CURRENT_EXC)
+        state.emit(opcodes.JUMP_ABSOLUTE, 0)
+        state.accumulator.append(state.get_patch_position())
+        state.patch_position(pos, state.get_position())
+
+class BaseExcNode(AstNode):
+    def gather_list(self):
+        count = 1
+        cur = self
+        while cur.next is not None:
+            cur = cur.next
+            count += 1
+        lst = [None] * count
+        lst[0] = self.get_exc_clause()
+        pos = 1
+        cur = self
+        while cur.next is not None:
+            cur = cur.next
+            lst[pos] = cur.get_exc_clause()
+            pos += 1
+        return lst
+
+class ExceptClauseList(BaseExcNode):
+    def __init__(self, exception_names, varname, block, next):
+        self.exception_names = exception_names
+        self.varname = varname
+        self.block = block
+        self.next = next
+
+    def get_exc_clause(self):
+        return ExceptClause(self.exception_names, self.varname, self.block)
+
+class FinallyClause(BaseExcNode):
+    next = None
+
+    def __init__(self, block):
+        self.block = block
+
+    def compile(self, state):
+        for item in self.block:
+            item.compile(state)
+
+    def get_exc_clause(self):
+        return self

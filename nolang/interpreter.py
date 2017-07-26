@@ -29,13 +29,14 @@ class Interpreter(object):
         arg0 = 0
         arg1 = 0
         bc = bytecode.bytecode
+        cur_exc = None
         while True:
             try:
                 op = ord(bc[index])
                 numargs = opcodes.opcodes[op].numargs
                 if numargs >= 1:
                     arg0 = (ord(bc[index + 1]) << 8) + ord(bc[index + 2])
-                elif numargs >= 2:
+                if numargs >= 2:
                     arg1 = (ord(bc[index + 3]) << 8) + ord(bc[index + 4])
 
                 if op == opcodes.LOAD_NONE:
@@ -71,9 +72,18 @@ class Interpreter(object):
                 elif op == opcodes.GETATTR:
                     self.getattr(space, frame, bytecode, arg0)
                 elif op == opcodes.PUSH_RESUME_STACK:
-                    self.push_resume_stack(space, frame, bytecode, arg0, arg1)
+                    self.push_resume_stack(space, frame, bytecode, arg0)
                 elif op == opcodes.RAISE:
                     raise AppError(frame.pop())
+                elif op == opcodes.COMPARE_EXCEPTION:
+                    index = self.compare_exception(space, frame,
+                               bytecode, arg0, arg1, cur_exc, index)
+                    continue
+                elif op == opcodes.RERAISE:
+                    if cur_exc:
+                        raise AppError(cur_exc)
+                elif op == opcodes.PUSH_CURRENT_EXC:
+                    frame.push(cur_exc)
                 elif op == opcodes.JUMP_IF_FALSE:
                     if not space.is_true(frame.pop()):
                         index = arg0
@@ -105,18 +115,25 @@ class Interpreter(object):
             except AppError as ae:
                 res = self.handle_error(space, frame, ae.w_exception)
                 if res:
+                    cur_exc = ae.w_exception
                     frame.stack_depth = 0 # clear stack
                     index = res
                     continue
                 raise ae # reraise the error if not handled
 
     def handle_error(self, space, frame, w_exception):
-        while frame.resume_stack_depth:
+        if frame.resume_stack_depth:
             frame.resume_stack_depth -= 1
-            block = frame.resume_stack[frame.resume_stack_depth]
-            if block.match(space, w_exception):
-                return block.position
+            r = frame.resume_stack[frame.resume_stack_depth]
+            return r
         return 0
+
+    def compare_exception(self, space, frame, bytecode, arg0, arg1, cur_exc,
+                          cur_pos):
+        block = bytecode.exception_blocks[arg0]
+        if block.match(space, cur_exc):
+            return cur_pos + 5
+        return arg1
 
     def load_variable(self, space, frame, bytecode_index, no):
         w_res = frame.locals_w[no]
@@ -143,9 +160,8 @@ class Interpreter(object):
         w_lhand = frame.pop()
         frame.push(space.getattr(w_lhand, space.utf8_w(bytecode.constants[no])))
 
-    def push_resume_stack(self, space, frame, bytecode, arg0, arg1):
-        block = bytecode.exception_blocks[arg0]
-        frame.resume_stack[frame.resume_stack_depth] = block
+    def push_resume_stack(self, space, frame, bytecode, arg0):
+        frame.resume_stack[frame.resume_stack_depth] = arg0
         frame.resume_stack_depth += 1
 
     def binop_lt(self, space, frame):

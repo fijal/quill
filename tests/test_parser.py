@@ -1,6 +1,6 @@
 
 from nolang.lexer import get_lexer
-from nolang.parser import get_parser, ParsingState
+from nolang.parser import get_parser, ParsingState, ParseError
 from nolang import astnodes as ast
 
 from tests.support import reformat_expr, reformat_code
@@ -98,3 +98,16 @@ class TestFullProgram(BaseTest):
                 ])
             ])
         assert r == expected
+
+    def test_empty_try(self):
+        try:
+            self.parse('''
+                def foo() {
+                    try {
+                    }
+                }
+            ''')
+        except ParseError:
+            pass
+        else:
+            raise Exception("DID NOT RAISE")
