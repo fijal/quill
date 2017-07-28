@@ -32,8 +32,9 @@ class BaseTest(object):
     def setup_class(self):
         self.parser = get_parser()
         self.lexer = get_lexer()
+        self.space = Space()
         self.interpreter = Interpreter()
-        self.space = Space(self.interpreter)
+        self.space.setup(self.interpreter)
 
     def compile(self, body):
         program = reformat_expr(body)

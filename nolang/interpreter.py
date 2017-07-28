@@ -21,9 +21,16 @@ class UninitializedVariable(Exception):
 
 class Interpreter(object):
     def __init__(self):
-        pass
+        self.topframeref = None
 
     def interpret(self, space, bytecode, frame):
+        try:
+            self.topframeref = frame
+            return self._interpret(space, bytecode, frame)
+        finally:
+            self.topframeref = frame.f_back
+
+    def _interpret(self, space, bytecode, frame):
         index = 0
         # make annotator happy
         arg0 = 0
@@ -74,7 +81,9 @@ class Interpreter(object):
                 elif op == opcodes.PUSH_RESUME_STACK:
                     self.push_resume_stack(space, frame, bytecode, arg0)
                 elif op == opcodes.RAISE:
-                    raise AppError(frame.pop())
+                    w_exception = frame.pop()
+                    space.setattr(w_exception, 'frame', frame)
+                    raise AppError(w_exception)
                 elif op == opcodes.COMPARE_EXCEPTION:
                     index = self.compare_exception(space, frame,
                                bytecode, arg0, arg1, cur_exc, index)

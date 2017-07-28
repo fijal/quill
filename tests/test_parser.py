@@ -114,3 +114,18 @@ class TestFullProgram(BaseTest):
             pass
         else:
             raise Exception("DID NOT RAISE")
+
+    def test_import_stuff(self):
+        r = self.parse('''
+            import foo
+            import foo.bar
+            import foo{a,b,c,d}
+            import foo.bar{a,b,c};
+            ''')
+        expected = ast.Program([
+            ast.Import(["foo"], []),
+            ast.Import(["foo"], ["bar"]),
+            ast.Import(["foo"], ["a", "b", "c", "d"]),
+            ast.Import(["foo", "bar"], ["a", "b", 'c'])
+            ])
+        assert r == expected
