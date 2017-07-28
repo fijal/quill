@@ -1,0 +1,6 @@
+[book]
+name = "my-example"
+version = "0.1.0"
+author = "Armin Ronacher <armin.ronacher@active-4.com>"
+license = "MIT"
+import_path = "org.pocoo.example"
