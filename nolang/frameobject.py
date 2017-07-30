@@ -1,7 +1,10 @@
 
-class Frame(object):
-    def __init__(self, bytecode):
+from nolang.objects.root import W_Root
+
+class Frame(W_Root):
+    def __init__(self, bytecode, f_back):
         self.bytecode = bytecode
+        self.f_back = f_back
         if bytecode.module is not None: # for tests
             self.globals_w = bytecode.module.functions
         self.locals_w = [None] * len(bytecode.varnames)

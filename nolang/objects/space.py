@@ -12,12 +12,14 @@ from nolang.function import BuiltinFunction
 from nolang.builtins.exception import exception_init
 
 class Space(object):
-    def __init__(self, interpreter):
+    def __init__(self):
         self.w_None = W_None() # singleton
         self.w_True = W_BoolObject(True)
         self.w_False = W_BoolObject(False)
-        self.interpreter = interpreter
         self.setup_exception()
+
+    def setup(self, interpreter):
+        self.interpreter = interpreter
 
     def setup_exception(self):
         self.w_exc_type = W_UserType("Exception", [

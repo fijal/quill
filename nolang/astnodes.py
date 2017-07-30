@@ -399,3 +399,31 @@ class FinallyClause(BaseExcNode):
 
     def get_exc_clause(self):
         return self
+
+class Import(AstNode):
+    def __init__(self, import_part, names):
+        self.import_part = import_part
+        self.names = names
+
+class IdentifierListPartial(AstNode):
+    def __init__(self, name, next, extra=None):
+        self.name = name
+        self.next = next
+        self.extra = extra
+
+    def get_names(self):
+        count = 0
+        cur = self
+        while cur is not None:
+            count += 1
+            assert isinstance(cur, IdentifierListPartial)
+            cur = cur.next
+        lst = [None] * count
+        i = 0
+        cur = self
+        while cur is not None:
+            assert isinstance(cur, IdentifierListPartial)
+            lst[i] = cur.name
+            cur = cur.next
+            i += 1
+        return lst

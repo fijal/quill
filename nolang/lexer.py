@@ -42,6 +42,7 @@ RULES = [
     ('FINALLY', r'finally'),
     ('AS', r'as'),
     ('RAISE', r'raise'),
+    ('IMPORT', r'import'),
     ('IDENTIFIER', r'[a-zA-Z_][a-zA-Z0-9_]*'),
     ('LEFT_CURLY_BRACE', r'\{'),
     ('LEFT_PAREN', r'\('),

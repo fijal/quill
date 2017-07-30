@@ -55,6 +55,30 @@ def get_parser():
     def body_element_semicolon(state, p):
         return None
 
+    @pg.production('body_element : IMPORT IDENTIFIER dot_identifier_list'
+                   ' optional_import SEMICOLON')
+    def body_element_import_statement(state, p):
+        basename = p[1].getstr()
+        if p[2] is None and p[3] is None:
+            return ast.Import([basename], [])
+        if p[3] is None:
+            names = p[2].get_names()
+            return ast.Import([basename] + names[:-1], [names[-1]])
+        if p[2] is None:
+            return ast.Import([basename], p[3].get_names())
+        return ast.Import([basename] + p[2].get_names(),
+                          p[3].get_names())
+
+    @pg.production('optional_import :')
+    def optional_import_empty(state, p):
+        return None
+
+    @pg.production('optional_import : '
+                   'LEFT_CURLY_BRACE IDENTIFIER identifier_list '
+                   'RIGHT_CURLY_BRACE')
+    def optional_import_brace(state, p):
+        return ast.IdentifierListPartial(p[1].getstr(), p[2])
+
     @pg.production('class_definition : CLASS IDENTIFIER LEFT_CURLY_BRACE body '
                    'RIGHT_CURLY_BRACE')
     def class_definition(state, p):
@@ -154,6 +178,24 @@ def get_parser():
                    'function_body RIGHT_CURLY_BRACE')
     def except_finally_clauses_finally(state, p):
         return ast.FinallyClause(p[2].get_element_list())
+
+
+    @pg.production('identifier_list : COMMA IDENTIFIER identifier_list')
+    def identifier_list_arglist(state, p):
+        return ast.IdentifierListPartial(p[1].getstr(), p[2])
+
+    @pg.production('identifier_list :')
+    def rest_of_identifier_list_empty(state, p):
+        return None
+
+
+    @pg.production('dot_identifier_list : DOT IDENTIFIER dot_identifier_list')
+    def identifier_list_arglist(state, p):
+        return ast.IdentifierListPartial(p[1].getstr(), p[2])
+
+    @pg.production('dot_identifier_list :')
+    def rest_of_identifier_list_empty(state, p):
+        return None
 
     @pg.production('arglist : LEFT_PAREN RIGHT_PAREN')
     def arglist(state, p):

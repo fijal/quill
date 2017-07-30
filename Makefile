@@ -1,16 +1,14 @@
 all: test
 
 venv:
-	@git submodule update --init
 	@virtualenv venv -p `python -c "import sys; print('%s/bin/python' % getattr(sys, 'real_prefix', sys.prefix))"`
-	@venv/bin/pip install rply pytest
-	@ln -fs `pwd`/vendor/pypy/rpython venv/lib/python2.7/site-packages
+	@venv/bin/pip install rpython rply pytest
 
 ensure-venv:
 	@if [ ! -f venv/bin/pytest ]; then $(MAKE) venv; fi
 
 compile: ensure-venv
-	@PYTHONPATH=. venv/bin/python vendor/pypy/rpython/bin/rpython -O2 nolang/target.py
+	@PYTHONPATH=. venv/bin/rpython -O2 nolang/target.py
 
 clean:
 	@rm -rf venv
