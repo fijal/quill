@@ -1,4 +1,5 @@
 
+import py
 from support import BaseTest
 
 class TestExceptions(BaseTest):
@@ -27,12 +28,12 @@ class TestExceptions(BaseTest):
             def main() {
                 try {
                     foo();
-                } except Exception {
-                    return 13;
+                } except Exception as e{
+                    return e.message;
                 }
             }
             ''')
-        assert self.space.int_w(w_res) == 13
+        assert self.space.utf8_w(w_res) == "message 2"
 
     def test_nested_exc_block(self):
         w_res = self.interpret('''
@@ -84,3 +85,24 @@ class TestExceptions(BaseTest):
             }
             ''')
         assert self.space.utf8_w(w_res) == "foo"
+
+    def test_subclass_with_custom_init(self):
+        py.test.skip("showcase the problem")
+        w_res = self.interpret('''
+            class X(Exception) {
+                def __init__(self, a, b, c) {
+                    self.a = a;
+                    self.b = b;
+                    self.c = c;
+                }
+            }
+
+            def main() {
+                try {
+                    raise X("foo", "bar", "baz");
+                } except X as e {
+                    return e.c;
+                }
+            }
+            ''')
+        assert self.space.utf8_w(w_res) == "baz"

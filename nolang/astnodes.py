@@ -6,6 +6,7 @@ with compile() interface that produces bytecode
 from nolang import opcodes
 from nolang.function import W_Function
 from nolang.objects.usertype import W_UserType
+from nolang.objects.userobject import W_UserObject
 from nolang.bytecode import compile_bytecode
 from nolang.compiler import compile_class
 
@@ -124,7 +125,7 @@ class Function(AstNode):
         for item in self.body:
             item.compile(state)
 
-    def wrap_as_global_symbol(self, source, w_mod):
+    def wrap_as_global_symbol(self, space, source, w_mod):
         return W_Function(self.name, compile_bytecode(self, source,
                           w_mod, self.arglist))
 
@@ -140,10 +141,11 @@ class ClassDefinition(AstNode):
     def get_element_list(self):
         return self.body.get_element_list()
 
-    def wrap_as_global_symbol(self, source, w_mod):
-        class_elements_w, w_parent = compile_class(source, self, w_mod,
-                                                   self.parent)
-        return W_UserType(self.name, class_elements_w, w_parent)
+    def wrap_as_global_symbol(self, space, source, w_mod):
+        t = compile_class(space, source, self, w_mod, self.parent)
+        alloc, class_elements_w, w_parent, default_alloc = t
+        return W_UserType(alloc, self.name, class_elements_w, w_parent,
+                          default_alloc)
 
 class While(AstNode):
     def __init__(self, expr, block):

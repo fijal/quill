@@ -13,5 +13,5 @@ class W_Module(W_Root):
         for item in self.functions:
             item.setup(space)
 
-    def getattr_w(self, name):
+    def getattr(self, space, name):
         return self.functions[self.name2index[name]] # XXX error handling

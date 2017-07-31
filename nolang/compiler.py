@@ -3,6 +3,10 @@
 """
 
 from nolang.module import W_Module
+from nolang.objects.userobject import W_UserObject
+from nolang.builtins.spec import wrap_function
+
+from rpython.rlib.objectmodel import specialize
 
 class NameAlreadyDefined(Exception):
     def __init__(self, name):
@@ -19,23 +23,36 @@ def _gather_names(ast, builtins):
         name_mapping[item.get_name()] = len(name_mapping)
     return name_mapping
 
-def compile_module(source, ast, builtins=None):
-    name_mapping = _gather_names(ast, builtins)
-    if builtins is not None:
-        globals_w = builtins[:]
+def compile_module(space, source, ast):
+    name_mapping = _gather_names(ast, space.builtins_w)
+    if space.builtins_w is not None:
+        globals_w = space.builtins_w[:]
     else:
         globals_w = []
     w_mod = W_Module(name_mapping, globals_w)
     for item in ast.get_element_list():
-        globals_w.append(item.wrap_as_global_symbol(source, w_mod))
+        globals_w.append(item.wrap_as_global_symbol(space, source, w_mod))
     return w_mod
 
-def compile_class(source, ast, w_mod, parent=None):
-    class_elements_w = []
+def new_user_object(space, args_w):
+    return W_UserObject(args_w[0])
+
+@specialize.memo()
+def get_alloc(space):
+    return wrap_function(space, new_user_object)
+
+def compile_class(space, source, ast, w_mod, parent=None):
     if parent is not None:
         w_parent = w_mod.functions[w_mod.name2index[parent]]
     else:
         w_parent = None
+    if w_parent is not None:
+        alloc = w_parent.allocate
+        default_alloc = w_parent.default_alloc
+    else:
+        alloc = get_alloc(space)
+        default_alloc = True
+    class_elements_w = []
     for item in ast.get_element_list():
-        class_elements_w.append(item.wrap_as_global_symbol(source, w_mod))
-    return class_elements_w, w_parent
+        class_elements_w.append(item.wrap_as_global_symbol(space, source, w_mod))
+    return alloc, class_elements_w, w_parent, default_alloc

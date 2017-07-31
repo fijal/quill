@@ -3,34 +3,38 @@
 on objects
 """
 
-from nolang.objects.root import W_None
+from nolang.objects.root import W_None, W_Root
 from nolang.objects.int import W_IntObject
 from nolang.objects.bool import W_BoolObject
 from nolang.objects.unicode import W_StrObject
-from nolang.objects.usertype import W_UserType
-from nolang.function import BuiltinFunction
-from nolang.builtins.exception import exception_init
+from nolang.builtins.spec import wrap_builtin
 
 class Space(object):
     def __init__(self):
         self.w_None = W_None() # singleton
         self.w_True = W_BoolObject(True)
         self.w_False = W_BoolObject(False)
-        self.setup_exception()
+        self.w_NotImplemented = W_Root()
 
     def setup(self, interpreter):
         self.interpreter = interpreter
 
-    def setup_exception(self):
-        self.w_exc_type = W_UserType("Exception", [
-            BuiltinFunction("__init__", exception_init, 2)],
-            None)
+    def setup_builtins(self, builtins):
+        self.builtins_w = [wrap_builtin(self, builtin)
+                           for builtin in builtins]
+        self.builtin_dict = {}
+        for builtin in self.builtins_w:
+            self.builtin_dict[builtin.name] = builtin
+        self.w_exception = self.builtin_dict['Exception']
 
     def setattr(self, w_obj, attrname, w_value):
         w_obj.setattr(self, attrname, w_value)
 
     def getattr(self, w_obj, attrname):
-        return w_obj.getattr(self, attrname)
+        w_res = w_obj.getattr(self, attrname)
+        if w_res is self.w_NotImplemented:
+            return self.getattr(self.type(w_obj), attrname).bind(self, w_obj)
+        return w_res
 
     def str(self, w_obj):
         return w_obj.str(self)
@@ -40,7 +44,8 @@ class Space(object):
         return w_left.issubclass(w_right)
 
     def type(self, w_obj):
-        return w_obj.w_type
+        # for builtin types we know exactly what type is it based on class
+        return w_obj.gettype(self)
 
     # newfoo wrappers
     def newint(self, intval):
@@ -86,7 +91,7 @@ class Space(object):
 
     # various calls
     def call_method(self, w_object, method_name, args):
-        w_obj = w_object.getattr_w(method_name)
+        w_obj = w_object.getattr(self, method_name)
         return w_obj.call(self, self.interpreter, args)
 
     def call(self, w_object, args):

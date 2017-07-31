@@ -10,7 +10,7 @@ from nolang.interpreter import Interpreter
 from nolang.error import AppError
 from nolang.parser import get_parser, ParsingState, ParseError
 from nolang.compiler import compile_module
-from nolang.function import BuiltinFunction
+from nolang.builtins.defaults import default_builtins
 from nolang.lexer import get_lexer
 from nolang.objects.space import Space
 
@@ -20,12 +20,10 @@ def main(argv):
         return 1
     return run_code(argv[1])
 
-def magic_print(space, args_w):
-    print space.str(args_w[0])
-
 parser = get_parser()
 lexer = get_lexer()
 space = Space()
+space.setup_builtins(default_builtins())
 
 def format_parser_error(pe):
     print "Error parsing input file %s, line %d: %s" % (pe.filename, pe.lineno,
@@ -48,8 +46,7 @@ def run_code(fname):
     except ParseError as pe:
         format_parser_error(pe)
         return 1
-    builtins = [BuiltinFunction('print', magic_print, 1), space.w_exc_type]
-    w_mod = compile_module(source, ast, builtins)
+    w_mod = compile_module(space, source, ast)
     w_mod.initialize(space)
     space.call_method(w_mod, 'main', [])
     return 0

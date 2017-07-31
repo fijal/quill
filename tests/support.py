@@ -7,6 +7,7 @@ from nolang.bytecode import compile_bytecode
 from nolang.interpreter import Interpreter
 from nolang.compiler import compile_module
 from nolang.objects.space import Space
+from nolang.builtins.defaults import default_builtins
 
 def reformat_code(body):
     bodylines = body.split("\n")
@@ -33,13 +34,14 @@ class BaseTest(object):
         self.parser = get_parser()
         self.lexer = get_lexer()
         self.space = Space()
+        self.space.setup_builtins(default_builtins())
         self.interpreter = Interpreter()
         self.space.setup(self.interpreter)
 
     def compile(self, body):
         program = reformat_expr(body)
         ast = self.parse(program)
-        w_mod = compile_module(program, ast, [self.space.w_exc_type])
+        w_mod = compile_module(self.space, program, ast)
         return compile_bytecode(ast.elements[0], program, w_mod)
 
     def parse(self, program):
@@ -50,9 +52,8 @@ class BaseTest(object):
         return self.interpret(reformat_expr(code))
 
     def interpret(self, code):
-        builtins = [self.space.w_exc_type]
         source = reformat_code(code)
         ast = self.parse(source)
-        w_mod = compile_module(source, ast, builtins)
+        w_mod = compile_module(self.space, source, ast)
         w_mod.initialize(self.space)
         return self.space.call_method(w_mod, 'main', [])

@@ -5,6 +5,7 @@ dispatch loop.
 
 from nolang import opcodes
 from nolang.error import AppError
+from nolang.builtins.exception import W_Exception
 
 class InvalidOpcode(Exception):
     def __init__(self, opcode):
@@ -82,7 +83,9 @@ class Interpreter(object):
                     self.push_resume_stack(space, frame, bytecode, arg0)
                 elif op == opcodes.RAISE:
                     w_exception = frame.pop()
-                    space.setattr(w_exception, 'frame', frame)
+                    if not isinstance(w_exception, W_Exception):
+                        raise Exception("handle this correctly")
+                    w_exception.frame = frame
                     raise AppError(w_exception)
                 elif op == opcodes.COMPARE_EXCEPTION:
                     index = self.compare_exception(space, frame,

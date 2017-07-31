@@ -4,12 +4,14 @@
 
 from nolang.objects.root import W_Root
 from nolang.error import ArgumentMismatchError
-from nolang.objects.userobject import W_UserObject
 
 class W_UserType(W_Root):
-    def __init__(self, name, class_elements_w, w_parent):
+    def __init__(self, allocate, name, class_elements_w, w_parent,
+                 default_alloc=True):
         self.name = name
+        self.allocate = allocate
         self.class_elements_w = class_elements_w
+        self.default_alloc = default_alloc
         if w_parent is not None:
             self.dict_w = w_parent.dict_w.copy()
         else:
@@ -23,10 +25,10 @@ class W_UserType(W_Root):
             item.setup(space)
 
     def call(self, space, interpreter, args_w):
-        w_obj = W_UserObject(self)
+        w_obj = space.call(self.allocate, [self] + args_w)
         if '__init__' in self.dict_w:
             space.call(self.dict_w['__init__'], [w_obj] + args_w)
-        else:
+        elif self.default_alloc:
             if len(args_w) != 0:
                 raise ArgumentMismatchError
         return w_obj
@@ -41,3 +43,6 @@ class W_UserType(W_Root):
                 return True
             cur = cur.w_parent
         return False
+
+    def __repr__(self):
+        return "<UserType %s>" % (self.name,)

@@ -10,6 +10,6 @@ class TestCompiler(BaseTest):
                 return 3;
             }
         ''')
-        w_mod = compile_module(code, self.parse(code))
+        w_mod = compile_module(self.space, code, self.parse(code))
         assert isinstance(w_mod, W_Module)
-        assert w_mod.name2index == {'foo': 0}
+        assert w_mod.name2index['foo'] == len(self.space.builtins_w)

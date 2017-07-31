@@ -7,3 +7,6 @@ class W_StrObject(W_Root):
 
     def utf8_w(self, space):
         return self.utf8val
+
+    def str(self, space):
+        return self.utf8_w(space)

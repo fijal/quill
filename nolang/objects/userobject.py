@@ -10,6 +10,9 @@ class W_UserObject(W_Root):
         self.w_type = w_type
         self.dict_w = {}
 
+    def gettype(self, space):
+        return self.w_type
+
     def setattr(self, space, attrname, w_val):
         self.dict_w[attrname] = w_val
 
@@ -17,10 +20,4 @@ class W_UserObject(W_Root):
         try:
             return self.dict_w[attrname]
         except KeyError:
-            # look up on the type
-            return self._potentially_wrap(self.w_type.getattr(space, attrname))
-
-    def _potentially_wrap(self, w_obj):
-        if isinstance(w_obj, W_Function):
-            return W_BoundMethod(self, w_obj)
-        return w_obj
+            return space.w_NotImplemented
