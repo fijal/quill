@@ -6,19 +6,21 @@ with compile() interface that produces bytecode
 from nolang import opcodes
 from nolang.function import W_Function
 from nolang.objects.usertype import W_UserType
-from nolang.objects.userobject import W_UserObject
 from nolang.bytecode import compile_bytecode
 from nolang.compiler import compile_class
 
 from rply.token import BaseBox
 
+
 class NameAlreadyDefined(Exception):
     def __init__(self, name):
         self.name = name
 
+
 class StoringIntoGlobal(Exception):
     def __init__(self, name):
         self.name = name
+
 
 class AstNode(BaseBox):
     def compile(self, state):
@@ -36,6 +38,7 @@ class AstNode(BaseBox):
     def __ne__(self, other):
         return not self == other
 
+
 class Number(AstNode):
     def __init__(self, value):
         self.value = value
@@ -44,6 +47,7 @@ class Number(AstNode):
         no = state.add_int_constant(self.value)
         state.emit(opcodes.LOAD_CONSTANT, no)
 
+
 class String(AstNode):
     def __init__(self, value):
         self.value = value
@@ -51,6 +55,7 @@ class String(AstNode):
     def compile(self, state):
         no = state.add_str_constant(self.value)
         state.emit(opcodes.LOAD_CONSTANT, no)
+
 
 class BinOp(AstNode):
     def __init__(self, op, left, right):
@@ -76,6 +81,7 @@ class BinOp(AstNode):
         else:
             assert False
 
+
 class And(AstNode):
     def __init__(self, left, right):
         self.left = left
@@ -88,6 +94,7 @@ class And(AstNode):
         state.emit(opcodes.DISCARD)
         self.right.compile(state)
         state.patch_position(pos, state.get_position())
+
 
 class Or(AstNode):
     def __init__(self, left, right):
@@ -102,13 +109,16 @@ class Or(AstNode):
         self.right.compile(state)
         state.patch_position(pos, state.get_position())
 
+
 class TrueNode(AstNode):
     def compile(self, state):
         state.emit(opcodes.LOAD_TRUE)
 
+
 class FalseNode(AstNode):
     def compile(self, state):
         state.emit(opcodes.LOAD_FALSE)
+
 
 class Program(AstNode):
     def __init__(self, elements):
@@ -116,6 +126,7 @@ class Program(AstNode):
 
     def get_element_list(self):
         return self.elements
+
 
 class Function(AstNode):
     def __init__(self, name, arglist, body):
@@ -139,6 +150,7 @@ class Function(AstNode):
         w_g = W_Function(self.name, compile_bytecode(self, source,
                          w_mod, self.arglist))
         globals_w.append(w_g)
+
 
 class ClassDefinition(AstNode):
     def __init__(self, name, body, parent=None):
@@ -164,6 +176,7 @@ class ClassDefinition(AstNode):
                          default_alloc)
         globals_w.append(w_g)
 
+
 class While(AstNode):
     def __init__(self, expr, block):
         self.expr = expr
@@ -179,6 +192,7 @@ class While(AstNode):
         state.emit(opcodes.JUMP_ABSOLUTE, jump_pos)
         state.patch_position(patch_pos, state.get_position())
 
+
 class If(AstNode):
     def __init__(self, expr, block):
         self.expr = expr
@@ -191,6 +205,7 @@ class If(AstNode):
         for item in self.block:
             item.compile(state)
         state.patch_position(patch_pos, state.get_position())
+
 
 class TryExcept(AstNode):
     def __init__(self, block, except_blocks):
@@ -221,6 +236,7 @@ class TryExcept(AstNode):
         state.emit(opcodes.RERAISE)
         state.accumulator = None
 
+
 class Raise(AstNode):
     def __init__(self, expr):
         self.expr = expr
@@ -228,6 +244,7 @@ class Raise(AstNode):
     def compile(self, state):
         self.expr.compile(state)
         state.emit(opcodes.RAISE)
+
 
 class Statement(AstNode):
     def __init__(self, expr):
@@ -238,6 +255,7 @@ class Statement(AstNode):
             self.expr.compile(state)
             state.emit(opcodes.DISCARD)
 
+
 class Getattr(AstNode):
     def __init__(self, lhand, identifier):
         self.lhand = lhand
@@ -247,6 +265,7 @@ class Getattr(AstNode):
         self.lhand.compile(state)
         no = state.add_str_constant(self.identifier)
         state.emit(opcodes.GETATTR, no)
+
 
 class Setattr(AstNode):
     def __init__(self, lhand, identifier, rhand):
@@ -260,12 +279,14 @@ class Setattr(AstNode):
         no = state.add_str_constant(self.identifier)
         state.emit(opcodes.SETATTR, no)
 
+
 class ArgList(AstNode):
     def __init__(self, arglist):
         self.arglist = arglist
 
     def get_names(self):
         return self.arglist
+
 
 class FunctionBody(AstNode):
     def __init__(self, elem, next):
@@ -295,6 +316,7 @@ class FunctionBody(AstNode):
             lst[i] = cur.elem
         return lst
 
+
 class VarDeclaration(AstNode):
     def __init__(self, varnames):
         self.varnames = varnames
@@ -303,6 +325,7 @@ class VarDeclaration(AstNode):
         for varname in self.varnames:
             state.register_variable(varname)
 
+
 class Identifier(AstNode):
     def __init__(self, name):
         self.name = name
@@ -310,7 +333,8 @@ class Identifier(AstNode):
     def compile(self, state):
         op, no = state.get_variable(self.name)
         state.emit(op, no)
- 
+
+
 class Assignment(AstNode):
     def __init__(self, varname, expr):
         self.varname = varname
@@ -323,6 +347,7 @@ class Assignment(AstNode):
             raise StoringIntoGlobal(self.varname)
         state.emit(opcodes.STORE, varno)
 
+
 class Call(AstNode):
     def __init__(self, expr, arglist):
         self.left_hand = expr
@@ -334,6 +359,7 @@ class Call(AstNode):
             arg.compile(state)
         state.emit(opcodes.CALL, len(self.arglist))
 
+
 class Return(AstNode):
     def __init__(self, expr):
         self.expr = expr
@@ -342,6 +368,7 @@ class Return(AstNode):
         self.expr.compile(state)
         state.emit(opcodes.RETURN)
 
+
 class ExpressionListPartial(AstNode):
     def __init__(self, elements):
         self.elements = elements
@@ -349,12 +376,14 @@ class ExpressionListPartial(AstNode):
     def get_element_list(self):
         return self.elements
 
+
 class VarDeclPartial(AstNode):
     def __init__(self, names):
         self.names = names
 
     def get_names(self):
         return self.names
+
 
 class ExceptClause(AstNode):
     def __init__(self, exception_names, varname, block):
@@ -377,6 +406,7 @@ class ExceptClause(AstNode):
         state.accumulator.append(state.get_patch_position())
         state.patch_position(pos, state.get_position())
 
+
 class BaseExcNode(AstNode):
     def gather_list(self):
         count = 1
@@ -396,6 +426,7 @@ class BaseExcNode(AstNode):
             pos += 1
         return lst
 
+
 class ExceptClauseList(BaseExcNode):
     def __init__(self, exception_names, varname, block, next):
         self.exception_names = exception_names
@@ -405,6 +436,7 @@ class ExceptClauseList(BaseExcNode):
 
     def get_exc_clause(self):
         return ExceptClause(self.exception_names, self.varname, self.block)
+
 
 class FinallyClause(BaseExcNode):
     next = None
@@ -418,6 +450,7 @@ class FinallyClause(BaseExcNode):
 
     def get_exc_clause(self):
         return self
+
 
 class Import(AstNode):
     def __init__(self, import_part, names):
@@ -442,6 +475,7 @@ class Import(AstNode):
             assert len(self.import_part) == 1
             for name in self.names:
                 globals_w.append(space.getattr(w_module, name))
+
 
 class IdentifierListPartial(AstNode):
     def __init__(self, name, next, extra=None):

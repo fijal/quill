@@ -1,0 +1,16 @@
+{
+    "files.exclude": {
+        "**/*.pyc": true,
+        "venv": true,
+        "build": true,
+        "*.egg-info": true
+    },
+    "files.trimTrailingWhitespace": true,
+    "files.ensureSingleFinalNewline": true,
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": true,
+    "python.pythonPath": "${workspaceRoot}/venv/bin/python",
+    "python.unitTest.pyTestEnabled": true,
+    "python.unitTest.unittestEnabled": false,
+    "python.unitTest.nosetestsEnabled": false
+}

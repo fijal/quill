@@ -3,6 +3,7 @@ from support import BaseTest, reformat_code
 from nolang.compiler import compile_module
 from nolang.module import W_Module
 
+
 class TestCompiler(BaseTest):
     def test_compile_module(self):
         code = reformat_code('''

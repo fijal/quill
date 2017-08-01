@@ -5,10 +5,12 @@ from rply.token import Token
 from nolang.lexer import TOKENS, ParseError
 from nolang import astnodes as ast
 
+
 class ParsingState(object):
     def __init__(self, filename, input):
         self.input = input
         self.filename = filename
+
 
 def errorhandler(state, lookahead):
     lines = state.input.splitlines()
@@ -19,6 +21,7 @@ def errorhandler(state, lookahead):
                      sourcepos.colno - 1,
                      len(lookahead.value) + sourcepos.colno - 1)
 
+
 def get_parser():
     pg = rply.ParserGenerator(TOKENS, precedence=[
         ('left', ['AND']),
@@ -28,7 +31,7 @@ def get_parser():
         ('left', ['TRUEDIV', 'STAR']),
         ('left', ['DOT']),
         ('left', ['LEFT_PAREN']),
-        ])
+    ])
     pg.error(errorhandler)
 
     @pg.production('program : body')
@@ -179,7 +182,6 @@ def get_parser():
     def except_finally_clauses_finally(state, p):
         return ast.FinallyClause(p[2].get_element_list())
 
-
     @pg.production('identifier_list : COMMA IDENTIFIER identifier_list')
     def identifier_list_arglist(state, p):
         return ast.IdentifierListPartial(p[1].getstr(), p[2])
@@ -188,13 +190,12 @@ def get_parser():
     def rest_of_identifier_list_empty(state, p):
         return None
 
-
     @pg.production('dot_identifier_list : DOT IDENTIFIER dot_identifier_list')
-    def identifier_list_arglist(state, p):
+    def dot_identifier_list_arglist(state, p):
         return ast.IdentifierListPartial(p[1].getstr(), p[2])
 
     @pg.production('dot_identifier_list :')
-    def rest_of_identifier_list_empty(state, p):
+    def rest_of_dot_identifier_list_empty(state, p):
         return None
 
     @pg.production('arglist : LEFT_PAREN RIGHT_PAREN')

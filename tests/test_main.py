@@ -1,6 +1,6 @@
-
 from support import reformat_code
 from nolang.main import main
+
 
 class TestMain(object):
     def test_main(self, tmpdir):

@@ -4,7 +4,7 @@ def target(driver, args):
     config = driver.config
 
     from rpython.config.config import to_optparse, SUPPRESS_USAGE
-    parser = to_optparse(config, parserkwargs={'usage': SUPPRESS_USAGE })
+    parser = to_optparse(config, parserkwargs={'usage': SUPPRESS_USAGE})
     parser.parse_args(args)
 
     from nolang.main import main

@@ -1,6 +1,7 @@
 
 from support import BaseTest
 
+
 class TestCore(BaseTest):
     def test_core_reflect_getframe(self):
         w_res = self.interpret('''

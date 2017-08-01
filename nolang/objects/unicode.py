@@ -1,5 +1,5 @@
-
 from nolang.objects.root import W_Root
+
 
 class W_StrObject(W_Root):
     def __init__(self, utf8val):

@@ -1,7 +1,6 @@
-
 from nolang.objects.root import W_Root
-from nolang.builtins.exception import W_Exception
 from nolang.builtins.spec import TypeSpec
+
 
 class W_FrameWrapper(W_Root):
     def __init__(self, frameref):
@@ -9,6 +8,7 @@ class W_FrameWrapper(W_Root):
 
     def get_filename(self, space):
         return space.newtext(self.frameref.bytecode.filename)
+
 
 W_FrameWrapper.spec = TypeSpec('Frame',
     constructor=None,
@@ -18,8 +18,10 @@ W_FrameWrapper.spec = TypeSpec('Frame',
     },
 )
 
+
 def get_exception_frame(space, w_exc):
     pass
+
 
 def get_current_frame(space):
     return W_FrameWrapper(space.interpreter.topframeref)

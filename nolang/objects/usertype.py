@@ -1,9 +1,9 @@
-
 """ Basic declaration of user type defined with class
 """
 
 from nolang.objects.root import W_Root
 from nolang.error import ArgumentMismatchError
+
 
 class W_UserType(W_Root):
     def __init__(self, allocate, name, class_elements_w, w_parent,

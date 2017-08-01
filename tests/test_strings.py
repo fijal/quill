@@ -3,6 +3,7 @@
 
 from support import BaseTest
 
+
 class TestStrings(BaseTest):
     def test_string_literal(self):
         w_res = self.interpret_expr('return "foo";')

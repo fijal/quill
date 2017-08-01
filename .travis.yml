@@ -9,6 +9,7 @@ install:
 script:
   - make compile
   - make test
+  - make lint
 
 notifications:
   irc:

@@ -1,4 +1,3 @@
-
 """ Bytecode representation and compilation. See opcodes.py for
 details about bytecodes
 """
@@ -7,8 +6,10 @@ from nolang import opcodes
 
 from rpython.rlib.rstring import StringBuilder
 
+
 class BaseConstant(object):
     pass
+
 
 class IntegerConstant(BaseConstant):
     def __init__(self, v):
@@ -17,6 +18,7 @@ class IntegerConstant(BaseConstant):
     def wrap(self, space):
         return space.newint(self._intval)
 
+
 class StringConstant(BaseConstant):
     def __init__(self, v):
         self._strval = v
@@ -24,8 +26,10 @@ class StringConstant(BaseConstant):
     def wrap(self, space):
         return space.newtext(self._strval)
 
+
 class InvalidStackDepth(Exception):
     pass
+
 
 class Bytecode(object):
     def __init__(self, filename, source, varnames, module, constants, bytecode,
@@ -106,9 +110,11 @@ class Bytecode(object):
             raise InvalidStackDepth()
         return max_stack_depth, max_resume_stack_depth
 
+
 class UndeclaredVariable(Exception):
     def __init__(self, name):
         self.name = name
+
 
 class ExceptionBlock(object):
     def __init__(self, types_w):
@@ -121,12 +127,13 @@ class ExceptionBlock(object):
                 return True
         return False
 
+
 class _BytecodeBuilder(object):
     def __init__(self, w_mod, arglist):
         self.vars = {}
         self.varnames = []
         self.builder = []
-        self.constants = [] # XXX implement interning of integers, strings etc.
+        self.constants = []  # XXX implement interning of integers, strings etc.
         self.exception_blocks = []
         self.w_mod = w_mod
         for name in arglist:
@@ -157,7 +164,7 @@ class _BytecodeBuilder(object):
 
     def register_variable(self, v):
         no = len(self.vars)
-        self.varnames.append(no) # XXX should we rely on dicts being ordered?
+        self.varnames.append(no)  # XXX should we rely on dicts being ordered?
         self.vars[v] = no
         assert len(self.vars) == len(self.varnames)
         return no
@@ -198,6 +205,7 @@ class _BytecodeBuilder(object):
                         self.constants,
                         "".join(self.builder), self.arglist,
                         self.exception_blocks)
+
 
 def compile_bytecode(ast, source, w_mod, arglist=[]):
     """ Compile the bytecode from produced AST.

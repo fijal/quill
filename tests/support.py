@@ -9,6 +9,7 @@ from nolang.compiler import compile_module
 from nolang.objects.space import Space
 from nolang.builtins.defaults import default_builtins
 
+
 def reformat_code(body):
     bodylines = body.split("\n")
     cut = 0
@@ -26,8 +27,10 @@ def reformat_code(body):
         newlines.append(" " * 4 + line[lgt:])
     return "\n".join(newlines)
 
+
 def reformat_expr(code):
     return "def main () {\n" + reformat_code(code) + "\n}"
+
 
 class BaseTest(object):
     def setup_class(self):

@@ -6,8 +6,10 @@ from nolang.builtins.exception import W_Exception
 from nolang.builtins.spec import wrap_function, wrap_type
 from nolang.builtins.core.reflect import get_current_frame, W_FrameWrapper
 
+
 def wrap_module(name, functions):
-    xxx
+    raise NotImplementedError
+
 
 def default_builtins():
     # XXX all of this should be more streamlined

@@ -1,6 +1,6 @@
-
 """ Opcode declaration
 """
+
 
 class Opcode(object):
     def __init__(self, name, numargs, stack_effect, description):
@@ -11,6 +11,7 @@ class Opcode(object):
 
     def __repr__(self):
         return '<%s>' % self.name
+
 
 opcodes = [
     Opcode('INVALID', 0, 0, 'invalid opcode'),
@@ -41,7 +42,7 @@ opcodes = [
     Opcode('MUL', 0, -1, 'load two values from the stack and store the result'
                          ' of multiplication'),
     Opcode('TRUEDIV', 0, -1, 'load two values from the stack and store the result'
-                         ' of integer division'),
+                             ' of integer division'),
     Opcode('LT', 0, -1, 'load two value from the stack and store the result'
                         ' of lower than comparison'),
     Opcode('EQ', 0, -1, 'load two value from the stack and store the result'
@@ -50,17 +51,19 @@ opcodes = [
     Opcode('JUMP_IF_FALSE', 1, -1, 'pop value from the stack and jump if false'
                                    ' to a given position'),
     Opcode('JUMP_IF_TRUE_NOPOP', 1, 0, 'peek value from the stack and jump if '
-                                   'true to a given position'),
+                                       'true to a given position'),
     Opcode('JUMP_IF_FALSE_NOPOP', 1, 0, 'peek value from the stack and jump if '
-                                   'false to a given position'),
+                                        'false to a given position'),
     Opcode('JUMP_ABSOLUTE', 1, 0, 'jump to an absolute position'),
     Opcode('CALL', 1, 255, 'take N arguments from the stack, pack them into'
                            'args and call the next element'),
     Opcode('RETURN', 0, -1, 'return the top of stack')
 ]
 
+
 def setup():
     for i, opcode in enumerate(opcodes):
         globals()[opcode.name] = i
+
 
 setup()

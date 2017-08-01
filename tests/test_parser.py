@@ -1,4 +1,3 @@
-
 from nolang.lexer import get_lexer
 from nolang.parser import get_parser, ParsingState, ParseError
 from nolang import astnodes as ast
@@ -10,6 +9,7 @@ class BaseTest(object):
     def setup_class(self):
         self.parser = get_parser()
         self.lexer = get_lexer()
+
 
 class TestExpressionParser(BaseTest):
     def parse(self, expr):
@@ -60,10 +60,10 @@ class TestParseFunctionBody(BaseTest):
                      ast.Assignment('i', ast.Number(0)),
                      ast.While(ast.BinOp('<', ast.Identifier('i'),
                         ast.Number(10)), [
-                          ast.Assignment('i', ast.BinOp('+',
-                            ast.Identifier('i'), ast.Number(1))),
-                          ast.Assignment('s', ast.BinOp('+',
-                            ast.Identifier('s'), ast.Identifier('i')))]),
+                            ast.Assignment('i', ast.BinOp('+',
+                                ast.Identifier('i'), ast.Number(1))),
+                            ast.Assignment('s', ast.BinOp('+',
+                                ast.Identifier('s'), ast.Identifier('i')))]),
                      ast.Return(ast.Identifier('s'))]
 
 
@@ -86,9 +86,9 @@ class TestFullProgram(BaseTest):
         expected = ast.Program([
             ast.Function('foo', [], [
                 ast.VarDeclaration(['x'])
-                ]),
+            ]),
             ast.Function('main', [], [])
-            ])
+        ])
         assert r == expected
 
     def test_function_declaration_args(self):
@@ -98,8 +98,8 @@ class TestFullProgram(BaseTest):
             ''')
         expected = ast.Program([
             ast.Function('foo', ['a0', 'a1'], [
-                ])
             ])
+        ])
         assert r == expected
 
     def test_empty_try(self):
@@ -127,5 +127,5 @@ class TestFullProgram(BaseTest):
             ast.Import(["foo"], ["bar"]),
             ast.Import(["foo"], ["a", "b", "c", "d"]),
             ast.Import(["foo", "bar"], ["a", "b", 'c'])
-            ])
+        ])
         assert r == expected

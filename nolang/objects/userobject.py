@@ -1,9 +1,8 @@
-
 """ User supplied objects
 """
 
 from nolang.objects.root import W_Root
-from nolang.function import W_Function, W_BoundMethod
+
 
 class W_UserObject(W_Root):
     def __init__(self, w_type):
