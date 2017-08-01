@@ -3,12 +3,14 @@
 on objects
 """
 
+from nolang.error import AppError
 from nolang.objects.root import W_None, W_Root
 from nolang.objects.int import W_IntObject
 from nolang.objects.bool import W_BoolObject
 from nolang.objects.unicode import W_StrObject
 from nolang.objects.buffer import W_BufObject
 from nolang.builtins.spec import wrap_builtin
+from nolang.builtins.exception import W_Exception
 
 class Space(object):
     def __init__(self):
@@ -109,3 +111,7 @@ class Space(object):
 
     def call(self, w_object, args):
         return w_object.call(self, self.interpreter, args)
+
+    # exceptions
+    def apperr(self, w_type_error, msg):
+        return AppError(W_Exception(w_type_error, msg))
