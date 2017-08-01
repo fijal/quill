@@ -67,7 +67,10 @@ def wrap_function(f):
 
 def wrap_type(tp):
     spec = tp.spec
-    allocate = wrap_function(spec.constructor)
+    if spec.constructor is None:
+        allocate = None
+    else:
+        allocate = wrap_function(spec.constructor)
     properties = []
     for name, (get_prop, set_prop) in spec.properties.iteritems():
         if set_prop is not None:

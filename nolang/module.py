@@ -6,6 +6,7 @@ from nolang.objects.root import W_Root
 
 class W_Module(W_Root):
     def __init__(self, name, name2index, functions):
+        self.name = name
         self.name2index = name2index
         self.functions = functions
 

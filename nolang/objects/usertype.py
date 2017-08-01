@@ -25,6 +25,8 @@ class W_UserType(W_Root):
             item.setup(space)
 
     def call(self, space, interpreter, args_w):
+        if self.allocate is None:
+            raise Exception("cannot be called like that")
         w_obj = space.call(self.allocate, [self] + args_w)
         if '__init__' in self.dict_w:
             space.call(self.dict_w['__init__'], [w_obj] + args_w)

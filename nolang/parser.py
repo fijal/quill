@@ -89,7 +89,7 @@ def get_parser():
     def class_definition_inheritance(state, p):
         return ast.ClassDefinition(p[1].getstr(), p[6], p[3].getstr())
 
-    @pg.production('function : FUNCTION IDENTIFIER arglist LEFT_CURLY_BRACE'
+    @pg.production('function : DEF IDENTIFIER arglist LEFT_CURLY_BRACE'
                    ' function_body RIGHT_CURLY_BRACE')
     def function_function_body(state, p):
         return ast.Function(p[1].getstr(), p[2].get_names(),

@@ -27,22 +27,6 @@ RULES = [
     ('TRUEDIV', r'\/\/'),
     ('EQ', r'=='),
     ('ASSIGN', r'='),
-    ('FUNCTION', r'def'),
-    ('CLASS', r'class'),
-    ('RETURN', r'return'),
-    ('VAR', r'var'),
-    ('WHILE', r'while'),
-    ('IF', r'if'),
-    ('OR', r'or'),
-    ('AND', r'and'),
-    ('TRUE', r'true'),
-    ('FALSE', r'false'),
-    ('TRY', r'try'),
-    ('EXCEPT', r'except'),
-    ('FINALLY', r'finally'),
-    ('AS', r'as'),
-    ('RAISE', r'raise'),
-    ('IMPORT', r'import'),
     ('IDENTIFIER', r'[a-zA-Z_][a-zA-Z0-9_]*'),
     ('LEFT_CURLY_BRACE', r'\{'),
     ('LEFT_PAREN', r'\('),
@@ -53,7 +37,28 @@ RULES = [
     ('STRING', r'"[^"]*"'),
 ]
 
-TOKENS = [x[0] for x in RULES]
+KEYWORDS = [
+    'def',
+    'class',
+    'return',
+    'var',
+    'while',
+    'if',
+    'or',
+    'and',
+    'true',
+    'false',
+    'try',
+    'except',
+    'finally',
+    'as',
+    'raise',
+    'import',
+]
+
+TOKENS = [x[0] for x in RULES] + [x.upper() for x in KEYWORDS]
+
+KEYWORD_DICT = dict.fromkeys(KEYWORDS)
 
 class QuillLexerStream(LexerStream):
     _last_token = None
@@ -91,9 +96,12 @@ class QuillLexerStream(LexerStream):
                 lineno = self._lineno
                 colno = self._update_pos(match)
                 source_pos = SourcePosition(match.start, lineno, colno)
-                token = Token(
-                    rule.name, self.s[match.start:match.end], source_pos
-                )
+                val = self.s[match.start:match.end]
+                if val in KEYWORD_DICT:
+                    name = val.upper()
+                else:
+                    name = rule.name
+                token = Token(name, val, source_pos)
                 self._last_token = token
                 return token
         else:

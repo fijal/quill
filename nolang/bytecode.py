@@ -28,8 +28,9 @@ class InvalidStackDepth(Exception):
     pass
 
 class Bytecode(object):
-    def __init__(self, source, varnames, module, constants, bytecode, arglist,
-                 exception_blocks):
+    def __init__(self, filename, source, varnames, module, constants, bytecode,
+                 arglist, exception_blocks):
+        self.filename = filename
         self.source = source
         self.varnames = varnames
         self.module = module
@@ -192,8 +193,9 @@ class _BytecodeBuilder(object):
         self.builder[pos] = chr(target >> 8)
         self.builder[pos + 1] = chr(target & 0xff)
 
-    def build(self, source):
-        return Bytecode(source, self.varnames, self.w_mod, self.constants,
+    def build(self, filename, source):
+        return Bytecode(filename, source, self.varnames, self.w_mod,
+                        self.constants,
                         "".join(self.builder), self.arglist,
                         self.exception_blocks)
 
@@ -205,4 +207,4 @@ def compile_bytecode(ast, source, w_mod, arglist=[]):
     # hack to enable building for now
     builder.emit(opcodes.LOAD_NONE)
     builder.emit(opcodes.RETURN)
-    return builder.build(source)
+    return builder.build(w_mod.name, source)
