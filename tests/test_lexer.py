@@ -1,5 +1,5 @@
-
 from nolang.lexer import get_lexer
+
 
 class TestLexing(object):
     def test_program(self):

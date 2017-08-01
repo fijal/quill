@@ -1,3 +1,2 @@
-
 class TestCompiler(object):
     pass

@@ -1,6 +1,6 @@
-
 import py
 from support import BaseTest
+
 
 class TestExceptions(BaseTest):
     def test_exc_initialize(self):

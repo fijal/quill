@@ -1,7 +1,7 @@
-
 import py
 from support import BaseTest, reformat_code
 from nolang.main import run_code
+
 
 class TestImport(BaseTest):
     def test_basic_import_self(self, tmpdir):
