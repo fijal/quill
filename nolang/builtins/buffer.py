@@ -5,7 +5,11 @@ from nolang.objects.unicode import W_StrObject
 
 @parameters(name='buffer')
 def buffer(space, args_w):
-    if isinstance(args_w[0], W_StrObject):
-        return space.newbuf([c for c in args_w[0].utf8val])
-    if isinstance(args_w[0], W_IntObject):
-        return space.newbuf(['\x00'] * args_w[0]._intval)
+    assert isinstance(args_w[0], W_IntObject)
+    return space.newbuf(['\x00'] * args_w[0]._intval)
+
+
+@parameters(name='buffer_from_utf8')
+def buffer_from_utf8(space, args_w):
+    assert isinstance(args_w[0], W_StrObject)
+    return space.newbuf([c for c in args_w[0].utf8val])
