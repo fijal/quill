@@ -34,14 +34,14 @@ class BaseTest(object):
         self.parser = get_parser()
         self.lexer = get_lexer()
         self.space = Space()
-        self.space.setup_builtins(default_builtins())
+        self.space.setup_builtins(*default_builtins())
         self.interpreter = Interpreter()
         self.space.setup(self.interpreter)
 
     def compile(self, body):
         program = reformat_expr(body)
         ast = self.parse(program)
-        w_mod = compile_module(self.space, program, ast)
+        w_mod = compile_module(self.space, '<test>', program, ast)
         return compile_bytecode(ast.elements[0], program, w_mod)
 
     def parse(self, program):
@@ -54,6 +54,6 @@ class BaseTest(object):
     def interpret(self, code):
         source = reformat_code(code)
         ast = self.parse(source)
-        w_mod = compile_module(self.space, source, ast)
-        w_mod.initialize(self.space)
+        w_mod = compile_module(self.space, 'test', source, ast)
+        w_mod.setup(self.space)
         return self.space.call_method(w_mod, 'main', [])

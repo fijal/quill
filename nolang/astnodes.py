@@ -12,8 +12,13 @@ from nolang.compiler import compile_class
 
 from rply.token import BaseBox
 
+class NameAlreadyDefined(Exception):
+    def __init__(self, name):
+        self.name = name
+
 class StoringIntoGlobal(Exception):
-    pass
+    def __init__(self, name):
+        self.name = name
 
 class AstNode(BaseBox):
     def compile(self, state):
@@ -121,13 +126,19 @@ class Function(AstNode):
     def get_name(self):
         return self.name
 
+    def add_name(self, mapping):
+        if self.name in mapping:
+            raise NameAlreadyDefined(self.name)
+        mapping[self.name] = len(mapping)
+
     def compile(self, state):
         for item in self.body:
             item.compile(state)
 
-    def wrap_as_global_symbol(self, space, source, w_mod):
-        return W_Function(self.name, compile_bytecode(self, source,
-                          w_mod, self.arglist))
+    def add_global_symbols(self, space, globals_w, source, w_mod):
+        w_g = W_Function(self.name, compile_bytecode(self, source,
+                         w_mod, self.arglist))
+        globals_w.append(w_g)
 
 class ClassDefinition(AstNode):
     def __init__(self, name, body, parent=None):
@@ -138,14 +149,20 @@ class ClassDefinition(AstNode):
     def get_name(self):
         return self.name
 
+    def add_name(self, mapping):
+        if self.name in mapping:
+            raise NameAlreadyDefined(self.name)
+        mapping[self.name] = len(mapping)
+
     def get_element_list(self):
         return self.body.get_element_list()
 
-    def wrap_as_global_symbol(self, space, source, w_mod):
+    def add_global_symbols(self, space, globals_w, source, w_mod):
         t = compile_class(space, source, self, w_mod, self.parent)
         alloc, class_elements_w, w_parent, default_alloc = t
-        return W_UserType(alloc, self.name, class_elements_w, w_parent,
-                          default_alloc)
+        w_g = W_UserType(alloc, self.name, class_elements_w, w_parent,
+                         default_alloc)
+        globals_w.append(w_g)
 
 class While(AstNode):
     def __init__(self, expr, block):
@@ -303,7 +320,7 @@ class Assignment(AstNode):
         self.expr.compile(state)
         op, varno = state.get_variable(self.varname)
         if op == opcodes.LOAD_GLOBAL:
-            raise StoringIntoGlobal()
+            raise StoringIntoGlobal(self.varname)
         state.emit(opcodes.STORE, varno)
 
 class Call(AstNode):
@@ -406,6 +423,25 @@ class Import(AstNode):
     def __init__(self, import_part, names):
         self.import_part = import_part
         self.names = names
+
+    def add_name(self, mapping):
+        if not self.names:
+            names = self.import_part
+        else:
+            names = self.names
+        for name in names:
+            if name in mapping:
+                raise NameAlreadyDefined(name)
+            mapping[name] = len(mapping)
+
+    def add_global_symbols(self, space, globals_w, source, w_mod):
+        w_module = space.import_symbols(self.import_part)
+        if self.names is None:
+            globals_w.append(w_module)
+        else:
+            assert len(self.import_part) == 1
+            for name in self.names:
+                globals_w.append(space.getattr(w_module, name))
 
 class IdentifierListPartial(AstNode):
     def __init__(self, name, next, extra=None):

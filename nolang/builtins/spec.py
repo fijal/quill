@@ -26,7 +26,7 @@ class TypeSpec(object):
         self.methods = methods
         self.properties = properties
 
-def wrap_function(space, f):
+def wrap_function(f):
     name = f.__name__
     argnames = f.__code__.co_varnames[:f.__code__.co_argcount]
     lines = ['def %s(space, args_w):' % name]
@@ -65,9 +65,9 @@ def wrap_function(space, f):
         exported_name = f.unwrap_parameters.get('name', exported_name)
     return W_BuiltinFunction(exported_name, d[name], numargs)
 
-def wrap_type(space, tp):
+def wrap_type(tp):
     spec = tp.spec
-    allocate = wrap_function(space, spec.constructor)
+    allocate = wrap_function(spec.constructor)
     properties = []
     for name, (get_prop, set_prop) in spec.properties.iteritems():
         if set_prop is not None:
@@ -75,8 +75,8 @@ def wrap_type(space, tp):
         properties.append(W_Property(name, get_prop.im_func, set_prop))
     return W_UserType(allocate, spec.name, properties, None, default_alloc=False)
 
-def wrap_builtin(space, builtin):
+def wrap_builtin(builtin):
     if isinstance(builtin, types.FunctionType):
-        return wrap_function(space, builtin)
+        return wrap_function(builtin)
     else:
-        return wrap_type(space, builtin)
+        return wrap_type(builtin)

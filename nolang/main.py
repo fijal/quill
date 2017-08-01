@@ -23,7 +23,7 @@ def main(argv):
 parser = get_parser()
 lexer = get_lexer()
 space = Space()
-space.setup_builtins(default_builtins())
+space.setup_builtins(*default_builtins())
 
 def format_parser_error(pe):
     print "Error parsing input file %s, line %d: %s" % (pe.filename, pe.lineno,
@@ -46,8 +46,8 @@ def run_code(fname):
     except ParseError as pe:
         format_parser_error(pe)
         return 1
-    w_mod = compile_module(space, source, ast)
-    w_mod.initialize(space)
+    w_mod = compile_module(space, fname.split('.')[0], source, ast)
+    w_mod.setup(space)
     space.call_method(w_mod, 'main', [])
     return 0
 

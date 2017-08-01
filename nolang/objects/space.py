@@ -19,13 +19,19 @@ class Space(object):
     def setup(self, interpreter):
         self.interpreter = interpreter
 
-    def setup_builtins(self, builtins):
-        self.builtins_w = [wrap_builtin(self, builtin)
-                           for builtin in builtins]
+    def setup_builtins(self, builtins, coremod):
+        self.builtins_w = [wrap_builtin(builtin) for builtin in builtins]
         self.builtin_dict = {}
         for builtin in self.builtins_w:
             self.builtin_dict[builtin.name] = builtin
         self.w_exception = self.builtin_dict['Exception']
+        self.coremod = coremod
+
+    def import_symbols(self, import_names):
+        package = import_names[0]
+        if package == 'core':
+            return self.coremod
+        raise Exception("importing unimplemented")
 
     def setattr(self, w_obj, attrname, w_value):
         w_obj.setattr(self, attrname, w_value)
