@@ -50,7 +50,10 @@ def wrap_function(f):
                 raise Exception("No spec found for %s while wrapping %s" %
                                 (argname, name))
             if spec == 'str':
-                argval = 'space.str(args_w[%d])' % j
+                argval = 'space.utf8_w(args_w[%d])' % j
+                j += 1
+            elif spec == 'int':
+                argval = 'space.int_w(args_w[%d])' % j
                 j += 1
             else:
                 assert False
