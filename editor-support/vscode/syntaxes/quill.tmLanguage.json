@@ -1,0 +1,120 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Quill",
+	"patterns": [
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#literals"
+		},
+		{
+			"include": "#function"
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.quill",
+				"match": "\\b(def|class|return|var|while|if|or|and|true|false|try|except|finally|as|raise|import)\\b"
+			}]
+		},
+		"comments": {
+			"patterns": [
+				{
+					"name": "comment.block.quill",
+					"begin": "/\\*",
+					"end": "\\*/",
+					"captures": {
+						"0": {
+							"name": "punctuation.definition.comment.quill"
+						}
+					}
+				},
+				{
+					"name": "comment.line.double-slash.quill",
+					"match": "(//).*$\n?",
+					"captures": {
+						"1": {
+							"name": "punctuation.definition.comment.quill"
+						}
+					}
+				}
+			]
+		},
+		"literals": {
+			"patterns": [
+				{
+					"include": "#strings"
+				},
+				{
+					"include": "#bools"
+				},
+				{
+					"include": "#numbers"
+				}
+			]
+		},
+		"strings": {
+			"name": "string.quoted.double.quill",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.quill",
+					"match": "\\\\."
+				}
+			]
+		},
+		"bools": {
+			"patterns": [
+				{
+					"name": "constant.language.boolean.true.quill",
+					"match": "(?<!\\.|\\$)\\btrue\\b(?!\\$)"
+				},
+				{
+					"name": "constant.language.boolean.false.quill",
+					"match": "(?<!\\.|\\$)\\bfalse\\b(?!\\$)"
+				}
+			]
+		},
+		"numbers": {
+			"patterns": [
+				{
+					"name": "constant.numeric.hex.quill",
+					"match": "\\b(?<!\\$)0(x|X)[0-9a-fA-F]+\\b(?!\\$)"
+				},
+				{
+					"match": "(?x)\n(?<!\\$)(?:\n  (?:\\b[0-9]+(\\.)[0-9]+[eE][+-]?[0-9]+\\b)| # 1.1E+3\n  (?:\\b[0-9]+(\\.)[eE][+-]?[0-9]+\\b)|       # 1.E+3\n  (?:\\B(\\.)[0-9]+[eE][+-]?[0-9]+\\b)|       # .1E+3\n  (?:\\b[0-9]+[eE][+-]?[0-9]+\\b)|            # 1E+3\n  (?:\\b[0-9]+(\\.)[0-9]+\\b)|                # 1.1\n  (?:\\b[0-9]+(\\.)\\B)|                      # 1.\n  (?:\\B(\\.)[0-9]+\\b)|                      # .1\n  (?:\\b[0-9]+\\b(?!\\.))                     # 1\n)(?!\\$)",
+					"captures": {
+						"0": {
+							"name": "constant.numeric.decimal.quill"
+						},
+						"1": {
+							"name": "meta.delimiter.decimal.period.quill"
+						},
+						"2": {
+							"name": "meta.delimiter.decimal.period.quill"
+						},
+						"3": {
+							"name": "meta.delimiter.decimal.period.quill"
+						},
+						"4": {
+							"name": "meta.delimiter.decimal.period.quill"
+						},
+						"5": {
+							"name": "meta.delimiter.decimal.period.quill"
+						},
+						"6": {
+							"name": "meta.delimiter.decimal.period.quill"
+						}
+					}
+				}
+			]
+		}
+	},
+	"scopeName": "source.quill"
+}
