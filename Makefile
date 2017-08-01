@@ -15,7 +15,7 @@ clean:
 	@rm -f nolang-c
 
 lint: ensure-venv
-	@flake8
+	@venv/bin/flake8
 
 test: ensure-venv
 	@venv/bin/pytest tests --tb=short
