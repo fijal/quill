@@ -4,6 +4,7 @@
 
 from nolang.objects.root import W_Root
 
+
 class W_Module(W_Root):
     def __init__(self, name, name2index, functions):
         self.name = name
@@ -15,4 +16,4 @@ class W_Module(W_Root):
             item.setup(space)
 
     def getattr(self, space, name):
-        return self.functions[self.name2index[name]] # XXX error handling
+        return self.functions[self.name2index[name]]  # XXX error handling

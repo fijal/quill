@@ -3,6 +3,7 @@ from rply import LexerGenerator
 from rply.lexer import Lexer, LexerStream
 from rply.token import SourcePosition, Token
 
+
 class ParseError(Exception):
     def __init__(self, msg, line, filename, lineno, start_colno, end_colno):
         self.msg = msg
@@ -16,6 +17,7 @@ class ParseError(Exception):
         # 6 comes from formatting of ParseError by pytest
         return (self.line + "\n" + " " * (self.start_colno - 6) +
                 "^" * (self.end_colno - self.start_colno))
+
 
 RULES = [
     ('INTEGER', r'\d+'),
@@ -60,6 +62,7 @@ TOKENS = [x[0] for x in RULES] + [x.upper() for x in KEYWORDS]
 
 KEYWORD_DICT = dict.fromkeys(KEYWORDS)
 
+
 class QuillLexerStream(LexerStream):
     _last_token = None
 
@@ -78,8 +81,8 @@ class QuillLexerStream(LexerStream):
                 lineno = self._lineno
                 colno = self._update_pos(match)
                 if "\n" in self.s[match.start:match.end]:
-                    if self._last_token.name not in ('RIGHT_CURLY_BRACE',
-                        'RIGHT_PAREN', 'IDENTIFIER', 'INTEGER'):
+                    if self._last_token.name not in \
+                       ('RIGHT_CURLY_BRACE', 'RIGHT_PAREN', 'IDENTIFIER', 'INTEGER'):
                         continue
                     source_pos = SourcePosition(match.start, lineno, colno)
                     token = Token(
@@ -119,9 +122,11 @@ class QuillLexer(Lexer):
     def lex(self, filename, s):
         return QuillLexerStream(self, filename, s)
 
+
 class QuillLexerGenerator(LexerGenerator):
     def build(self):
         return QuillLexer(self.rules, self.ignore_rules)
+
 
 def get_lexer():
     lg = QuillLexerGenerator()

@@ -1,4 +1,3 @@
-
 """ Class containing convinient shortcut for calling all things
 on objects
 """
@@ -9,9 +8,10 @@ from nolang.objects.bool import W_BoolObject
 from nolang.objects.unicode import W_StrObject
 from nolang.builtins.spec import wrap_builtin
 
+
 class Space(object):
     def __init__(self):
-        self.w_None = W_None() # singleton
+        self.w_None = W_None()  # singleton
         self.w_True = W_BoolObject(True)
         self.w_False = W_BoolObject(False)
         self.w_NotImplemented = W_Root()

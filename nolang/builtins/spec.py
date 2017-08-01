@@ -1,4 +1,3 @@
-
 """ Various specifications for builtins
 """
 
@@ -7,11 +6,13 @@ import py
 from nolang.function import W_BuiltinFunction, W_Property
 from nolang.objects.usertype import W_UserType
 
+
 def unwrap_spec(**spec):
     def wrapper(func):
         func.unwrap_spec = spec
         return func
     return wrapper
+
 
 def parameters(**args):
     def wrapper(func):
@@ -19,12 +20,14 @@ def parameters(**args):
         return func
     return wrapper
 
+
 class TypeSpec(object):
     def __init__(self, name, constructor, methods, properties):
         self.constructor = constructor
         self.name = name
         self.methods = methods
         self.properties = properties
+
 
 def wrap_function(f):
     name = f.__name__
@@ -65,6 +68,7 @@ def wrap_function(f):
         exported_name = f.unwrap_parameters.get('name', exported_name)
     return W_BuiltinFunction(exported_name, d[name], numargs)
 
+
 def wrap_type(tp):
     spec = tp.spec
     if spec.constructor is None:
@@ -77,6 +81,7 @@ def wrap_type(tp):
             set_prop = set_prop.im_func
         properties.append(W_Property(name, get_prop.im_func, set_prop))
     return W_UserType(allocate, spec.name, properties, None, default_alloc=False)
+
 
 def wrap_builtin(builtin):
     if isinstance(builtin, types.FunctionType):

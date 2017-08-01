@@ -1,10 +1,10 @@
-
 """ Main declaration of function
 """
 
 from nolang.objects.root import W_Root
 from nolang.frameobject import Frame
 from nolang.error import ArgumentMismatchError
+
 
 class W_Function(W_Root):
     def __init__(self, name, bytecode):
@@ -24,6 +24,7 @@ class W_Function(W_Root):
     def bind(self, space, w_obj):
         return W_BoundMethod(w_obj, self)
 
+
 class W_BuiltinFunction(W_Root):
     def __init__(self, name, callable, num_args):
         self.name = name
@@ -41,6 +42,7 @@ class W_BuiltinFunction(W_Root):
     def __repr__(self):
         return "<BuiltinFunction %s/%d>" % (self.name, self.num_args)
 
+
 class W_Property(W_Root):
     def __init__(self, name, getter, setter):
         self.name = name
@@ -52,6 +54,7 @@ class W_Property(W_Root):
 
     def setup(self, space):
         pass
+
 
 class W_BoundMethod(W_Root):
     def __init__(self, w_self, w_function):

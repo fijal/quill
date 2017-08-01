@@ -1,4 +1,3 @@
-
 """ Main module compiler
 """
 
@@ -8,6 +7,7 @@ from nolang.builtins.spec import wrap_function
 
 from rpython.rlib.objectmodel import specialize
 
+
 def _gather_names(ast, builtins):
     name_mapping = {}
     if builtins is not None:
@@ -16,6 +16,7 @@ def _gather_names(ast, builtins):
     for item in ast.get_element_list():
         item.add_name(name_mapping)
     return name_mapping
+
 
 def compile_module(space, name, source, ast):
     name_mapping = _gather_names(ast, space.builtins_w)
@@ -28,12 +29,15 @@ def compile_module(space, name, source, ast):
         item.add_global_symbols(space, globals_w, source, w_mod)
     return w_mod
 
+
 def new_user_object(space, args_w):
     return W_UserObject(args_w[0])
+
 
 @specialize.memo()
 def get_alloc(space):
     return wrap_function(new_user_object)
+
 
 def compile_class(space, source, ast, w_mod, parent=None):
     if parent is not None:

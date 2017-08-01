@@ -7,6 +7,7 @@ from nolang import opcodes
 from nolang.error import AppError
 from nolang.builtins.exception import W_Exception
 
+
 class InvalidOpcode(Exception):
     def __init__(self, opcode):
         self.opcode = opcode
@@ -17,8 +18,10 @@ class InvalidOpcode(Exception):
         except IndexError:
             return "<InvalidOpcode %d>" % self.opcode
 
+
 class UninitializedVariable(Exception):
-    pass # XXX add logic to present the error
+    pass  # XXX add logic to present the error
+
 
 class Interpreter(object):
     def __init__(self):
@@ -128,10 +131,10 @@ class Interpreter(object):
                 res = self.handle_error(space, frame, ae.w_exception)
                 if res:
                     cur_exc = ae.w_exception
-                    frame.stack_depth = 0 # clear stack
+                    frame.stack_depth = 0  # clear stack
                     index = res
                     continue
-                raise ae # reraise the error if not handled
+                raise ae  # reraise the error if not handled
 
     def handle_error(self, space, frame, w_exception):
         if frame.resume_stack_depth:
