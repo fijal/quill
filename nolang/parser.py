@@ -14,7 +14,7 @@ class ParsingState(object):
 
 def errorhandler(state, lookahead):
     lines = state.input.splitlines()
-    sourcepos = lookahead.getsourcepos()
+    sourcepos = lookahead.getsourcepos().start
     line = lines[sourcepos.lineno - 1]
     assert isinstance(lookahead, Token)
     raise ParseError('Parsing error', line, state.filename, sourcepos.lineno,

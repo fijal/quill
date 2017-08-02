@@ -4,6 +4,24 @@ from rply.lexer import Lexer, LexerStream
 from rply.token import SourcePosition, Token
 
 
+class SourceRange(object):
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+
+    def _tuple(self):
+        return ((self.start.idx, self.start.lineno, self.start.colno),
+                (self.end.idx, self.end.lineno, self.end.colno))
+
+    def __eq__(self, other):
+        # Special case so we can ignore position info in tests.
+        if other is None:
+            return True
+        if self.__class__ != other.__class__:
+            return False
+        return self._tuple() == other._tuple()
+
+
 class ParseError(Exception):
     def __init__(self, msg, line, filename, lineno, start_colno, end_colno):
         self.msg = msg
@@ -70,6 +88,24 @@ class QuillLexerStream(LexerStream):
         self._filename = filename
         LexerStream.__init__(self, lexer, s)
 
+    def _update_pos(self, match):
+        self.idx = match.end
+        start_line = self._lineno
+        self._lineno += self.s.count("\n", match.start, match.end)
+        last_nl = self.s.rfind("\n", 0, match.start)
+        if last_nl < 0:
+            start_col = match.start + 1
+        else:
+            start_col = match.start - last_nl
+        last_nl = self.s.rfind("\n", 0, match.end)
+        if last_nl < 0:
+            end_col = match.end + 1
+        else:
+            end_col = match.end - last_nl
+        return SourceRange(
+            SourcePosition(match.start, start_line, start_col),
+            SourcePosition(match.end, self._lineno, end_col))
+
     def next(self):
         while True:
             if self.idx >= len(self.s):
@@ -78,15 +114,13 @@ class QuillLexerStream(LexerStream):
             whitespace_rule = self.lexer.ignore_rules[0]
             match = whitespace_rule.matches(self.s, self.idx)
             if match is not None:
-                lineno = self._lineno
-                colno = self._update_pos(match)
+                source_range = self._update_pos(match)
                 if "\n" in self.s[match.start:match.end]:
                     if self._last_token.name not in \
                        ('RIGHT_CURLY_BRACE', 'RIGHT_PAREN', 'IDENTIFIER', 'INTEGER'):
                         continue
-                    source_pos = SourcePosition(match.start, lineno, colno)
                     token = Token(
-                        'SEMICOLON', self.s[match.start:match.end], source_pos
+                        'SEMICOLON', self.s[match.start:match.end], source_range
                     )
                     self._last_token = token
                     return token
@@ -96,15 +130,13 @@ class QuillLexerStream(LexerStream):
         for rule in self.lexer.rules:
             match = rule.matches(self.s, self.idx)
             if match:
-                lineno = self._lineno
-                colno = self._update_pos(match)
-                source_pos = SourcePosition(match.start, lineno, colno)
+                source_range = self._update_pos(match)
                 val = self.s[match.start:match.end]
                 if val in KEYWORD_DICT:
                     name = val.upper()
                 else:
                     name = rule.name
-                token = Token(name, val, source_pos)
+                token = Token(name, val, source_range)
                 self._last_token = token
                 return token
         else:
