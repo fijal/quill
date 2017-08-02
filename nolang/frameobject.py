@@ -2,9 +2,8 @@ from nolang.objects.root import W_Root
 
 
 class Frame(W_Root):
-    def __init__(self, bytecode, f_back):
+    def __init__(self, bytecode):
         self.bytecode = bytecode
-        self.f_back = f_back
         if bytecode.module is not None:  # for tests
             self.globals_w = bytecode.module.functions
         self.locals_w = [None] * len(bytecode.varnames)
@@ -33,3 +32,14 @@ class Frame(W_Root):
 
     def store_var(self, index):
         self.locals_w[index] = self.pop()
+
+def format_traceback(space, apperr):
+    lines = []
+    w_exception = apperr.w_exception
+    tb = apperr.traceback
+    while tb:
+        lines.append("file %s, line %d" % (tb.bytecode.filename, tb.position))
+        tb = tb.next
+    lines.append("%s: %s" % (space.type(w_exception).name, w_exception.message))
+    lines.append("")
+    return "\n".join(lines)

@@ -3,10 +3,9 @@ from nolang.objects.userobject import W_UserObject
 
 
 class W_Exception(W_UserObject):
-    def __init__(self, w_tp, message, frame=None):
+    def __init__(self, w_tp, message):
         W_UserObject.__init__(self, w_tp)
         self.message = message
-        self.frame = frame
 
     def get_message(self, space):
         return space.newtext(self.message)

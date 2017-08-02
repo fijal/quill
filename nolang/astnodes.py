@@ -129,10 +129,12 @@ class Program(AstNode):
 
 
 class Function(AstNode):
-    def __init__(self, name, arglist, body):
+    def __init__(self, startlineno, endlineno, name, arglist, body):
         self.name = name
         self.arglist = arglist
         self.body = body
+        self.startlineno = startlineno
+        self.endlineno = endlineno
 
     def get_name(self):
         return self.name
@@ -148,7 +150,8 @@ class Function(AstNode):
 
     def add_global_symbols(self, space, globals_w, source, w_mod):
         w_g = W_Function(self.name, compile_bytecode(self, source,
-                         w_mod, self.arglist))
+                         w_mod, self.arglist, self.startlineno,
+                         self.endlineno))
         globals_w.append(w_g)
 
 

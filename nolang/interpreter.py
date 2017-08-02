@@ -28,11 +28,12 @@ class Interpreter(object):
         self.topframeref = None
 
     def interpret(self, space, bytecode, frame):
+        back = self.topframeref
         try:
             self.topframeref = frame
             return self._interpret(space, bytecode, frame)
         finally:
-            self.topframeref = frame.f_back
+            self.topframeref = back
 
     def _interpret(self, space, bytecode, frame):
         index = 0
@@ -128,6 +129,7 @@ class Interpreter(object):
                 else:
                     index += 5
             except AppError as ae:
+                ae.record_position(frame, bytecode, index)
                 res = self.handle_error(space, frame, ae.w_exception)
                 if res:
                     cur_exc = ae.w_exception

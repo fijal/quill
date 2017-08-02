@@ -15,7 +15,7 @@ class W_Function(W_Root):
         self.bytecode.setup(space)
 
     def call(self, space, interpreter, args_w):
-        frame = Frame(self.bytecode, interpreter.topframeref)
+        frame = Frame(self.bytecode)
         if len(self.bytecode.arglist) != len(args_w):
             raise ArgumentMismatchError()
         frame.populate_args(args_w)

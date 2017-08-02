@@ -33,7 +33,7 @@ class InvalidStackDepth(Exception):
 
 class Bytecode(object):
     def __init__(self, filename, source, varnames, module, constants, bytecode,
-                 arglist, exception_blocks):
+                 arglist, exception_blocks, lnotab):
         self.filename = filename
         self.source = source
         self.varnames = varnames
@@ -45,6 +45,7 @@ class Bytecode(object):
         self.stack_depth, self.resume_stack_depth = r
         self.arglist = arglist
         self.exception_blocks = exception_blocks
+        self.lnotab = lnotab
 
     def setup(self, space):
         self.constants = [None] * len(self._constants)
@@ -139,6 +140,7 @@ class _BytecodeBuilder(object):
         for name in arglist:
             self.register_variable(name)
         self.arglist = arglist
+        self.lnotab = []
 
     def add_constant(self, const):
         no = len(self.constants)
@@ -176,7 +178,8 @@ class _BytecodeBuilder(object):
         self.exception_blocks.append(ExceptionBlock(types_w))
         return len(self.exception_blocks) - 1
 
-    def emit(self, opcode, arg0=0, arg1=0):
+    def emit(self, lineno, opcode, arg0=0, arg1=0):
+        self.lnotab.append(lineno)
         self.builder.append(chr(opcode))
         assert arg0 < 0x10000
         assert arg1 < 0x10000
@@ -200,14 +203,17 @@ class _BytecodeBuilder(object):
         self.builder[pos] = chr(target >> 8)
         self.builder[pos + 1] = chr(target & 0xff)
 
+    def _packlnotab(self, lnotab):
+        return lnotab
+
     def build(self, filename, source):
         return Bytecode(filename, source, self.varnames, self.w_mod,
                         self.constants,
                         "".join(self.builder), self.arglist,
-                        self.exception_blocks)
+                        self.exception_blocks, self._packlnotab(self.lnotab))
 
-
-def compile_bytecode(ast, source, w_mod, arglist=[]):
+def compile_bytecode(ast, source, w_mod, arglist=[], startlineno=0,
+                     endlineno=0):
     """ Compile the bytecode from produced AST.
     """
     builder = _BytecodeBuilder(w_mod, arglist[:])
