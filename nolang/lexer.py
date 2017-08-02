@@ -13,6 +13,9 @@ class SourceRange(object):
         return ((self.start.idx, self.start.lineno, self.start.colno),
                 (self.end.idx, self.end.lineno, self.end.colno))
 
+    def __repr__(self):
+        return "SourceRange(start=%r, end=%r)" % (self.start, self.end)
+
     def __eq__(self, other):
         # Special case so we can ignore position info in tests.
         if other is None:
