@@ -157,6 +157,45 @@ class TestFullProgram(BaseTest):
         ], srcpos=mkpos(4, 1, 5, 67, 5, 6))
         assert r == expected
 
+    def test_ast_pos_except(self):
+        r = self.parse('''
+            def main() {
+                try {
+                    raise Exception("foo");
+                } except A {
+                    return 1;
+                } except Exception {
+                    return 13;
+                }
+            }
+            ''')
+        expected = ast.Program([
+            ast.Function('main', [], [
+                ast.TryExcept([
+                    ast.Raise(
+                        ast.Call(
+                            ast.Identifier('Exception', srcpos=mkpos(49, 3, 19, 58, 3, 28)),
+                            [ast.String('foo', srcpos=mkpos(59, 3, 29, 64, 3, 34))],
+                            srcpos=mkpos(49, 3, 19, 65, 3, 35)),
+                        srcpos=mkpos(43, 3, 13, 66, 3, 36))
+                ], [
+                    ast.ExceptClause(
+                        ['A'], None, [
+                            ast.Return(
+                                ast.Number(1, srcpos=mkpos(107, 5, 20, 108, 5, 21)),
+                                srcpos=mkpos(100, 5, 13, 109, 5, 22))
+                        ], srcpos=mkpos(77, 4, 11, 119, 6, 10)),
+                    ast.ExceptClause(
+                        ['Exception'], None, [
+                            ast.Return(
+                                ast.Number(13, srcpos=mkpos(158, 7, 20, 160, 7, 22)),
+                                srcpos=mkpos(151, 7, 13, 161, 7, 23))
+                        ], srcpos=mkpos(120, 6, 11, 171, 8, 10)),
+                ], srcpos=mkpos(25, 2, 9, 171, 8, 10))
+            ], srcpos=mkpos(4, 1, 5, 177, 9, 6))
+        ], srcpos=mkpos(4, 1, 5, 177, 9, 6))
+        assert r == expected
+
 
 def mkpos(si, sl, sc, ei, el, ec):
     return SourceRange(SourcePosition(si, sl, sc), SourcePosition(ei, el, ec))
