@@ -19,7 +19,8 @@ class TestExpressionParser(BaseTest):
         return ast.elements[0].body[0].expr
 
     def test_add(self):
-        assert self.parse('1 + 1') == ast.BinOp('+', ast.Number(1), ast.Number(1), None)
+        assert self.parse('1 + 1') == ast.BinOp(
+            '+', ast.Number(1), ast.Number(1), oppos=(15, 16))
 
     def test_various_kinds_of_calls(self):
         r = self.parse('x(1, 2, 3)')
@@ -42,9 +43,11 @@ class TestParseFunctionBody(BaseTest):
             x = 3;
             x = x + 1;
             ''')
-        assert r == [ast.VarDeclaration(['x']), ast.Assignment('x',
-                 ast.Number(3)), ast.Assignment('x', ast.BinOp('+',
-                    ast.Identifier('x'), ast.Number(1), None))]
+        assert r == [
+            ast.VarDeclaration(['x']),
+            ast.Assignment('x', ast.Number(3)),
+            ast.Assignment('x', ast.BinOp('+', ast.Identifier('x'),
+                                          ast.Number(1), oppos=(46, 47)))]
 
     def test_while_loop(self):
         r = self.parse('''
@@ -56,15 +59,16 @@ class TestParseFunctionBody(BaseTest):
             }
             return s;
             ''')
-        assert r == [ast.VarDeclaration(['i', 's']),
-                     ast.Assignment('i', ast.Number(0)),
-                     ast.While(ast.BinOp('<', ast.Identifier('i'),
-                        ast.Number(10), None), [
-                            ast.Assignment('i', ast.BinOp('+',
-                                ast.Identifier('i'), ast.Number(1), None)),
-                            ast.Assignment('s', ast.BinOp('+',
-                                ast.Identifier('s'), ast.Identifier('i'), None))]),
-                     ast.Return(ast.Identifier('s'))]
+        assert r == [
+            ast.VarDeclaration(['i', 's']),
+            ast.Assignment('i', ast.Number(0)),
+            ast.While(
+                ast.BinOp('<', ast.Identifier('i'), ast.Number(10), oppos=(51, 52)), [
+                    ast.Assignment('i', ast.BinOp(
+                        '+', ast.Identifier('i'), ast.Number(1), oppos=(72, 73))),
+                    ast.Assignment('s', ast.BinOp(
+                        '+', ast.Identifier('s'), ast.Identifier('i'), oppos=(91, 92)))]),
+            ast.Return(ast.Identifier('s'))]
 
 
 class TestFullProgram(BaseTest):
@@ -86,8 +90,8 @@ class TestFullProgram(BaseTest):
         expected = ast.Program([
             ast.Function('foo', [], [
                 ast.VarDeclaration(['x'])
-            ]),
-            ast.Function('main', [], [])
+            ], lineno=1),
+            ast.Function('main', [], [], lineno=4)
         ])
         assert r == expected
 
@@ -98,7 +102,7 @@ class TestFullProgram(BaseTest):
             ''')
         expected = ast.Program([
             ast.Function('foo', ['a0', 'a1'], [
-            ])
+            ], lineno=1)
         ])
         assert r == expected
 
@@ -131,7 +135,7 @@ class TestFullProgram(BaseTest):
         assert r == expected
 
     def test_ast_pos(self):
-        r = self.parse('''
+        program = self.parse('''
             def foo(n) {
                 return n + 1;
             }
@@ -139,24 +143,19 @@ class TestFullProgram(BaseTest):
             def main() {
             }
             ''')
-        expected = ast.Program([
-            ast.Function('foo', ['n'], [
-                ast.Return(
-                    ast.BinOp(
-                        '+',
-                        ast.Identifier('n', srcpos=(32, 33)),
-                        ast.Number(1, srcpos=(36, 37)),
-                        oppos=(34, 35), srcpos=(32, 37)
-                    ),
-                    srcpos=(25, 38)
-                )
-            ], lineno=1, srcpos=(4, 44)),
-            ast.Function('main', [], [], lineno=4, srcpos=(49, 67))
-        ], srcpos=(4, 67))
-        assert r == expected
+        assert program.getsourcepos() == (4, 67)
+        [func_foo, func_main] = program.elements
+        assert func_foo.getsourcepos() == (4, 44)
+        assert func_main.getsourcepos() == (49, 67)
+        [ret] = func_foo.body
+        assert ret.getsourcepos() == (25, 38)
+        binop = ret.expr
+        assert binop.getsourcepos() == (32, 37)
+        assert binop.left.getsourcepos() == (32, 33)
+        assert binop.right.getsourcepos() == (36, 37)
 
     def test_ast_pos_except(self):
-        r = self.parse('''
+        program = self.parse('''
             def main() {
                 try {
                     raise Exception("foo");
@@ -166,18 +165,10 @@ class TestFullProgram(BaseTest):
                 }
             }
             ''')
-        expected = ast.Program([
-            ast.Function('main', [], [
-                ast.TryExcept([
-                    ast.Raise(ast.Call(ast.Identifier('Exception'), [ast.String('foo')]))
-                ], [
-                    ast.ExceptClause(
-                        ['A'], None, [ast.Return(ast.Number(1))],
-                        srcpos=(77, 119)),
-                    ast.ExceptClause(
-                        ['Exception'], None, [],
-                        srcpos=(120, 148)),
-                ], srcpos=(25, 148))
-            ], lineno=1, srcpos=(4, 154))
-        ])
-        assert r == expected
+        [func_main] = program.elements
+        assert func_main.getsourcepos() == (4, 154)
+        [try_except] = func_main.body
+        assert try_except.getsourcepos() == (25, 148)
+        [except_A, except_Exception] = try_except.except_blocks
+        assert except_A.getsourcepos() == (77, 119)
+        assert except_Exception.getsourcepos() == (120, 148)
