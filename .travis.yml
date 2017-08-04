@@ -1,5 +1,8 @@
 sudo: false
 language: python
+cache:
+  directories:
+    - venv
 
 python: 2.7
 
