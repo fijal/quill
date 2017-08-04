@@ -143,16 +143,16 @@ class TestFullProgram(BaseTest):
             def main() {
             }
             ''')
-        assert program.getsourcepos() == (4, 67)
+        assert program.getsrcpos() == (4, 67)
         [func_foo, func_main] = program.elements
-        assert func_foo.getsourcepos() == (4, 44)
-        assert func_main.getsourcepos() == (49, 67)
+        assert func_foo.getsrcpos() == (4, 44)
+        assert func_main.getsrcpos() == (49, 67)
         [ret] = func_foo.body
-        assert ret.getsourcepos() == (25, 38)
+        assert ret.getsrcpos() == (25, 38)
         binop = ret.expr
-        assert binop.getsourcepos() == (32, 37)
-        assert binop.left.getsourcepos() == (32, 33)
-        assert binop.right.getsourcepos() == (36, 37)
+        assert binop.getsrcpos() == (32, 37)
+        assert binop.left.getsrcpos() == (32, 33)
+        assert binop.right.getsrcpos() == (36, 37)
 
     def test_ast_pos_except(self):
         program = self.parse('''
@@ -166,9 +166,9 @@ class TestFullProgram(BaseTest):
             }
             ''')
         [func_main] = program.elements
-        assert func_main.getsourcepos() == (4, 154)
+        assert func_main.getsrcpos() == (4, 154)
         [try_except] = func_main.body
-        assert try_except.getsourcepos() == (25, 148)
+        assert try_except.getsrcpos() == (25, 148)
         [except_A, except_Exception] = try_except.except_blocks
-        assert except_A.getsourcepos() == (77, 119)
-        assert except_Exception.getsourcepos() == (120, 148)
+        assert except_A.getsrcpos() == (77, 119)
+        assert except_Exception.getsrcpos() == (120, 148)

@@ -7,7 +7,7 @@ from nolang import astnodes as ast
 
 
 def sr(p):
-    return (p[0].getsourcepos()[0], p[-1].getsourcepos()[1])
+    return (p[0].getsrcpos()[0], p[-1].getsrcpos()[1])
 
 
 class ParsingState(object):

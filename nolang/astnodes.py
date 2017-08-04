@@ -28,7 +28,7 @@ class AstNode(BaseBox):
             srcpos = (None, None)
         self._startidx, self._endidx = srcpos
 
-    def getsourcepos(self):
+    def getsrcpos(self):
         return (self._startidx, self._endidx)
 
     def getstartidx(self):

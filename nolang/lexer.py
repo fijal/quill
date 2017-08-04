@@ -1,6 +1,11 @@
 from rply import LexerGenerator
 from rply.lexer import Lexer, LexerStream
-from rply.token import Token
+from rply.token import Token as RplyToken
+
+
+class Token(RplyToken):
+    def getsrcpos(self):
+        return (self.source_pos.start, self.source_pos.end)
 
 
 class SourceRange(object):
@@ -9,9 +14,6 @@ class SourceRange(object):
         self.end = end
         self.lineno = lineno
         self.colno = colno
-
-    def __getitem__(self, i):
-        return (self.start, self.end, self.lineno)[i]
 
     def __repr__(self):
         return "SourceRange(start=%d, end=%d, lineno=%d, colno=%d)" % (
