@@ -4,7 +4,7 @@
 nolang-c <program.no>
 """
 
-import sys
+import sys, os
 
 from nolang.interpreter import Interpreter
 from nolang.parser import get_parser, ParsingState, ParseError
@@ -56,7 +56,7 @@ def run_code(fname):
     try:
         space.call_method(w_mod, 'main', [])
     except AppError as e:
-        sys.stdout.write(format_traceback(space, e))
+        os.write(2, format_traceback(space, e))
         return 1
     return 0
 
