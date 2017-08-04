@@ -2,8 +2,12 @@
 import rply
 from rply.token import Token
 
-from nolang.lexer import TOKENS, ParseError
+from nolang.lexer import TOKENS, ParseError, SourceRange
 from nolang import astnodes as ast
+
+
+def sr(p):
+    return SourceRange(p[0].getsourcepos().start, p[-1].getsourcepos().end)
 
 
 class ParsingState(object):
@@ -14,7 +18,7 @@ class ParsingState(object):
 
 def errorhandler(state, lookahead):
     lines = state.input.splitlines()
-    sourcepos = lookahead.getsourcepos()
+    sourcepos = lookahead.getsourcepos().start
     line = lines[sourcepos.lineno - 1]
     assert isinstance(lookahead, Token)
     raise ParseError('Parsing error', line, state.filename, sourcepos.lineno,
@@ -36,7 +40,8 @@ def get_parser():
 
     @pg.production('program : body')
     def program_body(state, p):
-        return ast.Program(p[0].get_element_list())
+        element_list = p[0].get_element_list()
+        return ast.Program(element_list, srcpos=sr(element_list))
 
     @pg.production('body :')
     def body_empty(state, p):
@@ -63,14 +68,14 @@ def get_parser():
     def body_element_import_statement(state, p):
         basename = p[1].getstr()
         if p[2] is None and p[3] is None:
-            return ast.Import([basename], [])
+            return ast.Import([basename], [], srcpos=sr(p))
         if p[3] is None:
             names = p[2].get_names()
-            return ast.Import([basename] + names[:-1], [names[-1]])
+            return ast.Import([basename] + names[:-1], [names[-1]], srcpos=sr(p))
         if p[2] is None:
-            return ast.Import([basename], p[3].get_names())
+            return ast.Import([basename], p[3].get_names(), srcpos=sr(p))
         return ast.Import([basename] + p[2].get_names(),
-                          p[3].get_names())
+                          p[3].get_names(), srcpos=sr(p))
 
     @pg.production('optional_import :')
     def optional_import_empty(state, p):
@@ -85,20 +90,18 @@ def get_parser():
     @pg.production('class_definition : CLASS IDENTIFIER LEFT_CURLY_BRACE body '
                    'RIGHT_CURLY_BRACE')
     def class_definition(state, p):
-        return ast.ClassDefinition(p[1].getstr(), p[3])
+        return ast.ClassDefinition(p[1].getstr(), p[3], srcpos=sr(p))
 
     @pg.production('class_definition : CLASS IDENTIFIER LEFT_PAREN IDENTIFIER '
                    'RIGHT_PAREN LEFT_CURLY_BRACE body RIGHT_CURLY_BRACE')
     def class_definition_inheritance(state, p):
-        return ast.ClassDefinition(p[1].getstr(), p[6], p[3].getstr())
+        return ast.ClassDefinition(p[1].getstr(), p[6], p[3].getstr(), srcpos=sr(p))
 
     @pg.production('function : DEF IDENTIFIER arglist LEFT_CURLY_BRACE'
                    ' function_body RIGHT_CURLY_BRACE')
     def function_function_body(state, p):
-        startlineno = p[0].source_pos.lineno
-        endlineno = p[5].source_pos.lineno
-        return ast.Function(startlineno, endlineno, p[1].getstr(),
-                            p[2].get_names(), p[4].get_element_list())
+        return ast.Function(p[1].getstr(), p[2].get_names(),
+                            p[4].get_element_list(), srcpos=sr(p))
 
     @pg.production('function_body :')
     def function_body_empty(state, p):
@@ -110,7 +113,7 @@ def get_parser():
 
     @pg.production('statement : expression SEMICOLON')
     def statement_expression(state, p):
-        return ast.Statement(p[0])
+        return ast.Statement(p[0], srcpos=sr(p))
 
     @pg.production('statement : SEMICOLON')
     def staement_empty(state, p):
@@ -118,7 +121,7 @@ def get_parser():
 
     @pg.production('statement : VAR IDENTIFIER var_decl SEMICOLON')
     def statement_var_decl(state, p):
-        return ast.VarDeclaration([p[1].getstr()] + p[2].get_names())
+        return ast.VarDeclaration([p[1].getstr()] + p[2].get_names(), srcpos=sr(p))
 
     @pg.production('var_decl : ')
     def var_decl_empty(state, p):
@@ -130,29 +133,29 @@ def get_parser():
 
     @pg.production('statement : IDENTIFIER ASSIGN expression SEMICOLON')
     def statement_identifier_assign_expr(state, p):
-        return ast.Assignment(p[0].getstr(), p[2])
+        return ast.Assignment(p[0].getstr(), p[2], srcpos=sr(p))
 
     @pg.production('statement : atom DOT IDENTIFIER ASSIGN expression SEMICOLON')
     def statement_setattr(state, p):
-        return ast.Setattr(p[0], p[2].getstr(), p[4])
+        return ast.Setattr(p[0], p[2].getstr(), p[4], srcpos=sr(p))
 
     @pg.production('statement : RETURN expression SEMICOLON')
     def statement_return(state, p):
-        return ast.Return(p[1])
+        return ast.Return(p[1], srcpos=sr(p))
 
     @pg.production('statement : WHILE expression LEFT_CURLY_BRACE function_body'
                    ' RIGHT_CURLY_BRACE')
     def statement_while_loop(state, p):
-        return ast.While(p[1], p[3].get_element_list())
+        return ast.While(p[1], p[3].get_element_list(), srcpos=sr(p))
 
     @pg.production('statement : IF expression LEFT_CURLY_BRACE function_body'
                    ' RIGHT_CURLY_BRACE')
     def statement_if_block(state, p):
-        return ast.If(p[1], p[3].get_element_list())
+        return ast.If(p[1], p[3].get_element_list(), srcpos=sr(p))
 
     @pg.production('statement : RAISE expression SEMICOLON')
     def statement_raise(state, p):
-        return ast.Raise(p[1])
+        return ast.Raise(p[1], srcpos=sr(p))
 
     @pg.production('statement : TRY LEFT_CURLY_BRACE function_body '
                    'RIGHT_CURLY_BRACE except_finally_clauses')
@@ -160,7 +163,7 @@ def get_parser():
         if p[4] is None:
             errorhandler(state, p[0])
         lst = p[4].gather_list()
-        return ast.TryExcept(p[2].get_element_list(), lst)
+        return ast.TryExcept(p[2].get_element_list(), lst, srcpos=sr([p[0], lst[-1]]))
 
     @pg.production('except_finally_clauses : ')
     def except_finally_clases_empty(state, p):
@@ -169,20 +172,24 @@ def get_parser():
     @pg.production('except_finally_clauses : EXCEPT IDENTIFIER LEFT_CURLY_BRACE'
                    ' function_body RIGHT_CURLY_BRACE except_finally_clauses')
     def except_finally_clauses_except(state, p):
+        # We want the position information for the clause, not the list.
         return ast.ExceptClauseList([p[1].getstr()], None,
-                                    p[3].get_element_list(), p[5])
+                                    p[3].get_element_list(), p[5],
+                                    srcpos=sr(p[:-1]))
 
     @pg.production('except_finally_clauses : EXCEPT IDENTIFIER AS IDENTIFIER '
                    'LEFT_CURLY_BRACE function_body RIGHT_CURLY_BRACE '
                    'except_finally_clauses')
     def except_finally_clauses_except_as_identifier(state, p):
+        # We want the position information for the clause, not the list.
         return ast.ExceptClauseList([p[1].getstr()], p[3].getstr(),
-                                    p[5].get_element_list(), p[7])
+                                    p[5].get_element_list(), p[7],
+                                    srcpos=sr(p[:-1]))
 
     @pg.production('except_finally_clauses : FINALLY LEFT_CURLY_BRACE '
                    'function_body RIGHT_CURLY_BRACE')
     def except_finally_clauses_finally(state, p):
-        return ast.FinallyClause(p[2].get_element_list())
+        return ast.FinallyClause(p[2].get_element_list(), srcpos=sr(p))
 
     @pg.production('identifier_list : COMMA IDENTIFIER identifier_list')
     def identifier_list_arglist(state, p):
@@ -202,15 +209,15 @@ def get_parser():
 
     @pg.production('arglist : LEFT_PAREN RIGHT_PAREN')
     def arglist(state, p):
-        return ast.ArgList([])
+        return ast.ArgList([], srcpos=sr(p))
 
     @pg.production('arglist : LEFT_PAREN IDENTIFIER var_decl RIGHT_PAREN')
     def arglist_non_empty(state, p):
-        return ast.ArgList([p[1].getstr()] + p[2].get_names())
+        return ast.ArgList([p[1].getstr()] + p[2].get_names(), srcpos=sr(p))
 
     @pg.production('expression : INTEGER')
     def expression_number(state, p):
-        return ast.Number(int(p[0].getstr()))
+        return ast.Number(int(p[0].getstr()), srcpos=sr(p))
 
     @pg.production('expression : STRING')
     def expression_string(state, p):
@@ -218,7 +225,7 @@ def get_parser():
         s = p[0].getstr()
         end = len(s) - 1
         assert end >= 0
-        return ast.String(s[1:end])
+        return ast.String(s[1:end], srcpos=sr(p))
 
     @pg.production('expression : atom')
     def expression_atom(state, p):
@@ -226,28 +233,28 @@ def get_parser():
 
     @pg.production('expression : expression OR expression')
     def expression_or_expression(state, p):
-        return ast.Or(p[0], p[2])
+        return ast.Or(p[0], p[2], srcpos=sr(p))
 
     @pg.production('expression : expression AND expression')
     def expression_and_expression(state, p):
-        return ast.And(p[0], p[2])
+        return ast.And(p[0], p[2], srcpos=sr(p))
 
     @pg.production('atom : TRUE')
     def atom_true(state, p):
-        return ast.TrueNode()
+        return ast.TrueNode(srcpos=sr(p))
 
     @pg.production('atom : IDENTIFIER')
     def atom_identifier(state, p):
-        return ast.Identifier(p[0].getstr())
+        return ast.Identifier(p[0].getstr(), srcpos=sr(p))
 
     @pg.production('atom : FALSE')
     def atom_false(state, p):
-        return ast.FalseNode()
+        return ast.FalseNode(srcpos=sr(p))
 
     @pg.production('atom : atom LEFT_PAREN expression_list '
                    'RIGHT_PAREN')
     def atom_call(state, p):
-        return ast.Call(p[0], p[2].get_element_list())
+        return ast.Call(p[0], p[2].get_element_list(), srcpos=sr(p))
 
     @pg.production('atom : LEFT_PAREN expression RIGHT_PAREN')
     def atom_paren_expression_paren(state, p):
@@ -255,7 +262,7 @@ def get_parser():
 
     @pg.production('atom : atom DOT IDENTIFIER')
     def atom_dot_identifier(state, p):
-        return ast.Getattr(p[0], p[2].getstr())
+        return ast.Getattr(p[0], p[2].getstr(), srcpos=sr(p))
 
     @pg.production('expression : expression PLUS expression')
     @pg.production('expression : expression MINUS expression')
@@ -264,7 +271,7 @@ def get_parser():
     @pg.production('expression : expression LT expression')
     @pg.production('expression : expression EQ expression')
     def expression_lt_expression(state, p):
-        return ast.BinOp(p[1].getstr(), p[0], p[2])
+        return ast.BinOp(p[1].getstr(), p[0], p[2], srcpos=sr(p))
 
     @pg.production('expression_list : ')
     def expression_list_empty(state, p):

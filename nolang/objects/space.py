@@ -2,11 +2,14 @@
 on objects
 """
 
+from nolang.error import AppError
 from nolang.objects.root import W_None, W_Root
 from nolang.objects.int import W_IntObject
 from nolang.objects.bool import W_BoolObject
 from nolang.objects.unicode import W_StrObject
+from nolang.objects.buffer import W_BufObject
 from nolang.builtins.spec import wrap_builtin
+from nolang.builtins.exception import W_Exception
 
 
 class Space(object):
@@ -65,12 +68,18 @@ class Space(object):
     def newtext(self, utf8val):
         return W_StrObject(utf8val)
 
+    def newbuf(self, charsval):
+        return W_BufObject(charsval)
+
     # foo_w unwrappers
     def int_w(self, w_obj):
         return w_obj.int_w(self)
 
     def utf8_w(self, w_obj):
         return w_obj.utf8_w(self)
+
+    def buffer_w(self, w_obj):
+        return w_obj.buffer_w(self)
 
     # unary operations
     def is_true(self, w_obj):
@@ -102,3 +111,7 @@ class Space(object):
 
     def call(self, w_object, args):
         return w_object.call(self, self.interpreter, args)
+
+    # exceptions
+    def apperr(self, w_type_error, msg):
+        return AppError(W_Exception(w_type_error, msg))
