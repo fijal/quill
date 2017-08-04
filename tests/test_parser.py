@@ -22,10 +22,15 @@ class TestStringParser(BaseTest):
         assert self.parse('"foo"') == 'foo'
 
     def test_string_quote(self):
-        assert self.parse('"foo\\"bar"') == 'foo"bar'
+        assert self.parse(r'"foo\"bar"') == 'foo"bar'
 
     def test_string_quote_only(self):
-        assert self.parse('"\\""') == '"'
+        assert self.parse(r'"\""') == '"'
+
+    def test_string_escaped_escapes(self):
+        assert self.parse(r'"\\"') == '\\'
+        assert self.parse(r'"\\\""') == '\\"'
+        assert self.parse(r'"\\\"\\"') == '\\"\\'
 
 
 class TestExpressionParser(BaseTest):
