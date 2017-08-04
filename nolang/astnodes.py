@@ -146,8 +146,6 @@ class Function(AstNode):
         self.name = name
         self.arglist = arglist
         self.body = body
-        self.startlineno = startlineno
-        self.endlineno = endlineno
 
     def get_name(self):
         return self.name
