@@ -21,7 +21,7 @@ class TestExpressionParser(BaseTest):
         return ast.elements[0].body[0].expr
 
     def test_add(self):
-        assert self.parse('1 + 1') == ast.BinOp('+', None, ast.Number(1), ast.Number(1))
+        assert self.parse('1 + 1') == ast.BinOp('+', ast.Number(1), ast.Number(1), None)
 
     def test_various_kinds_of_calls(self):
         r = self.parse('x(1, 2, 3)')
@@ -46,7 +46,7 @@ class TestParseFunctionBody(BaseTest):
             ''')
         assert r == [ast.VarDeclaration(['x']), ast.Assignment('x',
                  ast.Number(3)), ast.Assignment('x', ast.BinOp('+',
-                    ast.Identifier('x'), ast.Number(1)))]
+                    ast.Identifier('x'), ast.Number(1), None))]
 
     def test_while_loop(self):
         r = self.parse('''
@@ -61,11 +61,11 @@ class TestParseFunctionBody(BaseTest):
         assert r == [ast.VarDeclaration(['i', 's']),
                      ast.Assignment('i', ast.Number(0)),
                      ast.While(ast.BinOp('<', ast.Identifier('i'),
-                        ast.Number(10)), [
+                        ast.Number(10), None), [
                             ast.Assignment('i', ast.BinOp('+',
-                                ast.Identifier('i'), ast.Number(1))),
+                                ast.Identifier('i'), ast.Number(1), None)),
                             ast.Assignment('s', ast.BinOp('+',
-                                ast.Identifier('s'), ast.Identifier('i')))]),
+                                ast.Identifier('s'), ast.Identifier('i'), None))]),
                      ast.Return(ast.Identifier('s'))]
 
 
@@ -148,7 +148,7 @@ class TestFullProgram(BaseTest):
                         '+',
                         ast.Identifier('n', srcpos=mkpos(32, 2, 16, 33, 2, 17)),
                         ast.Number(1, srcpos=mkpos(36, 2, 20, 37, 2, 21)),
-                        srcpos=mkpos(32, 2, 16, 37, 2, 21)
+                        None, srcpos=mkpos(32, 2, 16, 37, 2, 21)
                     ),
                     srcpos=mkpos(25, 2, 9, 38, 2, 22)
                 )
