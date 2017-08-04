@@ -1,7 +1,24 @@
-
 from rply import LexerGenerator
 from rply.lexer import Lexer, LexerStream
-from rply.token import SourcePosition, Token
+from rply.token import Token as RplyToken
+
+
+class Token(RplyToken):
+    def getsrcpos(self):
+        return (self.source_pos.start, self.source_pos.end)
+
+
+class SourceRange(object):
+    def __init__(self, start, end, lineno, colno):
+        self.start = start
+        self.end = end
+        self.lineno = lineno
+        self.colno = colno
+
+    def __repr__(self):
+        return "SourceRange(start=%d, end=%d, lineno=%d, colno=%d)" % (
+            self.start, self.end, self.lineno, self.colno)
+
 
 class ParseError(Exception):
     def __init__(self, msg, line, filename, lineno, start_colno, end_colno):
@@ -17,6 +34,7 @@ class ParseError(Exception):
         return (self.line + "\n" + " " * (self.start_colno - 6) +
                 "^" * (self.end_colno - self.start_colno))
 
+
 RULES = [
     ('INTEGER', r'\d+'),
     ('PLUS', r'\+'),
@@ -27,22 +45,6 @@ RULES = [
     ('TRUEDIV', r'\/\/'),
     ('EQ', r'=='),
     ('ASSIGN', r'='),
-    ('FUNCTION', r'def'),
-    ('CLASS', r'class'),
-    ('RETURN', r'return'),
-    ('VAR', r'var'),
-    ('WHILE', r'while'),
-    ('IF', r'if'),
-    ('OR', r'or'),
-    ('AND', r'and'),
-    ('TRUE', r'true'),
-    ('FALSE', r'false'),
-    ('TRY', r'try'),
-    ('EXCEPT', r'except'),
-    ('FINALLY', r'finally'),
-    ('AS', r'as'),
-    ('RAISE', r'raise'),
-    ('IMPORT', r'import'),
     ('IDENTIFIER', r'[a-zA-Z_][a-zA-Z0-9_]*'),
     ('LEFT_CURLY_BRACE', r'\{'),
     ('LEFT_PAREN', r'\('),
@@ -53,7 +55,29 @@ RULES = [
     ('STRING', r'"[^"]*"'),
 ]
 
-TOKENS = [x[0] for x in RULES]
+KEYWORDS = [
+    'def',
+    'class',
+    'return',
+    'var',
+    'while',
+    'if',
+    'or',
+    'and',
+    'true',
+    'false',
+    'try',
+    'except',
+    'finally',
+    'as',
+    'raise',
+    'import',
+]
+
+TOKENS = [x[0] for x in RULES] + [x.upper() for x in KEYWORDS]
+
+KEYWORD_DICT = dict.fromkeys(KEYWORDS)
+
 
 class QuillLexerStream(LexerStream):
     _last_token = None
@@ -61,6 +85,17 @@ class QuillLexerStream(LexerStream):
     def __init__(self, lexer, filename, s):
         self._filename = filename
         LexerStream.__init__(self, lexer, s)
+
+    def _update_pos(self, match):
+        lineno = self._lineno
+        self.idx = match.end
+        self._lineno += self.s.count("\n", match.start, match.end)
+        last_nl = self.s.rfind("\n", 0, match.start)
+        if last_nl < 0:
+            colno = match.start + 1
+        else:
+            colno = match.start - last_nl
+        return SourceRange(match.start, match.end, lineno, colno)
 
     def next(self):
         while True:
@@ -70,15 +105,13 @@ class QuillLexerStream(LexerStream):
             whitespace_rule = self.lexer.ignore_rules[0]
             match = whitespace_rule.matches(self.s, self.idx)
             if match is not None:
-                lineno = self._lineno
-                colno = self._update_pos(match)
+                source_range = self._update_pos(match)
                 if "\n" in self.s[match.start:match.end]:
-                    if self._last_token.name not in ('RIGHT_CURLY_BRACE',
-                        'RIGHT_PAREN', 'IDENTIFIER', 'INTEGER'):
+                    if self._last_token.name not in \
+                       ('RIGHT_CURLY_BRACE', 'RIGHT_PAREN', 'IDENTIFIER', 'INTEGER'):
                         continue
-                    source_pos = SourcePosition(match.start, lineno, colno)
                     token = Token(
-                        'SEMICOLON', self.s[match.start:match.end], source_pos
+                        'SEMICOLON', self.s[match.start:match.end], source_range
                     )
                     self._last_token = token
                     return token
@@ -88,12 +121,13 @@ class QuillLexerStream(LexerStream):
         for rule in self.lexer.rules:
             match = rule.matches(self.s, self.idx)
             if match:
-                lineno = self._lineno
-                colno = self._update_pos(match)
-                source_pos = SourcePosition(match.start, lineno, colno)
-                token = Token(
-                    rule.name, self.s[match.start:match.end], source_pos
-                )
+                source_range = self._update_pos(match)
+                val = self.s[match.start:match.end]
+                if val in KEYWORD_DICT:
+                    name = val.upper()
+                else:
+                    name = rule.name
+                token = Token(name, val, source_range)
                 self._last_token = token
                 return token
         else:
@@ -111,9 +145,11 @@ class QuillLexer(Lexer):
     def lex(self, filename, s):
         return QuillLexerStream(self, filename, s)
 
+
 class QuillLexerGenerator(LexerGenerator):
     def build(self):
         return QuillLexer(self.rules, self.ignore_rules)
+
 
 def get_lexer():
     lg = QuillLexerGenerator()

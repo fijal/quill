@@ -5,6 +5,8 @@ dispatch loop.
 
 from nolang import opcodes
 from nolang.error import AppError
+from nolang.builtins.exception import W_Exception
+
 
 class InvalidOpcode(Exception):
     def __init__(self, opcode):
@@ -16,19 +18,22 @@ class InvalidOpcode(Exception):
         except IndexError:
             return "<InvalidOpcode %d>" % self.opcode
 
+
 class UninitializedVariable(Exception):
-    pass # XXX add logic to present the error
+    pass  # XXX add logic to present the error
+
 
 class Interpreter(object):
     def __init__(self):
         self.topframeref = None
 
     def interpret(self, space, bytecode, frame):
+        back = self.topframeref
         try:
             self.topframeref = frame
             return self._interpret(space, bytecode, frame)
         finally:
-            self.topframeref = frame.f_back
+            self.topframeref = back
 
     def _interpret(self, space, bytecode, frame):
         index = 0
@@ -82,7 +87,9 @@ class Interpreter(object):
                     self.push_resume_stack(space, frame, bytecode, arg0)
                 elif op == opcodes.RAISE:
                     w_exception = frame.pop()
-                    space.setattr(w_exception, 'frame', frame)
+                    if not isinstance(w_exception, W_Exception):
+                        raise Exception("handle this correctly")
+                    w_exception.frame = frame
                     raise AppError(w_exception)
                 elif op == opcodes.COMPARE_EXCEPTION:
                     index = self.compare_exception(space, frame,
@@ -122,13 +129,14 @@ class Interpreter(object):
                 else:
                     index += 5
             except AppError as ae:
+                ae.record_position(frame, bytecode, index)
                 res = self.handle_error(space, frame, ae.w_exception)
                 if res:
                     cur_exc = ae.w_exception
-                    frame.stack_depth = 0 # clear stack
+                    frame.stack_depth = 0  # clear stack
                     index = res
                     continue
-                raise ae # reraise the error if not handled
+                raise ae  # reraise the error if not handled
 
     def handle_error(self, space, frame, w_exception):
         if frame.resume_stack_depth:

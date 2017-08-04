@@ -1,6 +1,7 @@
 
 from support import BaseTest
 
+
 class TestClasses(BaseTest):
     def test_simple_class(self):
         w_res = self.interpret('''

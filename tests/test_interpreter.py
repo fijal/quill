@@ -1,5 +1,5 @@
-
 from support import BaseTest
+
 
 class TestInterpreterBasic(BaseTest):
     def test_interpret(self):
@@ -77,7 +77,8 @@ class TestInterpreterBasic(BaseTest):
 
     def test_longer_blocks(self):
         code = '\n'.join(['if 0 < 3 {'] + ['    1;'] * 300 + ['}'])
-        self.interpret_expr(code) # assert did not crash
+        self.interpret_expr(code)  # assert did not crash
+
 
 class TestInterpreter(BaseTest):
     def test_basic(self):

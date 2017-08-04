@@ -1,36 +1,49 @@
-
 """ Class containing convinient shortcut for calling all things
 on objects
 """
 
-from nolang.objects.root import W_None
+from nolang.error import AppError
+from nolang.objects.root import W_None, W_Root
 from nolang.objects.int import W_IntObject
 from nolang.objects.bool import W_BoolObject
 from nolang.objects.unicode import W_StrObject
-from nolang.objects.usertype import W_UserType
-from nolang.function import BuiltinFunction
-from nolang.builtins.exception import exception_init
+from nolang.objects.buffer import W_BufObject
+from nolang.builtins.spec import wrap_builtin
+from nolang.builtins.exception import W_Exception
+
 
 class Space(object):
     def __init__(self):
-        self.w_None = W_None() # singleton
+        self.w_None = W_None()  # singleton
         self.w_True = W_BoolObject(True)
         self.w_False = W_BoolObject(False)
-        self.setup_exception()
+        self.w_NotImplemented = W_Root()
 
     def setup(self, interpreter):
         self.interpreter = interpreter
 
-    def setup_exception(self):
-        self.w_exc_type = W_UserType("Exception", [
-            BuiltinFunction("__init__", exception_init, 2)],
-            None)
+    def setup_builtins(self, builtins, coremod):
+        self.builtins_w = [wrap_builtin(builtin) for builtin in builtins]
+        self.builtin_dict = {}
+        for builtin in self.builtins_w:
+            self.builtin_dict[builtin.name] = builtin
+        self.w_exception = self.builtin_dict['Exception']
+        self.coremod = coremod
+
+    def import_symbols(self, import_names):
+        package = import_names[0]
+        if package == 'core':
+            return self.coremod
+        raise Exception("importing unimplemented")
 
     def setattr(self, w_obj, attrname, w_value):
         w_obj.setattr(self, attrname, w_value)
 
     def getattr(self, w_obj, attrname):
-        return w_obj.getattr(self, attrname)
+        w_res = w_obj.getattr(self, attrname)
+        if w_res is self.w_NotImplemented:
+            return self.getattr(self.type(w_obj), attrname).bind(self, w_obj)
+        return w_res
 
     def str(self, w_obj):
         return w_obj.str(self)
@@ -40,7 +53,8 @@ class Space(object):
         return w_left.issubclass(w_right)
 
     def type(self, w_obj):
-        return w_obj.w_type
+        # for builtin types we know exactly what type is it based on class
+        return w_obj.gettype(self)
 
     # newfoo wrappers
     def newint(self, intval):
@@ -54,12 +68,18 @@ class Space(object):
     def newtext(self, utf8val):
         return W_StrObject(utf8val)
 
+    def newbuf(self, charsval):
+        return W_BufObject(charsval)
+
     # foo_w unwrappers
     def int_w(self, w_obj):
         return w_obj.int_w(self)
 
     def utf8_w(self, w_obj):
         return w_obj.utf8_w(self)
+
+    def buffer_w(self, w_obj):
+        return w_obj.buffer_w(self)
 
     # unary operations
     def is_true(self, w_obj):
@@ -86,8 +106,12 @@ class Space(object):
 
     # various calls
     def call_method(self, w_object, method_name, args):
-        w_obj = w_object.getattr_w(method_name)
+        w_obj = w_object.getattr(self, method_name)
         return w_obj.call(self, self.interpreter, args)
 
     def call(self, w_object, args):
         return w_object.call(self, self.interpreter, args)
+
+    # exceptions
+    def apperr(self, w_type_error, msg):
+        return AppError(W_Exception(w_type_error, msg))

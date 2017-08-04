@@ -1,0 +1,26 @@
+{
+    "name": "quill",
+    "displayName": "quill",
+    "description": "Syntax support for quill",
+    "version": "0.0.1",
+    "publisher": "quill",
+    "engines": {
+        "vscode": "^1.14.0"
+    },
+    "categories": [
+        "Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "quill",
+            "aliases": ["Quill", "quill"],
+            "extensions": ["q"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "quill",
+            "scopeName": "source.quill",
+            "path": "./syntaxes/quill.tmLanguage.json"
+        }]
+    }
+}

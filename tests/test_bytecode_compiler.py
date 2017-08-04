@@ -1,6 +1,6 @@
-
 import re
 from support import BaseTest
+
 
 class TestBytecodeCompiler(BaseTest):
 
@@ -37,7 +37,7 @@ class TestBytecodeCompiler(BaseTest):
         x = x + 1
         """
         bc = self.compile(body)
-        self.assert_equals(bc,"""
+        self.assert_equals(bc, """
             LOAD_CONSTANT 0
             STORE 0
             LOAD_VARIABLE 0
