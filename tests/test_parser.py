@@ -1,6 +1,4 @@
-from rply.token import SourcePosition
-
-from nolang.lexer import get_lexer, SourceRange
+from nolang.lexer import get_lexer
 from nolang.parser import get_parser, ParsingState, ParseError
 from nolang import astnodes as ast
 
@@ -146,15 +144,15 @@ class TestFullProgram(BaseTest):
                 ast.Return(
                     ast.BinOp(
                         '+',
-                        ast.Identifier('n', srcpos=mkpos(32, 2, 16, 33, 2, 17)),
-                        ast.Number(1, srcpos=mkpos(36, 2, 20, 37, 2, 21)),
-                        None, srcpos=mkpos(32, 2, 16, 37, 2, 21)
+                        ast.Identifier('n', srcpos=(32, 33)),
+                        ast.Number(1, srcpos=(36, 37)),
+                        oppos=(34, 35), srcpos=(32, 37)
                     ),
-                    srcpos=mkpos(25, 2, 9, 38, 2, 22)
+                    srcpos=(25, 38)
                 )
-            ], srcpos=mkpos(4, 1, 5, 44, 3, 6)),
-            ast.Function('main', [], [], srcpos=mkpos(49, 4, 5, 67, 5, 6))
-        ], srcpos=mkpos(4, 1, 5, 67, 5, 6))
+            ], lineno=1, srcpos=(4, 44)),
+            ast.Function('main', [], [], lineno=4, srcpos=(49, 67))
+        ], srcpos=(4, 67))
         assert r == expected
 
     def test_ast_pos_except(self):
@@ -175,15 +173,11 @@ class TestFullProgram(BaseTest):
                 ], [
                     ast.ExceptClause(
                         ['A'], None, [ast.Return(ast.Number(1))],
-                        srcpos=mkpos(77, 4, 11, 119, 6, 10)),
+                        srcpos=(77, 119)),
                     ast.ExceptClause(
                         ['Exception'], None, [],
-                        srcpos=mkpos(120, 6, 11, 148, 7, 10)),
-                ], srcpos=mkpos(25, 2, 9, 148, 7, 10))
-            ], srcpos=mkpos(4, 1, 5, 154, 8, 6))
+                        srcpos=(120, 148)),
+                ], srcpos=(25, 148))
+            ], lineno=1, srcpos=(4, 154))
         ])
         assert r == expected
-
-
-def mkpos(si, sl, sc, ei, el, ec):
-    return SourceRange(SourcePosition(si, sl, sc), SourcePosition(ei, el, ec))

@@ -9,20 +9,11 @@ class SourceRange(object):
         self.start = start
         self.end = end
 
-    def _tuple(self):
-        return ((self.start.idx, self.start.lineno, self.start.colno),
-                (self.end.idx, self.end.lineno, self.end.colno))
+    def __getitem__(self, i):
+        return (self.start.idx, self.end.idx)[i]
 
     def __repr__(self):
         return "SourceRange(start=%r, end=%r)" % (self.start, self.end)
-
-    def __eq__(self, other):
-        # Special case so we can ignore position info in tests.
-        if other is None:
-            return True
-        if self.__class__ != other.__class__:
-            return False
-        return self._tuple() == other._tuple()
 
 
 class ParseError(Exception):
