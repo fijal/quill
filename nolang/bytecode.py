@@ -195,9 +195,11 @@ class _BytecodeBuilder(object):
         if numargs > 0:
             self.builder.append(chr(arg0 >> 8))
             self.builder.append(chr(arg0 & 0xff))
+            self.lnotab += [0] * 2
         if numargs > 1:
             self.builder.append(chr(arg1 >> 8))
             self.builder.append(chr(arg1 & 0xff))
+            self.lnotab += [0] * 2
         assert numargs <= 2
 
     def get_position(self):
