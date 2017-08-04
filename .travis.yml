@@ -14,7 +14,7 @@ matrix:
     - env: RUN=compile
 
 script:
-  - make $RUN
+  - make $RUN RPYTHONFLAGS=--batch
 
 notifications:
   irc:
