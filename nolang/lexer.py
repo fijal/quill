@@ -52,7 +52,7 @@ RULES = [
     ('RIGHT_CURLY_BRACE', r'\}'),
     ('COMMA', r','),
     ('SEMICOLON', r';'),
-    ('STRING', r'"(\\\\|\\"|[^"])*"'),
+    ('STRING', r'"(\\\\|\\.|[^"\\])*"'),
 ]
 
 KEYWORDS = [
