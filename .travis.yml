@@ -6,10 +6,15 @@ python: 2.7
 install:
   - make venv
 
+matrix:
+  fast_finish: true
+  include:
+    - env: RUN=lint
+    - env: RUN=test
+    - env: RUN=compile
+
 script:
-  - make compile
-  - make test
-  - make lint
+  - make $RUN
 
 notifications:
   irc:
