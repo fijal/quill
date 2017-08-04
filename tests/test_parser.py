@@ -1,6 +1,4 @@
-from rply.token import SourcePosition
-
-from nolang.lexer import get_lexer, SourceRange
+from nolang.lexer import get_lexer
 from nolang.parser import get_parser, ParsingState, ParseError
 from nolang import astnodes as ast
 
@@ -21,7 +19,7 @@ class TestExpressionParser(BaseTest):
         return ast.elements[0].body[0].expr
 
     def test_add(self):
-        assert self.parse('1 + 1') == ast.BinOp('+', None, ast.Number(1), ast.Number(1))
+        assert self.parse('1 + 1') == ast.BinOp('+', ast.Number(1), ast.Number(1), None)
 
     def test_various_kinds_of_calls(self):
         r = self.parse('x(1, 2, 3)')
@@ -46,7 +44,7 @@ class TestParseFunctionBody(BaseTest):
             ''')
         assert r == [ast.VarDeclaration(['x']), ast.Assignment('x',
                  ast.Number(3)), ast.Assignment('x', ast.BinOp('+',
-                    ast.Identifier('x'), ast.Number(1)))]
+                    ast.Identifier('x'), ast.Number(1), None))]
 
     def test_while_loop(self):
         r = self.parse('''
@@ -61,11 +59,11 @@ class TestParseFunctionBody(BaseTest):
         assert r == [ast.VarDeclaration(['i', 's']),
                      ast.Assignment('i', ast.Number(0)),
                      ast.While(ast.BinOp('<', ast.Identifier('i'),
-                        ast.Number(10)), [
+                        ast.Number(10), None), [
                             ast.Assignment('i', ast.BinOp('+',
-                                ast.Identifier('i'), ast.Number(1))),
+                                ast.Identifier('i'), ast.Number(1), None)),
                             ast.Assignment('s', ast.BinOp('+',
-                                ast.Identifier('s'), ast.Identifier('i')))]),
+                                ast.Identifier('s'), ast.Identifier('i'), None))]),
                      ast.Return(ast.Identifier('s'))]
 
 
@@ -146,15 +144,15 @@ class TestFullProgram(BaseTest):
                 ast.Return(
                     ast.BinOp(
                         '+',
-                        ast.Identifier('n', srcpos=mkpos(32, 2, 16, 33, 2, 17)),
-                        ast.Number(1, srcpos=mkpos(36, 2, 20, 37, 2, 21)),
-                        srcpos=mkpos(32, 2, 16, 37, 2, 21)
+                        ast.Identifier('n', srcpos=(32, 33)),
+                        ast.Number(1, srcpos=(36, 37)),
+                        oppos=(34, 35), srcpos=(32, 37)
                     ),
-                    srcpos=mkpos(25, 2, 9, 38, 2, 22)
+                    srcpos=(25, 38)
                 )
-            ], srcpos=mkpos(4, 1, 5, 44, 3, 6)),
-            ast.Function('main', [], [], srcpos=mkpos(49, 4, 5, 67, 5, 6))
-        ], srcpos=mkpos(4, 1, 5, 67, 5, 6))
+            ], lineno=1, srcpos=(4, 44)),
+            ast.Function('main', [], [], lineno=4, srcpos=(49, 67))
+        ], srcpos=(4, 67))
         assert r == expected
 
     def test_ast_pos_except(self):
@@ -175,15 +173,11 @@ class TestFullProgram(BaseTest):
                 ], [
                     ast.ExceptClause(
                         ['A'], None, [ast.Return(ast.Number(1))],
-                        srcpos=mkpos(77, 4, 11, 119, 6, 10)),
+                        srcpos=(77, 119)),
                     ast.ExceptClause(
                         ['Exception'], None, [],
-                        srcpos=mkpos(120, 6, 11, 148, 7, 10)),
-                ], srcpos=mkpos(25, 2, 9, 148, 7, 10))
-            ], srcpos=mkpos(4, 1, 5, 154, 8, 6))
+                        srcpos=(120, 148)),
+                ], srcpos=(25, 148))
+            ], lineno=1, srcpos=(4, 154))
         ])
         assert r == expected
-
-
-def mkpos(si, sl, sc, ei, el, ec):
-    return SourceRange(SourcePosition(si, sl, sc), SourcePosition(ei, el, ec))

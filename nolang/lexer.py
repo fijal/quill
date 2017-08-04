@@ -5,24 +5,18 @@ from rply.token import SourcePosition, Token
 
 
 class SourceRange(object):
-    def __init__(self, start, end):
+    def __init__(self, start, end, lineno, colno):
         self.start = start
         self.end = end
+        self.lineno = lineno
+        self.colno = colno
 
-    def _tuple(self):
-        return ((self.start.idx, self.start.lineno, self.start.colno),
-                (self.end.idx, self.end.lineno, self.end.colno))
+    def __getitem__(self, i):
+        return (self.start, self.end, self.lineno)[i]
 
     def __repr__(self):
-        return "SourceRange(start=%r, end=%r)" % (self.start, self.end)
-
-    def __eq__(self, other):
-        # Special case so we can ignore position info in tests.
-        if other is None:
-            return True
-        if self.__class__ != other.__class__:
-            return False
-        return self._tuple() == other._tuple()
+        return "SourceRange(start=%d, end=%d, lineno=%d, colno=%d)" % (
+            self.start, self.end, self.lineno, self.colno)
 
 
 class ParseError(Exception):
@@ -92,22 +86,15 @@ class QuillLexerStream(LexerStream):
         LexerStream.__init__(self, lexer, s)
 
     def _update_pos(self, match):
+        lineno = self._lineno
         self.idx = match.end
-        start_line = self._lineno
         self._lineno += self.s.count("\n", match.start, match.end)
         last_nl = self.s.rfind("\n", 0, match.start)
         if last_nl < 0:
-            start_col = match.start + 1
+            colno = match.start + 1
         else:
-            start_col = match.start - last_nl
-        last_nl = self.s.rfind("\n", 0, match.end)
-        if last_nl < 0:
-            end_col = match.end + 1
-        else:
-            end_col = match.end - last_nl
-        return SourceRange(
-            SourcePosition(match.start, start_line, start_col),
-            SourcePosition(match.end, self._lineno, end_col))
+            colno = match.start - last_nl
+        return SourceRange(match.start, match.end, lineno, colno)
 
     def next(self):
         while True:

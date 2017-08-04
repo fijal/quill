@@ -24,16 +24,18 @@ class StoringIntoGlobal(Exception):
 
 class AstNode(BaseBox):
     def __init__(self, srcpos=None):
-        self._srcpos = srcpos
+        if srcpos is None:
+            srcpos = (None, None)
+        self._startidx, self._endidx = srcpos
 
     def getsourcepos(self):
-        return self._srcpos
+        return (self._startidx, self._endidx)
 
     def getstartidx(self):
-        return self._srcpos.start.idx
+        return self._startidx
 
     def getendidx(self):
-        return self._srcpos.end.idx
+        return self._endidx
 
     def compile(self, state):
         raise NotImplementedError("abstract base class")
@@ -43,14 +45,21 @@ class AstNode(BaseBox):
             "%s=%s" % (k, v) for k, v in self.__dict__.iteritems()
             if k != '_srcpos']))
 
+    def clean_dict(self):
+        dct = self.__dict__.copy()
+        del dct['_startidx']
+        del dct['_endidx']
+        return dct
+
+    def compare_dicts(self, other):
+        if None in (self._startidx, other._startidx):
+            return self.clean_dict() == other.clean_dict()
+        return self.__dict__ == other.__dict__
+
     def __eq__(self, other):
         if self.__class__ != other.__class__:
             return False
-        to_compare = self.__dict__.copy()
-        other = other.__dict__.copy()
-        del to_compare['_srcpos']
-        del other['_srcpos']
-        return to_compare == other
+        return self.compare_dicts(other)
 
     def __ne__(self, other):
         return not self == other
@@ -84,21 +93,26 @@ class BinOp(AstNode):
         self.left = left
         self.right = right
 
+    def clean_dict(self):
+        dct = AstNode.clean_dict(self)
+        del dct['oppos']
+        return dct
+
     def compile(self, state):
         self.left.compile(state)
         self.right.compile(state)
         if self.op == '+':
-            state.emit(self.oppos.start.idx, opcodes.ADD)
+            state.emit(self.oppos[0], opcodes.ADD)
         elif self.op == '-':
-            state.emit(self.oppos.start.idx, opcodes.SUB)
+            state.emit(self.oppos[0], opcodes.SUB)
         elif self.op == '//':
-            state.emit(self.oppos.start.idx, opcodes.TRUEDIV)
+            state.emit(self.oppos[0], opcodes.TRUEDIV)
         elif self.op == '*':
-            state.emit(self.oppos.start.idx, opcodes.MUL)
+            state.emit(self.oppos[0], opcodes.MUL)
         elif self.op == '<':
-            state.emit(self.oppos.start.idx, opcodes.LT)
+            state.emit(self.oppos[0], opcodes.LT)
         elif self.op == '==':
-            state.emit(self.oppos.start.idx, opcodes.EQ)
+            state.emit(self.oppos[0], opcodes.EQ)
         else:
             assert False
 
@@ -153,11 +167,12 @@ class Program(AstNode):
 
 
 class Function(AstNode):
-    def __init__(self, name, arglist, body, srcpos=None):
+    def __init__(self, name, arglist, body, lineno=None, srcpos=None):
         AstNode.__init__(self, srcpos)
         self.name = name
         self.arglist = arglist
         self.body = body
+        self.lineno = lineno
 
     def get_name(self):
         return self.name
@@ -167,14 +182,18 @@ class Function(AstNode):
             raise NameAlreadyDefined(self.name)
         mapping[self.name] = len(mapping)
 
+    def clean_dict(self):
+        dct = AstNode.clean_dict(self)
+        del dct['lineno']
+        return dct
+
     def compile(self, state):
         for item in self.body:
             item.compile(state)
 
     def add_global_symbols(self, space, globals_w, source, w_mod):
-        spos = self.getsourcepos()
         w_g = W_Function(self.name, compile_bytecode(self, source,
-                         w_mod, self.arglist, spos.start.lineno))
+                         w_mod, self.arglist, self.lineno))
         globals_w.append(w_g)
 
 

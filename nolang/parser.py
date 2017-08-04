@@ -2,12 +2,12 @@
 import rply
 from rply.token import Token
 
-from nolang.lexer import TOKENS, ParseError, SourceRange
+from nolang.lexer import TOKENS, ParseError
 from nolang import astnodes as ast
 
 
 def sr(p):
-    return SourceRange(p[0].getsourcepos().start, p[-1].getsourcepos().end)
+    return (p[0].getsourcepos()[0], p[-1].getsourcepos()[1])
 
 
 class ParsingState(object):
@@ -26,9 +26,10 @@ class ParsingState(object):
         import pdb
         pdb.set_trace()
 
+
 def errorhandler(state, lookahead):
     lines = state.input.splitlines()
-    sourcepos = lookahead.getsourcepos().start
+    sourcepos = lookahead.getsourcepos()
     line = lines[sourcepos.lineno - 1]
     assert isinstance(lookahead, Token)
     raise ParseError('Parsing error', line, state.filename, sourcepos.lineno,
@@ -110,8 +111,9 @@ def get_parser():
     @pg.production('function : DEF IDENTIFIER arglist LEFT_CURLY_BRACE'
                    ' function_body RIGHT_CURLY_BRACE')
     def function_function_body(state, p):
+        lineno = p[0].getsourcepos().lineno
         return ast.Function(p[1].getstr(), p[2].get_names(),
-                            p[4].get_element_list(), srcpos=sr(p))
+                            p[4].get_element_list(), lineno, srcpos=sr(p))
 
     @pg.production('function_body :')
     def function_body_empty(state, p):
