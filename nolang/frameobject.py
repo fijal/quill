@@ -33,6 +33,7 @@ class Frame(W_Root):
     def store_var(self, index):
         self.locals_w[index] = self.pop()
 
+
 def find_line(bytecode, target_pc):
     src = bytecode.source
     pos = 0
@@ -46,6 +47,7 @@ def find_line(bytecode, target_pc):
         if pos < 0:
             return src[prev_pos + 1:], lineno
     return src[prev_pos + 1:pos], lineno
+
 
 def format_traceback(space, apperr):
     lines = []
