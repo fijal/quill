@@ -28,7 +28,7 @@ class AstNode(BaseBox):
             srcpos = (None, None)
         self._startidx, self._endidx = srcpos
 
-    def getsourcepos(self):
+    def getsrcpos(self):
         return (self._startidx, self._endidx)
 
     def getstartidx(self):
@@ -45,21 +45,16 @@ class AstNode(BaseBox):
             "%s=%s" % (k, v) for k, v in self.__dict__.iteritems()
             if k != '_srcpos']))
 
-    def clean_dict(self):
-        dct = self.__dict__.copy()
-        del dct['_startidx']
-        del dct['_endidx']
-        return dct
-
-    def compare_dicts(self, other):
-        if None in (self._startidx, other._startidx):
-            return self.clean_dict() == other.clean_dict()
-        return self.__dict__ == other.__dict__
-
     def __eq__(self, other):
         if self.__class__ != other.__class__:
             return False
-        return self.compare_dicts(other)
+        to_compare = self.__dict__.copy()
+        other = other.__dict__.copy()
+        del to_compare['_startidx']
+        del to_compare['_endidx']
+        del other['_startidx']
+        del other['_endidx']
+        return to_compare == other
 
     def __ne__(self, other):
         return not self == other
@@ -92,11 +87,6 @@ class BinOp(AstNode):
         self.oppos = oppos
         self.left = left
         self.right = right
-
-    def clean_dict(self):
-        dct = AstNode.clean_dict(self)
-        del dct['oppos']
-        return dct
 
     def compile(self, state):
         self.left.compile(state)
@@ -181,11 +171,6 @@ class Function(AstNode):
         if self.name in mapping:
             raise NameAlreadyDefined(self.name)
         mapping[self.name] = len(mapping)
-
-    def clean_dict(self):
-        dct = AstNode.clean_dict(self)
-        del dct['lineno']
-        return dct
 
     def compile(self, state):
         for item in self.body:
