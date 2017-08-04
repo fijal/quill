@@ -26,9 +26,10 @@ class ParsingState(object):
         import pdb
         pdb.set_trace()
 
+
 def errorhandler(state, lookahead):
     lines = state.input.splitlines()
-    sourcepos = lookahead.getsourcepos().start
+    sourcepos = lookahead.getsourcepos()
     line = lines[sourcepos.lineno - 1]
     assert isinstance(lookahead, Token)
     raise ParseError('Parsing error', line, state.filename, sourcepos.lineno,
@@ -110,7 +111,7 @@ def get_parser():
     @pg.production('function : DEF IDENTIFIER arglist LEFT_CURLY_BRACE'
                    ' function_body RIGHT_CURLY_BRACE')
     def function_function_body(state, p):
-        lineno = p[0].getsourcepos().start.lineno
+        lineno = p[0].getsourcepos().lineno
         return ast.Function(p[1].getstr(), p[2].get_names(),
                             p[4].get_element_list(), lineno, srcpos=sr(p))
 
