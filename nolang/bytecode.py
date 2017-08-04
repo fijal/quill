@@ -178,9 +178,17 @@ class _BytecodeBuilder(object):
         self.exception_blocks.append(ExceptionBlock(types_w))
         return len(self.exception_blocks) - 1
 
-    def emit(self, lineno, opcode, arg0=0, arg1=0):
+    def emit(self, lineno, opcode, arg0=-1, arg1=-1):
         self.lnotab.append(lineno)
         self.builder.append(chr(opcode))
+        if opcodes.opcodes[opcode].numargs == 0:
+            assert arg0 == -1
+        else:
+            assert arg0 >= 0
+        if opcodes.opcodes[opcode].numargs <= 1:
+            assert arg1 == -1
+        else:
+            assert arg1 >= 0
         assert arg0 < 0x10000
         assert arg1 < 0x10000
         numargs = opcodes.opcodes[opcode].numargs
@@ -212,13 +220,12 @@ class _BytecodeBuilder(object):
                         "".join(self.builder), self.arglist,
                         self.exception_blocks, self._packlnotab(self.lnotab))
 
-def compile_bytecode(ast, source, w_mod, arglist=[], startlineno=0,
-                     endlineno=0):
+def compile_bytecode(ast, source, w_mod, arglist=[], startlineno=0):
     """ Compile the bytecode from produced AST.
     """
     builder = _BytecodeBuilder(w_mod, arglist[:])
     ast.compile(builder)
     # hack to enable building for now
-    builder.emit(opcodes.LOAD_NONE)
-    builder.emit(opcodes.RETURN)
+    builder.emit(ast.getendidx(), opcodes.LOAD_NONE)
+    builder.emit(ast.getendidx(), opcodes.RETURN)
     return builder.build(w_mod.name, source)

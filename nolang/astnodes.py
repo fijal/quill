@@ -29,17 +29,28 @@ class AstNode(BaseBox):
     def getsourcepos(self):
         return self._srcpos
 
+    def getstartidx(self):
+        return self._srcpos.start.idx
+
+    def getendidx(self):
+        return self._srcpos.end.idx
+
     def compile(self, state):
         raise NotImplementedError("abstract base class")
 
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__, ", ".join([
-            "%s=%s" % (k, v) for k, v in self.__dict__.iteritems()]))
+            "%s=%s" % (k, v) for k, v in self.__dict__.iteritems()
+            if k != '_srcpos']))
 
     def __eq__(self, other):
         if self.__class__ != other.__class__:
             return False
-        return self.__dict__ == other.__dict__
+        to_compare = self.__dict__.copy()
+        other = other.__dict__.copy()
+        del to_compare['_srcpos']
+        del other['_srcpos']
+        return to_compare == other
 
     def __ne__(self, other):
         return not self == other
@@ -52,7 +63,7 @@ class Number(AstNode):
 
     def compile(self, state):
         no = state.add_int_constant(self.value)
-        state.emit(opcodes.LOAD_CONSTANT, no)
+        state.emit(self.getstartidx(), opcodes.LOAD_CONSTANT, no)
 
 
 class String(AstNode):
@@ -62,13 +73,14 @@ class String(AstNode):
 
     def compile(self, state):
         no = state.add_str_constant(self.value)
-        state.emit(opcodes.LOAD_CONSTANT, no)
+        state.emit(self.getstartidx(), opcodes.LOAD_CONSTANT, no)
 
 
 class BinOp(AstNode):
-    def __init__(self, op, left, right, srcpos=None):
+    def __init__(self, op, left, right, oppos, srcpos=None):
         AstNode.__init__(self, srcpos)
         self.op = op
+        self.oppos = oppos
         self.left = left
         self.right = right
 
@@ -76,17 +88,17 @@ class BinOp(AstNode):
         self.left.compile(state)
         self.right.compile(state)
         if self.op == '+':
-            state.emit(opcodes.ADD)
+            state.emit(self.oppos.start.idx, opcodes.ADD)
         elif self.op == '-':
-            state.emit(opcodes.SUB)
+            state.emit(self.oppos.start.idx, opcodes.SUB)
         elif self.op == '//':
-            state.emit(opcodes.TRUEDIV)
+            state.emit(self.oppos.start.idx, opcodes.TRUEDIV)
         elif self.op == '*':
-            state.emit(opcodes.MUL)
+            state.emit(self.oppos.start.idx, opcodes.MUL)
         elif self.op == '<':
-            state.emit(opcodes.LT)
+            state.emit(self.oppos.start.idx, opcodes.LT)
         elif self.op == '==':
-            state.emit(opcodes.EQ)
+            state.emit(self.oppos.start.idx, opcodes.EQ)
         else:
             assert False
 
@@ -99,9 +111,9 @@ class And(AstNode):
 
     def compile(self, state):
         self.left.compile(state)
-        state.emit(opcodes.JUMP_IF_FALSE_NOPOP, 0)
+        state.emit(self.left.getendidx(), opcodes.JUMP_IF_FALSE_NOPOP, 0)
         pos = state.get_patch_position()
-        state.emit(opcodes.DISCARD)
+        state.emit(self.right.getstartidx(), opcodes.DISCARD)
         self.right.compile(state)
         state.patch_position(pos, state.get_position())
 
@@ -114,21 +126,21 @@ class Or(AstNode):
 
     def compile(self, state):
         self.left.compile(state)
-        state.emit(opcodes.JUMP_IF_TRUE_NOPOP, 0)
+        state.emit(self.left.getendidx(), opcodes.JUMP_IF_TRUE_NOPOP, 0)
         pos = state.get_patch_position()
-        state.emit(opcodes.DISCARD)
+        state.emit(self.right.getstartidx(), opcodes.DISCARD)
         self.right.compile(state)
         state.patch_position(pos, state.get_position())
 
 
 class TrueNode(AstNode):
     def compile(self, state):
-        state.emit(opcodes.LOAD_TRUE)
+        state.emit(self.getstartidx(), opcodes.LOAD_TRUE)
 
 
 class FalseNode(AstNode):
     def compile(self, state):
-        state.emit(opcodes.LOAD_FALSE)
+        state.emit(self.getstartidx(), opcodes.LOAD_FALSE)
 
 
 class Program(AstNode):
@@ -160,9 +172,9 @@ class Function(AstNode):
             item.compile(state)
 
     def add_global_symbols(self, space, globals_w, source, w_mod):
+        spos = self.getsourcepos()
         w_g = W_Function(self.name, compile_bytecode(self, source,
-                         w_mod, self.arglist, self.startlineno,
-                         self.endlineno))
+                         w_mod, self.arglist, spos.start.lineno))
         globals_w.append(w_g)
 
 
@@ -201,11 +213,11 @@ class While(AstNode):
     def compile(self, state):
         jump_pos = state.get_position()
         self.expr.compile(state)
-        state.emit(opcodes.JUMP_IF_FALSE, 0)
+        state.emit(self.expr.getendidx(), opcodes.JUMP_IF_FALSE, 0)
         patch_pos = state.get_patch_position()
         for item in self.block:
             item.compile(state)
-        state.emit(opcodes.JUMP_ABSOLUTE, jump_pos)
+        state.emit(self.block[-1].getendidx(), opcodes.JUMP_ABSOLUTE, jump_pos)
         state.patch_position(patch_pos, state.get_position())
 
 
@@ -217,7 +229,7 @@ class If(AstNode):
 
     def compile(self, state):
         self.expr.compile(state)
-        state.emit(opcodes.JUMP_IF_FALSE, 0)
+        state.emit(self.expr.getendidx(), opcodes.JUMP_IF_FALSE, 0)
         patch_pos = state.get_patch_position()
         for item in self.block:
             item.compile(state)
@@ -236,12 +248,16 @@ class TryExcept(AstNode):
             self.except_blocks = except_blocks
 
     def compile(self, state):
-        state.emit(opcodes.PUSH_RESUME_STACK, 0)
+        state.emit(self.getstartidx(), opcodes.PUSH_RESUME_STACK, 0)
         pos = state.get_patch_position()
         for item in self.block:
             item.compile(state)
-        state.emit(opcodes.POP_RESUME_STACK)
-        state.emit(opcodes.JUMP_ABSOLUTE, 0)
+        if self.block:
+            idx = self.block[-1].getendidx()
+        else:
+            idx = self.getstartidx()
+        state.emit(idx, opcodes.POP_RESUME_STACK)
+        state.emit(idx, opcodes.JUMP_ABSOLUTE, 0)
         jump_pos = state.get_patch_position()
         state.patch_position(pos, state.get_position())
         state.accumulator = [jump_pos]
@@ -251,7 +267,7 @@ class TryExcept(AstNode):
             state.patch_position(pos, state.get_position())
         if self.finally_clause is not None:
             self.finally_clause.compile(state)
-        state.emit(opcodes.RERAISE)
+        state.emit(self.getendidx(), opcodes.RERAISE)
         state.accumulator = None
 
 
@@ -262,7 +278,7 @@ class Raise(AstNode):
 
     def compile(self, state):
         self.expr.compile(state)
-        state.emit(opcodes.RAISE)
+        state.emit(self.expr.getstartidx(), opcodes.RAISE)
 
 
 class Statement(AstNode):
@@ -273,7 +289,7 @@ class Statement(AstNode):
     def compile(self, state):
         if self.expr:
             self.expr.compile(state)
-            state.emit(opcodes.DISCARD)
+            state.emit(self.expr.getstartidx(), opcodes.DISCARD)
 
 
 class Getattr(AstNode):
@@ -285,7 +301,7 @@ class Getattr(AstNode):
     def compile(self, state):
         self.lhand.compile(state)
         no = state.add_str_constant(self.identifier)
-        state.emit(opcodes.GETATTR, no)
+        state.emit(self.lhand.getendidx(), opcodes.GETATTR, no)
 
 
 class Setattr(AstNode):
@@ -299,7 +315,7 @@ class Setattr(AstNode):
         self.lhand.compile(state)
         self.rhand.compile(state)
         no = state.add_str_constant(self.identifier)
-        state.emit(opcodes.SETATTR, no)
+        state.emit(self.rhand.getendidx(), opcodes.SETATTR, no)
 
 
 class ArgList(AstNode):
@@ -357,7 +373,7 @@ class Identifier(AstNode):
 
     def compile(self, state):
         op, no = state.get_variable(self.name)
-        state.emit(op, no)
+        state.emit(self.getstartidx(), op, no)
 
 
 class Assignment(AstNode):
@@ -371,7 +387,7 @@ class Assignment(AstNode):
         op, varno = state.get_variable(self.varname)
         if op == opcodes.LOAD_GLOBAL:
             raise StoringIntoGlobal(self.varname)
-        state.emit(opcodes.STORE, varno)
+        state.emit(self.expr.getstartidx(), opcodes.STORE, varno)
 
 
 class Call(AstNode):
@@ -384,7 +400,7 @@ class Call(AstNode):
         self.left_hand.compile(state)
         for arg in self.arglist:
             arg.compile(state)
-        state.emit(opcodes.CALL, len(self.arglist))
+        state.emit(self.left_hand.getendidx(), opcodes.CALL, len(self.arglist))
 
 
 class Return(AstNode):
@@ -394,7 +410,7 @@ class Return(AstNode):
 
     def compile(self, state):
         self.expr.compile(state)
-        state.emit(opcodes.RETURN)
+        state.emit(self.getstartidx(), opcodes.RETURN)
 
 
 class ExpressionListPartial(AstNode):
@@ -422,16 +438,17 @@ class ExceptClause(AstNode):
 
     def compile(self, state):
         no = state.register_exception_setup(self.exception_names)
-        state.emit(opcodes.COMPARE_EXCEPTION, no, 0)
+        state.emit(self.getstartidx(), opcodes.COMPARE_EXCEPTION, no, 0)
         pos = state.get_patch_position()
         if self.varname is not None:
-            state.emit(opcodes.PUSH_CURRENT_EXC)
+            state.emit(self.getstartidx(), opcodes.PUSH_CURRENT_EXC)
             no = state.register_variable(self.varname)
-            state.emit(opcodes.STORE, no)
+            state.emit(self.getstartidx(), opcodes.STORE, no)
         for item in self.block:
             item.compile(state)
-        state.emit(opcodes.CLEAR_CURRENT_EXC)
-        state.emit(opcodes.JUMP_ABSOLUTE, 0)
+        idx = self.getendidx()
+        state.emit(idx, opcodes.CLEAR_CURRENT_EXC)
+        state.emit(idx, opcodes.JUMP_ABSOLUTE, 0)
         state.accumulator.append(state.get_patch_position())
         state.patch_position(pos, state.get_position())
 

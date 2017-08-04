@@ -281,7 +281,7 @@ def get_parser():
     @pg.production('expression : expression LT expression')
     @pg.production('expression : expression EQ expression')
     def expression_lt_expression(state, p):
-        return ast.BinOp(p[1].getstr(), p[0], p[2], srcpos=sr(p))
+        return ast.BinOp(p[1].getstr(), p[0], p[2], sr([p[1]]), srcpos=sr(p))
 
     @pg.production('expression_list : ')
     def expression_list_empty(state, p):

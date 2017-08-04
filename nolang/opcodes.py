@@ -22,7 +22,7 @@ opcodes = [
     Opcode('LOAD_TRUE', 0, 1, 'load true onto stack'),
     Opcode('LOAD_FALSE', 0, 1, 'load false onto stack'),
     Opcode('STORE', 1, -1, 'store top of the stack into variable'),
-    Opcode('DISCARD', 1, -1, 'discard top of the stack'),
+    Opcode('DISCARD', 0, -1, 'discard top of the stack'),
     Opcode('GETATTR', 1, 0, 'get attribut from the object on top of the stack '
                             'with string constant as an argument'),
     Opcode('SETATTR', 1, -2, 'set attribute on an object'),

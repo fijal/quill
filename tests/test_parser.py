@@ -21,7 +21,7 @@ class TestExpressionParser(BaseTest):
         return ast.elements[0].body[0].expr
 
     def test_add(self):
-        assert self.parse('1 + 1') == ast.BinOp('+', ast.Number(1), ast.Number(1))
+        assert self.parse('1 + 1') == ast.BinOp('+', None, ast.Number(1), ast.Number(1))
 
     def test_various_kinds_of_calls(self):
         r = self.parse('x(1, 2, 3)')
