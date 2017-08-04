@@ -52,7 +52,7 @@ RULES = [
     ('RIGHT_CURLY_BRACE', r'\}'),
     ('COMMA', r','),
     ('SEMICOLON', r';'),
-    ('STRING', r'"(\\\\|\\.|[^"\\])*"'),
+    ('STRING', r'"'),
 ]
 
 KEYWORDS = [
@@ -77,6 +77,51 @@ KEYWORDS = [
 TOKENS = [x[0] for x in RULES] + [x.upper() for x in KEYWORDS]
 
 KEYWORD_DICT = dict.fromkeys(KEYWORDS)
+
+
+STRING_RULES = [
+    ('ESC_QUOTE', r'\\"'),
+    ('ESC_ESC', r'\\\\'),
+    ('CHAR', r'[^"\\]'),
+    ('CLOSING_QUOTE', r'"'),
+]
+
+
+def get_string_lexer():
+    lg = LexerGenerator()
+    for name, rule in STRING_RULES:
+        lg.add(name, rule)
+    return lg.build()
+
+
+def lex_string(s):
+    l = get_string_lexer()
+    parts = []
+    length = 1
+    for t in l.lex(s):
+        length += len(t.value)
+        if t.name == 'CLOSING_QUOTE':
+            return (''.join(parts), length)
+        elif t.name == 'ESC_QUOTE':
+            parts.append('"')
+        elif t.name == 'ESC_ESC':
+            parts.append('\\')
+        else:
+            assert t.name == 'CHAR'
+            parts.append(t.value)
+    else:
+        return None, length
+
+
+class FakeMatch(object):
+    def __init__(self, start, length):
+        self.start = start
+        self.end = start + length
+
+
+class StringLexerGenerator(LexerGenerator):
+    def build(self):
+        return QuillLexer(self.rules, self.ignore_rules)
 
 
 class QuillLexerStream(LexerStream):
@@ -121,6 +166,15 @@ class QuillLexerStream(LexerStream):
         for rule in self.lexer.rules:
             match = rule.matches(self.s, self.idx)
             if match:
+                if rule.name == 'STRING':
+                    val, length = lex_string(self.s[self.idx + 1:])
+                    if val is None:
+                        raise self.parse_error("unterminated string")
+                    source_range = self._update_pos(FakeMatch(self.idx, length))
+                    token = Token(rule.name, val, source_range)
+                    self._last_token = token
+                    return token
+
                 source_range = self._update_pos(match)
                 val = self.s[match.start:match.end]
                 if val in KEYWORD_DICT:
@@ -131,14 +185,17 @@ class QuillLexerStream(LexerStream):
                 self._last_token = token
                 return token
         else:
-            last_nl = self.s.rfind("\n", 0, self.idx)
-            if last_nl < 0:
-                colno = self.idx - 1
-            else:
-                colno = self.idx - last_nl - 1
-            raise ParseError("unrecognized token",
-                             self.s.splitlines()[self._lineno - 1],
-                             self._filename, self._lineno, colno, colno + 1)
+            raise self.parse_error("unrecognized token")
+
+    def parse_error(self, msg):
+        last_nl = self.s.rfind("\n", 0, self.idx)
+        if last_nl < 0:
+            colno = self.idx - 1
+        else:
+            colno = self.idx - last_nl - 1
+        return ParseError(msg,
+                          self.s.splitlines()[self._lineno - 1],
+                          self._filename, self._lineno, colno, colno + 1)
 
 
 class QuillLexer(Lexer):

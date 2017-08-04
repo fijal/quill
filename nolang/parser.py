@@ -222,12 +222,7 @@ def get_parser():
 
     @pg.production('expression : STRING')
     def expression_string(state, p):
-        # XXX validate valid utf8
-        s = p[0].getstr()
-        end = len(s) - 1
-        assert end >= 0
-        s = s[1:end].replace('\\"', '"').replace('\\\\', '\\')
-        return ast.String(s, srcpos=sr(p))
+        return ast.String(p[0].getstr(), srcpos=sr(p))
 
     @pg.production('expression : atom')
     def expression_atom(state, p):
