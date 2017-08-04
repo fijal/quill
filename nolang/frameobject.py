@@ -38,11 +38,12 @@ def find_line(bytecode, target_pc):
     pos = 0
     lineno = 0
     target_position = bytecode.lnotab[target_pc]
+    prev_pos = 0
     while pos < target_position:
         prev_pos = pos
         pos = src.find("\n", pos + 1)
         lineno += 1
-        if pos == -1:
+        if pos < 0:
             return src[prev_pos + 1:], lineno
     return src[prev_pos + 1:pos], lineno
 
