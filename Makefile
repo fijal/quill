@@ -20,10 +20,12 @@ lint: ensure-venv
 test: ensure-venv
 	@venv/bin/pytest tests --tb=short
 
+check: lint test compile
+
 install-vscode-extension:
 	ln -fs `pwd`/editor-support/vscode ~/.vscode/extensions/quill
 
 uninstall-vscode-extension:
 	rm -f ~/.vscode/extensions/quill
 
-.PHONY: all venv ensure-venv clean compile test lint install-vscode-extension uninstall-vscode-extension
+.PHONY: all venv ensure-venv clean compile test check lint install-vscode-extension uninstall-vscode-extension
