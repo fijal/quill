@@ -4,7 +4,8 @@
 nolang-c <program.no>
 """
 
-import sys, os
+import os
+import sys
 
 from nolang.interpreter import Interpreter
 from nolang.parser import get_parser, ParsingState, ParseError
