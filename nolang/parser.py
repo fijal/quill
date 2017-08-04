@@ -226,7 +226,8 @@ def get_parser():
         s = p[0].getstr()
         end = len(s) - 1
         assert end >= 0
-        return ast.String(s[1:end], srcpos=sr(p))
+        s = s[1:end].replace('\\"', '"')
+        return ast.String(s, srcpos=sr(p))
 
     @pg.production('expression : atom')
     def expression_atom(state, p):

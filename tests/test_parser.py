@@ -11,6 +11,23 @@ class BaseTest(object):
         self.lexer = get_lexer()
 
 
+class TestStringParser(BaseTest):
+    def parse(self, expr):
+        program = "def foo () { " + expr + "; }"
+        ast = self.parser.parse(self.lexer.lex('test', program),
+                                ParsingState('test', program))
+        return ast.elements[0].body[0].expr.value
+
+    def test_string_simple(self):
+        assert self.parse('"foo"') == 'foo'
+
+    def test_string_quote(self):
+        assert self.parse('"foo\\"bar"') == 'foo"bar'
+
+    def test_string_quote_only(self):
+        assert self.parse('"\\""') == '"'
+
+
 class TestExpressionParser(BaseTest):
     def parse(self, expr):
         program = "def foo () { " + expr + "; }"
