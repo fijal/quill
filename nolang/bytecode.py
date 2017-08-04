@@ -220,6 +220,7 @@ class _BytecodeBuilder(object):
                         "".join(self.builder), self.arglist,
                         self.exception_blocks, self._packlnotab(self.lnotab))
 
+
 def compile_bytecode(ast, source, w_mod, arglist=[], startlineno=0):
     """ Compile the bytecode from produced AST.
     """

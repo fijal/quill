@@ -13,6 +13,7 @@ from nolang.builtins.defaults import default_builtins
 from nolang.lexer import get_lexer
 from nolang.frameobject import format_traceback
 from nolang.objects.space import Space
+from nolang.error import AppError
 
 
 def main(argv):

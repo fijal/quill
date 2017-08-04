@@ -33,6 +33,7 @@ class Frame(W_Root):
     def store_var(self, index):
         self.locals_w[index] = self.pop()
 
+
 def format_traceback(space, apperr):
     lines = []
     w_exception = apperr.w_exception

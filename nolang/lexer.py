@@ -1,7 +1,6 @@
-
 from rply import LexerGenerator
 from rply.lexer import Lexer, LexerStream
-from rply.token import SourcePosition, Token
+from rply.token import Token
 
 
 class SourceRange(object):

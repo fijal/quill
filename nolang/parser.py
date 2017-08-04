@@ -16,13 +16,13 @@ class ParsingState(object):
         self.filename = filename
 
     def create(self, p, ast):
-        xxx
-        if isinstance(p[0], Token):
-            startpos = p[0].source_pos.idx
-        else:
-            XXX
-        if isinstance(p[-1], Token):
-            endpos = p[-1].source_pos
+        raise NotImplementedError('implement me')
+        # if isinstance(p[0], Token):
+        #     startpos = p[0].source_pos.idx
+        # else:
+        #     XXX
+        # if isinstance(p[-1], Token):
+        #     endpos = p[-1].source_pos
         import pdb
         pdb.set_trace()
 
