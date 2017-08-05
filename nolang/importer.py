@@ -7,6 +7,7 @@ from nolang.module import create_module
 from nolang.parser import ParsingState
 from nolang.compiler import compile_module
 
+
 class Importer(object):
     def __init__(self, basepath=None, parser=None, lexer=None):
         # XXX basepath is a hack
