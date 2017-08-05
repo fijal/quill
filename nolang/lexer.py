@@ -87,18 +87,74 @@ STRING_RULES = [
 ]
 
 
+class SRLexerStream(LexerStream):
+    def _update_pos(self, match_start, match_end):
+        lineno = self._lineno
+        self.idx = match_end
+        self._lineno += self.s.count("\n", match_start, match_end)
+        last_nl = self.s.rfind("\n", 0, match_start)
+        if last_nl < 0:
+            colno = match_start + 1
+        else:
+            colno = match_start - last_nl
+        return SourceRange(match_start, match_end, lineno, colno)
+
+    def next(self):
+        while True:
+            if self.idx >= len(self.s):
+                raise StopIteration
+            for rule in self.lexer.ignore_rules:
+                match = rule.matches(self.s, self.idx)
+                if match:
+                    self._update_pos(match.start, match.end)
+                    break
+            else:
+                break
+
+        for rule in self.lexer.rules:
+            match = rule.matches(self.s, self.idx)
+            if match:
+                source_pos = self._update_pos(match.start, match.end)
+                token = Token(
+                    rule.name, self.s[match.start:match.end], source_pos
+                )
+                return token
+        else:
+            raise self.parse_error("unrecognized token")
+
+    def parse_error(self, msg):
+        last_nl = self.s.rfind("\n", 0, self.idx)
+        if last_nl < 0:
+            colno = self.idx - 1
+        else:
+            colno = self.idx - last_nl - 1
+        return ParseError(msg,
+                          self.s.splitlines()[self._lineno - 1],
+                          self._filename, self._lineno, colno, colno + 1)
+
+
+class StringLexer(Lexer):
+    def lex(self, ignored, s):
+        return SRLexerStream(self, s)
+
+
+class StringLexerGenerator(LexerGenerator):
+    def build(self):
+        return StringLexer(self.rules, self.ignore_rules)
+
+
 def get_string_lexer():
-    lg = LexerGenerator()
+    lg = StringLexerGenerator()
+
     for name, rule in STRING_RULES:
         lg.add(name, rule)
     return lg.build()
 
 
-def lex_string(s):
-    l = get_string_lexer()
+def lex_string(l, s):
     parts = []
     length = 1
-    for t in l.lex(s):
+    for t in l.lex('', s):
         length += len(t.value)
         if t.name == 'CLOSING_QUOTE':
             return (''.join(parts), length)
@@ -113,34 +169,12 @@ def lex_string(s):
         return None, length
 
 
-class FakeMatch(object):
-    def __init__(self, start, length):
-        self.start = start
-        self.end = start + length
-
-
-class StringLexerGenerator(LexerGenerator):
-    def build(self):
-        return QuillLexer(self.rules, self.ignore_rules)
-
-
-class QuillLexerStream(LexerStream):
+class QuillLexerStream(SRLexerStream):
     _last_token = None
 
     def __init__(self, lexer, filename, s):
         self._filename = filename
         LexerStream.__init__(self, lexer, s)
-
-    def _update_pos(self, match):
-        lineno = self._lineno
-        self.idx = match.end
-        self._lineno += self.s.count("\n", match.start, match.end)
-        last_nl = self.s.rfind("\n", 0, match.start)
-        if last_nl < 0:
-            colno = match.start + 1
-        else:
-            colno = match.start - last_nl
-        return SourceRange(match.start, match.end, lineno, colno)
 
     def next(self):
         while True:
@@ -150,7 +184,7 @@ class QuillLexerStream(LexerStream):
             whitespace_rule = self.lexer.ignore_rules[0]
             match = whitespace_rule.matches(self.s, self.idx)
             if match is not None:
-                source_range = self._update_pos(match)
+                source_range = self._update_pos(match.start, match.end)
                 if "\n" in self.s[match.start:match.end]:
                     if self._last_token.name not in \
                        ('RIGHT_CURLY_BRACE', 'RIGHT_PAREN', 'IDENTIFIER', 'INTEGER'):
@@ -167,15 +201,16 @@ class QuillLexerStream(LexerStream):
             match = rule.matches(self.s, self.idx)
             if match:
                 if rule.name == 'STRING':
-                    val, length = lex_string(self.s[self.idx + 1:])
+                    val, length = lex_string(
+                        self.lexer.string_lexer, self.s[self.idx + 1:])
                     if val is None:
                         raise self.parse_error("unterminated string")
-                    source_range = self._update_pos(FakeMatch(self.idx, length))
+                    source_range = self._update_pos(self.idx, self.idx + length)
                     token = Token(rule.name, val, source_range)
                     self._last_token = token
                     return token
 
-                source_range = self._update_pos(match)
+                source_range = self._update_pos(match.start, match.end)
                 val = self.s[match.start:match.end]
                 if val in KEYWORD_DICT:
                     name = val.upper()
@@ -187,25 +222,19 @@ class QuillLexerStream(LexerStream):
         else:
             raise self.parse_error("unrecognized token")
 
-    def parse_error(self, msg):
-        last_nl = self.s.rfind("\n", 0, self.idx)
-        if last_nl < 0:
-            colno = self.idx - 1
-        else:
-            colno = self.idx - last_nl - 1
-        return ParseError(msg,
-                          self.s.splitlines()[self._lineno - 1],
-                          self._filename, self._lineno, colno, colno + 1)
-
 
 class QuillLexer(Lexer):
+    def __init__(self, rules, ignore_rules, string_lexer):
+        self.string_lexer = string_lexer
+        Lexer.__init__(self, rules, ignore_rules)
+
     def lex(self, filename, s):
         return QuillLexerStream(self, filename, s)
 
 
 class QuillLexerGenerator(LexerGenerator):
     def build(self):
-        return QuillLexer(self.rules, self.ignore_rules)
+        return QuillLexer(self.rules, self.ignore_rules, get_string_lexer())
 
 
 def get_lexer():
