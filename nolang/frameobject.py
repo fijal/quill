@@ -61,8 +61,8 @@ def format_traceback(space, apperr):
     for i in range(len(tb_list) - 1, -1, -1):
         tb = tb_list[i]
         line, lineno = find_line(tb.bytecode, tb.position)
-        lines.append("file %s, line %d" % (tb.bytecode.filename, lineno))
-        lines.append("  " + line)
+        lines.append("file \"%s\", line %d" % (tb.bytecode.filename, lineno))
+        lines.append("  " + line.strip())
     lines.append("%s: %s" % (space.type(w_exception).name, w_exception.message))
     lines.append("")
     return "\n".join(lines)
