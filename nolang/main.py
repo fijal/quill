@@ -17,15 +17,13 @@ from nolang.importer import Importer
 from nolang.objects.space import Space
 from nolang.error import AppError
 
-from rpython.rlib.rstring import assert_str0
-
 
 def dirname(p):
     """Returns the directory component of a pathname"""
     i = p.rfind(os.path.sep) + 1
     assert i >= 0
     head = p[:i]
-    if head and head != os.path.sep*len(head):
+    if head and head != os.path.sep * len(head):
         head = head.rstrip(os.path.sep)
     return head
 
