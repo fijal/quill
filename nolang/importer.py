@@ -44,4 +44,4 @@ class Importer(object):
         elif imp_path[0] == 'core':
             return space.coremod
         else:
-            raise
+            raise Exception("unimplemented")
