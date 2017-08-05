@@ -40,9 +40,9 @@ class TestMain(object):
         assert main(['nolang-c', str(fname)]) == 1
         out, err = capfd.readouterr()
         expected = [
-            'file .*/foo.q, line 2',
+            'file ".*/foo.q", line 2, in foo',
             'raise Exception\("foo"\)',
-            'file .*/foo.q, line 5',
+            'file ".*/foo.q", line 5, in main',
             'foo\(\)',
             'Exception: foo'
         ]
