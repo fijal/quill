@@ -34,6 +34,8 @@ class Space(object):
         package = import_names[0]
         if package == 'core':
             return self.coremod
+        if package == 'self':
+            importer.import_self(import_names)
         raise Exception("importing unimplemented")
 
     def setattr(self, w_obj, attrname, w_value):

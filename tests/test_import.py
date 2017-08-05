@@ -5,13 +5,12 @@ from nolang.main import run_code
 
 class TestImport(BaseTest):
     def test_basic_import_self(self, tmpdir):
-        py.test.skip("skip for now")
         main_file = tmpdir.join('main.q')
         main_file.write(reformat_code('''
-            import self.foo
+            import self.foo.bar
 
             def main() {
-                print(foo.bar(3))
+                print(bar(3))
             }
             '''))
 

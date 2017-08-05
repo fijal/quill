@@ -40,6 +40,9 @@ class AstNode(BaseBox):
     def compile(self, state):
         raise NotImplementedError("abstract base class")
 
+    def add_missing_imports(self, space, w_mod, globals_w, importer):
+        pass
+
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__, ", ".join([
             "%s=%s" % (k, v) for k, v in self.__dict__.iteritems()
@@ -521,14 +524,21 @@ class Import(AstNode):
                 raise NameAlreadyDefined(name)
             mapping[name] = len(mapping)
 
-    def add_global_symbols(self, space, globals_w, source, w_mod):
-        w_module = space.import_symbols(self.import_part)
+    def add_missing_imports(self, space, w_mod, globals_w, importer):
+        imp_mod = importer.import_package(space, self.import_part)
+        idx = globals_w.index(None)
+        assert idx >= 0
         if self.names is None:
-            globals_w.append(w_module)
+            globals_w[idx] = imp_mod
         else:
-            assert len(self.import_part) == 1
-            for name in self.names:
-                globals_w.append(space.getattr(w_module, name))
+            for i, name in enumerate(self.names):
+                globals_w[i + idx] = space.getattr(imp_mod, name)
+
+    def add_global_symbols(self, space, globals_w, source, w_mod):
+        if self.names is None:
+            globals_w.append(None)
+        else:
+            globals_w.extend([None] * len(self.names))
 
 
 class IdentifierListPartial(AstNode):

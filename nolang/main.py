@@ -13,6 +13,7 @@ from nolang.compiler import compile_module
 from nolang.builtins.defaults import default_builtins
 from nolang.lexer import get_lexer
 from nolang.frameobject import format_traceback
+from nolang.importer import Importer
 from nolang.objects.space import Space
 from nolang.error import AppError
 
@@ -52,7 +53,8 @@ def run_code(fname):
     except ParseError as pe:
         format_parser_error(pe)
         return 1
-    w_mod = compile_module(space, fname, source, ast)
+    importer = Importer(os.path.dirname(os.path.abspath(fname)), parser, lexer)
+    w_mod = compile_module(space, fname, source, ast, importer)
     w_mod.setup(space)
     try:
         space.call_method(w_mod, 'main', [])
