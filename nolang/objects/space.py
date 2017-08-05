@@ -30,14 +30,6 @@ class Space(object):
         self.w_exception = self.builtin_dict['Exception']
         self.coremod = coremod
 
-    def import_symbols(self, import_names):
-        package = import_names[0]
-        if package == 'core':
-            return self.coremod
-        if package == 'self':
-            importer.import_self(import_names)
-        raise Exception("importing unimplemented")
-
     def setattr(self, w_obj, attrname, w_value):
         w_obj.setattr(self, attrname, w_value)
 

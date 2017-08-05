@@ -1,4 +1,3 @@
-import py
 from support import BaseTest, reformat_code
 from nolang.main import run_code
 
