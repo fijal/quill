@@ -5,6 +5,18 @@ import pytoml
 from itertools import islice, chain, repeat
 
 
+DEFAULT_DEPENDENCIES = [
+    {
+        'name': 'std-io',
+        'version': '1.x',
+    },
+    {
+        'name': 'std-util',
+        'version': '1.x',
+    },
+]
+
+
 def parse_version(version):
     bits = version.split('.')
     if len(bits) not in (1, 2, 3):
@@ -16,6 +28,7 @@ def parse_version_spec(version):
     bits = version.split('.')
     if len(bits) not in (1, 2, 3):
         raise ValueError('invalid version %r' % version)
+
     def convert_part(part):
         if part in ('*', '', 'x', 'X'):
             return None
@@ -35,7 +48,7 @@ def matches_version_spec(version, spec):
     return True
 
 
-def load_book_definition(root, resolve_dependency_references=True):
+def load_book_definition(root):
     metadata_file = os.path.join(root, 'book.toml')
     try:
         with open(metadata_file) as f:
@@ -45,6 +58,7 @@ def load_book_definition(root, resolve_dependency_references=True):
             raise LookupError('book metadata not found')
 
     metadata['dependencies'] = {}
+    metadata['root_path'] = os.path.abspath(root)
 
     dep_folder = os.path.join(root, 'dependencies')
     if os.path.isdir(dep_folder):
@@ -71,22 +85,86 @@ def load_book_definition(root, resolve_dependency_references=True):
 
             metadata['dependencies'][dep['dependency_reference']['name']] = dep
 
-    if resolve_dependency_references:
-        for dep_name, dep in metadata['dependencies'].iteritems():
-            if 'book' in dep:
-                continue
-            dep_ref_data = dep['dependency_reference']
-            target_path = os.path.join(root, dep_ref_data['path'], 'book.toml')
-            with open(target_path) as f:
-                dep_meta = pytoml.load(f)
-                if dep_meta['book']['name'] != dep_ref_data['name']:
-                    raise LookupError('Found invalid dependency')
-                if not matches_version_spec(dep_meta['book']['version'],
-                                            dep_ref_data['version']):
-                    raise ValueError('%r does not match %r' % (
-                        dep_meta['book']['version'],
-                        dep_ref_data['version']))
-                dep_meta.pop('dependency_reference', None)
-                dep.update(dep_meta)
-
     return metadata
+
+
+class Book(object):
+
+    def __init__(self, fs_path, name, version, author=None, license=None,
+                 import_path=None, dependencies=None):
+        self.fs_path = fs_path
+        self.name = name
+        self.version = version
+        self.author = author
+        self.import_path = import_path
+        self.license = license
+        self.dependencies = dependencies
+        self.athenaeum = None
+
+    def resolve_module(self, import_path):
+        pieces = import_path.strip('.').split('.')
+        prefix = (self.import_path or '').strip('.').split('.')
+
+        if not prefix or prefix == ['']:
+            local_path = pieces
+        elif pieces[:len(prefix)] == prefix:
+            local_path = pieces[len(prefix):]
+        else:
+            raise LookupError('Module not found')
+
+        fs_path = os.path.join(self.fs_path, 'src', *local_path)
+        if os.path.isfile(fs_path + '.q'):
+            return fs_path + '.q'
+        elif os.path.isfile(os.path.join(fs_path, 'index.q')):
+            return os.path.join(fs_path, 'index.q')
+        raise LookupError('Module not found')
+
+    @classmethod
+    def from_definition(cls, md):
+        book = md['book']
+        return cls(
+            fs_path=md['root_path'],
+            name=book['name'],
+            version=book['version'],
+            author=book.get('author'),
+            license=book.get('license'),
+            import_path=book.get('import_path'),
+            dependencies=md.get('dependencies') or {},
+        )
+
+    @classmethod
+    def from_path(cls, path):
+        md = load_book_definition(path)
+        return cls.from_definition(md)
+
+
+class Athenaeum(object):
+
+    def __init__(self):
+        self.books = {}
+
+    def add_book(self, book):
+        if book.athenaeum is not None:
+            raise RuntimeError('Book already added to an athenaeum')
+        if book.name in self.books:
+            raise RuntimeError('Book with name %r already registered'
+                               % book.name)
+        self.books[book.name] = book
+        book.athenaeum = self
+
+    def resolve_all(self):
+        # XXX: resolve dependencies here
+        pass
+
+
+def load_book(path):
+    book = Book.from_path(path)
+    athenaeum = Athenaeum()
+    athenaeum.add_book(book)
+    athenaeum.resolve_all()
+    return book
+
+
+def test():
+    book = load_book('example')
+    print book.resolve_module('org.pocoo.example')
