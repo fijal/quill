@@ -105,7 +105,7 @@ class ModuleMatch(object):
         )
 
     def __repr__(self):
-        return '<ModuleName fqid=%r path=%r>' % (
+        return '<ModuleMatch fqid=%r path=%r>' % (
             self.fqid,
             self.fs_path,
         )
