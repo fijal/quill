@@ -161,6 +161,13 @@ class Book(object):
                 pass
         raise LookupError('Module not found')
 
+    def open_resource(self, path):
+        """Opens a resource stream"""
+        try:
+            return open(os.path.join(self.fs_path, *path.split('/')))
+        except IOError:
+            raise LookupError('Resource not found')
+
     @classmethod
     def from_definition(cls, md):
         book = md['book']
@@ -205,3 +212,5 @@ def test():
     book = Book.from_path('example')
     print book.resolve_module('org.pocoo.example')
     print book.resolve_module('org.pocoo.other')
+    with book.open_resource('README') as f:
+        print f.read().strip()
