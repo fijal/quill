@@ -18,7 +18,7 @@ def _gather_names(ast, builtins):
     return name_mapping
 
 
-def compile_module(space, name, source, ast):
+def compile_module(space, name, source, ast, importer):
     name_mapping = _gather_names(ast, space.builtins_w)
     if space.builtins_w is not None:
         globals_w = space.builtins_w[:]
@@ -27,6 +27,8 @@ def compile_module(space, name, source, ast):
     w_mod = W_Module(name, name_mapping, globals_w)
     for item in ast.get_element_list():
         item.add_global_symbols(space, globals_w, source, w_mod)
+    importer.register_module(w_mod)
+    importer.add_missing_imports(space, ast, w_mod, globals_w)
     return w_mod
 
 

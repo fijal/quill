@@ -2,7 +2,8 @@ from nolang.objects.root import W_Root
 
 
 class Frame(W_Root):
-    def __init__(self, bytecode):
+    def __init__(self, bytecode, name=None):
+        self.name = name
         self.bytecode = bytecode
         if bytecode.module is not None:  # for tests
             self.globals_w = bytecode.module.functions
@@ -61,8 +62,12 @@ def format_traceback(space, apperr):
     for i in range(len(tb_list) - 1, -1, -1):
         tb = tb_list[i]
         line, lineno = find_line(tb.bytecode, tb.position)
-        lines.append("file %s, line %d" % (tb.bytecode.filename, lineno))
-        lines.append("  " + line)
+        lines.append("file \"%s\", line %d, in %s" % (
+            tb.bytecode.filename,
+            lineno,
+            tb.frame.name or '<unknown>',
+        ))
+        lines.append("  " + line.strip())
     lines.append("%s: %s" % (space.type(w_exception).name, w_exception.message))
     lines.append("")
     return "\n".join(lines)

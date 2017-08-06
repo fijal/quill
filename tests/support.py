@@ -6,6 +6,7 @@ from nolang.lexer import get_lexer
 from nolang.bytecode import compile_bytecode
 from nolang.interpreter import Interpreter
 from nolang.compiler import compile_module
+from nolang.importer import Importer
 from nolang.objects.space import Space
 from nolang.builtins.defaults import default_builtins
 
@@ -44,7 +45,8 @@ class BaseTest(object):
     def compile(self, body):
         program = reformat_expr(body)
         ast = self.parse(program)
-        w_mod = compile_module(self.space, '<test>', program, ast)
+        imp = Importer()
+        w_mod = compile_module(self.space, '<test>', program, ast, imp)
         return compile_bytecode(ast.elements[0], program, w_mod)
 
     def parse(self, program):
@@ -57,6 +59,7 @@ class BaseTest(object):
     def interpret(self, code):
         source = reformat_code(code)
         ast = self.parse(source)
-        w_mod = compile_module(self.space, 'test', source, ast)
+        imp = Importer()
+        w_mod = compile_module(self.space, 'test', source, ast, imp)
         w_mod.setup(self.space)
         return self.space.call_method(w_mod, 'main', [])

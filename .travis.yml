@@ -3,6 +3,7 @@ language: python
 cache:
   directories:
     - venv
+    - vendor/pypy
 
 python: 2.7
 
