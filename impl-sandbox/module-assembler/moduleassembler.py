@@ -154,12 +154,7 @@ class Book(object):
             pass
         else:
             return ModuleMatch(self.name, self.version, import_path, fs_path)
-        for book in self.athenaeum.books.itervalues():
-            try:
-                return book.resolve_module(import_path)
-            except LookupError:
-                pass
-        raise LookupError('Module not found')
+        return self.athenaeum.resolve_module(import_path)
 
     def open_resource(self, path):
         """Opens a resource stream"""
@@ -187,11 +182,19 @@ class Book(object):
         return cls.from_definition(md)
 
 
+class DependencyInfo(object):
+
+    def __init__(self, name, dep_data, book):
+        self.name = name
+        self.dep_data = dep_data
+        self.book = book
+
+
 class Athenaeum(object):
 
     def __init__(self, root_path):
         self.root_path = root_path
-        self.books = {}
+        self.dependencies = {}
 
     def load_dependency(self, dep_name, dep_data):
         if 'book' in dep_data:
@@ -201,11 +204,23 @@ class Athenaeum(object):
                 self.root_path, dep_data['dependency_reference']['path']))
         else:
             raise NotImplementedError('no search path for modules yet')
-        self.books[dep_name] = book
+        self.dependencies[dep_name] = DependencyInfo(
+            name=dep_name,
+            dep_data=dep_data,
+            book=book
+        )
 
     def load_dependencies(self, dependencies):
         for dep_name, dep_data in dependencies.iteritems():
             self.load_dependency(dep_name, dep_data)
+
+    def resolve_module(self, import_path):
+        for dep_info in self.dependencies.itervalues():
+            try:
+                return dep_info.book.resolve_module(import_path)
+            except LookupError:
+                pass
+        raise LookupError('Module not found')
 
 
 def test():
