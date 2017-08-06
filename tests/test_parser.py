@@ -23,6 +23,8 @@ class TestStringParser(BaseTest):
             value = self.parse(expr)
         except ParseError:
             pass
+        except UnicodeDecodeError:
+            pass
         else:
             raise Exception("Incorrectly parsed %r as %r." % (expr, value))
 
@@ -61,13 +63,13 @@ class TestStringParser(BaseTest):
     def test_good_utf8(self):
         assert self.parse('"\x00"') == '\x00'
         assert self.parse('"\x7f"') == '\x7f'
-        assert self.parse('"\xc0\x80"') == '\xc0\x80'
-        assert self.parse('"\xc0\xbf"') == '\xc0\xbf'
-        assert self.parse('"\xdf\x80"') == '\xdf\x80'
-        assert self.parse('"\xe0\x80\xbf"') == '\xe0\x80\xbf'
-        assert self.parse('"\xef\x80\xbf"') == '\xef\x80\xbf'
-        assert self.parse('"\xf0\x80\x80\xbf"') == '\xf0\x80\x80\xbf'
-        assert self.parse('"\xf7\x80\x80\xbf"') == '\xf7\x80\x80\xbf'
+        assert self.parse('"\xc2\x80"') == '\xc2\x80'
+        assert self.parse('"\xc2\xbf"') == '\xc2\xbf'
+        assert self.parse('"\xdf\xbf"') == '\xdf\xbf'
+        assert self.parse('"\xe0\xbf\xbf"') == '\xe0\xbf\xbf'
+        assert self.parse('"\xef\x80\x80"') == '\xef\x80\x80'
+        assert self.parse('"\xf0\xbf\xbf\xbf"') == '\xf0\xbf\xbf\xbf'
+        assert self.parse('"\xf4\x80\x80\xbf"') == '\xf4\x80\x80\xbf'
 
 
 class TestExpressionParser(BaseTest):

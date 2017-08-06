@@ -82,10 +82,7 @@ KEYWORD_DICT = dict.fromkeys(KEYWORDS)
 STRING_RULES = [
     ('ESC_QUOTE', r'\\"'),
     ('ESC_ESC', r'\\\\'),
-    ('CHAR1', r'[^"\\\x80-\xff]'),
-    ('CHAR2', r'[\xc0-\xdf][\x80-\xbf]'),
-    ('CHAR3', r'[\xe0-\xef][\x80-\xbf][\x80-\xbf]'),
-    ('CHAR4', r'[\xf0-\xf7][\x80-\xbf][\x80-\xbf][\x80-\xbf]'),
+    ('CHAR', r'[^"\\]'),
     ('CLOSING_QUOTE', r'"'),
 ]
 
@@ -169,17 +166,22 @@ class QuillLexerStream(SRLexerStream):
         for t in self.lexer.string_lexer.lex(self._filename, self.s, self.idx + 1, self._lineno):
             length += len(t.value)
             if t.name == 'CLOSING_QUOTE':
-                source_range = self._update_pos(self.idx, self.idx + length)
-                return Token('STRING', ''.join(parts), source_range)
+                break
             elif t.name == 'ESC_QUOTE':
                 parts.append('"')
             elif t.name == 'ESC_ESC':
                 parts.append('\\')
             else:
-                assert t.name in ['CHAR1', 'CHAR2', 'CHAR3', 'CHAR4']
+                assert t.name == 'CHAR'
                 parts.append(t.value)
         else:
             raise self.parse_error("unterminated string")
+
+        val = ''.join(parts)
+        # XXX not rpython
+        val.decode('utf8')
+        source_range = self._update_pos(self.idx, self.idx + length)
+        return Token('STRING', val, source_range)
 
     def next(self):
         while True:
