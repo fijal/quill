@@ -26,23 +26,48 @@ class TestStringParser(BaseTest):
         else:
             raise Exception("Incorrectly parsed %r as %r." % (expr, value))
 
-    def test_string_simple(self):
+    def test_simple(self):
         assert self.parse('"foo"') == 'foo'
 
-    def test_string_quote(self):
+    def test_quote(self):
         assert self.parse(r'"foo\"bar"') == 'foo"bar'
 
-    def test_string_quote_only(self):
+    def test_quote_only(self):
         assert self.parse(r'"\""') == '"'
 
     def test_non_strings(self):
         self.parse_bad(r'"\"')
         self.parse_bad(r'"\\\"')
 
-    def test_string_escaped_escapes(self):
+    def test_escaped_escapes(self):
         assert self.parse(r'"\\"') == '\\'
         assert self.parse(r'"\\\""') == '\\"'
         assert self.parse(r'"\\\"\\"') == '\\"\\'
+
+    def test_bad_utf8(self):
+        self.parse_bad('"\xff"')
+        self.parse_bad('"\xc0q"')
+        self.parse_bad('"\xc0c0"')
+        self.parse_bad('"\xdfq"')
+        self.parse_bad('"\xe0q"')
+        self.parse_bad('"\xe0\x80q"')
+        self.parse_bad('"\xef\x80q"')
+        self.parse_bad('"\xf0q"')
+        self.parse_bad('"\xf0\x80q"')
+        self.parse_bad('"\xf0\x80\x80q"')
+        self.parse_bad('"\xf7\x80\x80q"')
+        self.parse_bad('"\xf8"')
+
+    def test_good_utf8(self):
+        assert self.parse('"\x00"') == '\x00'
+        assert self.parse('"\x7f"') == '\x7f'
+        assert self.parse('"\xc0\x80"') == '\xc0\x80'
+        assert self.parse('"\xc0\xbf"') == '\xc0\xbf'
+        assert self.parse('"\xdf\x80"') == '\xdf\x80'
+        assert self.parse('"\xe0\x80\xbf"') == '\xe0\x80\xbf'
+        assert self.parse('"\xef\x80\xbf"') == '\xef\x80\xbf'
+        assert self.parse('"\xf0\x80\x80\xbf"') == '\xf0\x80\x80\xbf'
+        assert self.parse('"\xf7\x80\x80\xbf"') == '\xf7\x80\x80\xbf'
 
 
 class TestExpressionParser(BaseTest):

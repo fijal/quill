@@ -82,12 +82,21 @@ KEYWORD_DICT = dict.fromkeys(KEYWORDS)
 STRING_RULES = [
     ('ESC_QUOTE', r'\\"'),
     ('ESC_ESC', r'\\\\'),
-    ('CHAR', r'[^"\\]'),
+    ('CHAR1', r'[^"\\\x80-\xff]'),
+    ('CHAR2', r'[\xc0-\xdf][\x80-\xbf]'),
+    ('CHAR3', r'[\xe0-\xef][\x80-\xbf][\x80-\xbf]'),
+    ('CHAR4', r'[\xf0-\xf7][\x80-\xbf][\x80-\xbf][\x80-\xbf]'),
     ('CLOSING_QUOTE', r'"'),
 ]
 
 
 class SRLexerStream(LexerStream):
+    def __init__(self, lexer, filename, s, idx=0, lineno=1):
+        self._filename = filename
+        LexerStream.__init__(self, lexer, s)
+        self.idx = idx
+        self._lineno = lineno
+
     def _update_pos(self, match_start, match_end):
         lineno = self._lineno
         self.idx = match_end
@@ -134,8 +143,8 @@ class SRLexerStream(LexerStream):
 
 
 class StringLexer(Lexer):
-    def lex(self, ignored, s):
-        return SRLexerStream(self, s)
+    def lex(self, filename, s, idx, lineno):
+        return SRLexerStream(self, filename, s, idx, lineno)
 
 
 class StringLexerGenerator(LexerGenerator):
@@ -151,30 +160,26 @@ def get_string_lexer():
     return lg.build()
 
 
-def lex_string(l, s):
-    parts = []
-    length = 1
-    for t in l.lex('', s):
-        length += len(t.value)
-        if t.name == 'CLOSING_QUOTE':
-            return (''.join(parts), length)
-        elif t.name == 'ESC_QUOTE':
-            parts.append('"')
-        elif t.name == 'ESC_ESC':
-            parts.append('\\')
-        else:
-            assert t.name == 'CHAR'
-            parts.append(t.value)
-    else:
-        return None, length
-
-
 class QuillLexerStream(SRLexerStream):
     _last_token = None
 
-    def __init__(self, lexer, filename, s):
-        self._filename = filename
-        LexerStream.__init__(self, lexer, s)
+    def lex_string(self):
+        parts = []
+        length = 1
+        for t in self.lexer.string_lexer.lex(self._filename, self.s, self.idx + 1, self._lineno):
+            length += len(t.value)
+            if t.name == 'CLOSING_QUOTE':
+                source_range = self._update_pos(self.idx, self.idx + length)
+                return Token('STRING', ''.join(parts), source_range)
+            elif t.name == 'ESC_QUOTE':
+                parts.append('"')
+            elif t.name == 'ESC_ESC':
+                parts.append('\\')
+            else:
+                assert t.name in ['CHAR1', 'CHAR2', 'CHAR3', 'CHAR4']
+                parts.append(t.value)
+        else:
+            raise self.parse_error("unterminated string")
 
     def next(self):
         while True:
@@ -201,12 +206,7 @@ class QuillLexerStream(SRLexerStream):
             match = rule.matches(self.s, self.idx)
             if match:
                 if rule.name == 'STRING':
-                    val, length = lex_string(
-                        self.lexer.string_lexer, self.s[self.idx + 1:])
-                    if val is None:
-                        raise self.parse_error("unterminated string")
-                    source_range = self._update_pos(self.idx, self.idx + length)
-                    token = Token(rule.name, val, source_range)
+                    token = self.lex_string()
                     self._last_token = token
                     return token
 
