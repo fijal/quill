@@ -2,6 +2,7 @@ import os
 import errno
 import pytoml
 
+from collections import deque
 from itertools import islice, chain, repeat
 
 
@@ -63,7 +64,7 @@ def load_book_definition(root):
     metadata['dependencies'] = {}
     metadata['root_path'] = os.path.abspath(root)
 
-    found_deps = set([metadata['book']['name']])
+    found_deps = set()
     dep_folder = os.path.join(root, 'dependencies')
     if os.path.isdir(dep_folder):
         for dep_ref in os.listdir(dep_folder):
@@ -125,7 +126,7 @@ class ModuleMatch(object):
 class Book(object):
 
     def __init__(self, fs_path, name, version, author=None, license=None,
-                 import_path=None, dependencies=None):
+                 import_path=None, dependencies=None, parent=None):
         self.fs_path = fs_path
         self.name = name
         self.version = version
@@ -133,10 +134,17 @@ class Book(object):
         self.import_path = import_path
         self.license = license
         self.dependencies = dependencies
+        self.parent = parent
 
-        self.athenaeum = Athenaeum(self.fs_path)
+        self.athenaeum = Athenaeum(self)
         if dependencies:
             self.athenaeum.load_dependencies(dependencies)
+
+    def __repr__(self):
+        return '<Book \'%s@%s\'>' % (
+            self.name,
+            self.version,
+        )
 
     def resolve_local_module(self, import_path):
         """Resolves a module within the book."""
@@ -159,13 +167,26 @@ class Book(object):
 
     def resolve_module(self, import_path):
         """Resolve a module with the book or its athenaeum"""
-        try:
-            fs_path = self.resolve_local_module(import_path)
-        except LookupError:
-            pass
-        else:
-            return ModuleMatch(self, import_path, fs_path)
-        return self.athenaeum.resolve_module(import_path)
+        books_seen = set()
+        to_visit = deque(x.book for x in self.athenaeum.dependencies.values())
+        to_visit.appendleft(self)
+
+        while to_visit:
+            book = to_visit.popleft()
+            if book in books_seen:
+                continue
+
+            try:
+                fs_path = book.resolve_local_module(import_path)
+            except LookupError:
+                pass
+            else:
+                return ModuleMatch(self, import_path, fs_path)
+
+            books_seen.add(book)
+            to_visit.extend(x.book for x in book.athenaeum.dependencies.values())
+
+        raise LookupError('Module %r not found' % import_path)
 
     def open_resource(self, path):
         """Opens a resource stream"""
@@ -175,7 +196,7 @@ class Book(object):
             raise LookupError('Resource not found')
 
     @classmethod
-    def from_definition(cls, md):
+    def from_definition(cls, md, parent=None):
         book = md['book']
         return cls(
             fs_path=md['root_path'],
@@ -185,12 +206,13 @@ class Book(object):
             license=book.get('license'),
             import_path=book.get('import_path'),
             dependencies=md.get('dependencies') or {},
+            parent=parent,
         )
 
     @classmethod
-    def from_path(cls, path):
+    def from_path(cls, path, parent=None):
         md = load_book_definition(path)
-        return cls.from_definition(md)
+        return cls.from_definition(md, parent=parent)
 
 
 class DependencyInfo(object):
@@ -203,18 +225,35 @@ class DependencyInfo(object):
 
 class Athenaeum(object):
 
-    def __init__(self, root_path):
-        self.root_path = root_path
+    def __init__(self, root_book):
+        self.root_book = root_book
         self.dependencies = {}
+
+    def find_book(self, name, version, upwards=False):
+        if self.root_book.name == name and self.root_book.version == version:
+            return self.root_book
+        other_match = self.dependencies.get(name)
+        if other_match is not None and other_match.book.version == version:
+            return other_match.book
+        if upwards and self.root_book.parent is not None:
+            return self.root_book.parent.athenaeum.find_book(
+                name, version, upwards=True)
 
     def load_dependency(self, dep_name, dep_data):
         if 'book' in dep_data:
-            book = Book.from_definition(dep_data)
+            book_def = dep_data
         elif 'path' in dep_data['dependency_reference']:
-            book = Book.from_path(os.path.join(
-                self.root_path, dep_data['dependency_reference']['path']))
+            book_def = load_book_definition(os.path.join(
+                self.root_book.fs_path,
+                dep_data['dependency_reference']['path']))
         else:
             raise NotImplementedError('no search path for modules yet')
+
+        old_book = self.find_book(book_def['book']['name'],
+                                  book_def['book']['version'],
+                                  upwards=True)
+        book = old_book or Book.from_definition(book_def, parent=self.root_book)
+
         self.dependencies[dep_name] = DependencyInfo(
             name=dep_name,
             dep_data=dep_data,
@@ -225,19 +264,15 @@ class Athenaeum(object):
         for dep_name, dep_data in dependencies.iteritems():
             self.load_dependency(dep_name, dep_data)
 
-    def resolve_module(self, import_path):
-        for dep_info in self.dependencies.itervalues():
-            try:
-                return dep_info.book.resolve_module(import_path)
-            except LookupError:
-                pass
-        raise LookupError('Module not found')
-
 
 def test():
     book = Book.from_path('example')
+    print 'load org.pocoo.example'
     print book.resolve_module('org.pocoo.example')
+    print 'load org.pocoo.other'
     print book.resolve_module('org.pocoo.other')
+    print 'load std.io'
     print book.resolve_module('std.io')
+    print 'open readme'
     with book.open_resource('README') as f:
         print f.read().strip()
