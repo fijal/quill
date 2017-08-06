@@ -1,7 +1,5 @@
-from rply import LexerGenerator
-from rply.lexer import Lexer, LexerStream
+from rply.lexergenerator import Rule
 from rply.token import Token as RplyToken
-from rpython.rlib.runicode import str_decode_utf_8
 
 
 class Token(RplyToken):
@@ -36,7 +34,7 @@ class ParseError(Exception):
                 "^" * (self.end_colno - self.start_colno))
 
 
-RULES = [
+QUILL_RULES = [
     ('INTEGER', r'\d+'),
     ('PLUS', r'\+'),
     ('MINUS', r'\-'),
@@ -53,7 +51,7 @@ RULES = [
     ('RIGHT_CURLY_BRACE', r'\}'),
     ('COMMA', r','),
     ('SEMICOLON', r';'),
-    ('STRING', r'"'),
+    ('ST_STRING', r'"'),
 ]
 
 KEYWORDS = [
@@ -75,25 +73,42 @@ KEYWORDS = [
     'import',
 ]
 
-TOKENS = [x[0] for x in RULES] + [x.upper() for x in KEYWORDS]
-
-KEYWORD_DICT = dict.fromkeys(KEYWORDS)
-
 
 STRING_RULES = [
     ('ESC_QUOTE', r'\\"'),
     ('ESC_ESC', r'\\\\'),
     ('CHAR', r'[^"\\]'),
-    ('CLOSING_QUOTE', r'"'),
+    ('ESC_SIMPLE', r'\\[abfnrtv0]'),
+    ('ESC_HEX_8', r'\\x[0-9a-fA-F]{2}'),
+    ('ESC_HEX_16', r'\\u[0-9a-fA-F]{4}'),
+    ('ESC_HEX_ANY', r'\\u\{[0-9a-fA-F]+\}'),
+    ('ESC_UNRECOGNISED', r'\\[^abfnrtv0xu"\\]'),
+    ('ST_ENDSTRING', r'"'),
 ]
 
 
-class SRLexerStream(LexerStream):
-    def __init__(self, lexer, filename, s, idx=0, lineno=1):
+TOKENS = [x[0] for x in QUILL_RULES + STRING_RULES] + [x.upper() for x in KEYWORDS]
+
+KEYWORD_DICT = dict.fromkeys(KEYWORDS)
+
+
+class QuillLexerStream(object):
+    _last_token = None
+
+    def __init__(self, lexer, filename, s, state='INITIAL'):
+        self.lexer = lexer
         self._filename = filename
-        LexerStream.__init__(self, lexer, s)
-        self.idx = idx
-        self._lineno = lineno
+        self.s = s
+        self.state = self.lexer.get_state(state)
+
+        self.idx = 0
+        self._lineno = 1
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        return self.next()
 
     def _update_pos(self, match_start, match_end):
         lineno = self._lineno
@@ -109,22 +124,48 @@ class SRLexerStream(LexerStream):
     def next(self):
         while True:
             if self.idx >= len(self.s):
+                if self.state.name == 'STRING':
+                    raise self.parse_error("unterminated string")
                 raise StopIteration
-            for rule in self.lexer.ignore_rules:
-                match = rule.matches(self.s, self.idx)
-                if match:
-                    self._update_pos(match.start, match.end)
+            if self.state.name == 'INITIAL':
+                assert len(self.state.ignore_rules) == 1
+                whitespace_rule = self.state.ignore_rules[0]
+                match = whitespace_rule.matches(self.s, self.idx)
+                if match is not None:
+                    source_range = self._update_pos(match.start, match.end)
+                    if "\n" in self.s[match.start:match.end]:
+                        if self._last_token.name not in \
+                           ('RIGHT_CURLY_BRACE', 'RIGHT_PAREN', 'IDENTIFIER', 'INTEGER'):
+                            continue
+                        token = Token(
+                            'SEMICOLON', self.s[match.start:match.end], source_range
+                        )
+                        self._last_token = token
+                        return token
+                else:
                     break
             else:
-                break
+                for rule in self.state.ignore_rules:
+                    match = rule.matches(self.s, self.idx)
+                    if match:
+                        self._update_pos(match.start, match.end)
+                        break
+                else:
+                    break
 
-        for rule in self.lexer.rules:
+        for rule in self.state.rules:
             match = rule.matches(self.s, self.idx)
             if match:
-                source_pos = self._update_pos(match.start, match.end)
-                token = Token(
-                    rule.name, self.s[match.start:match.end], source_pos
-                )
+                source_range = self._update_pos(match.start, match.end)
+                val = self.s[match.start:match.end]
+                if val in KEYWORD_DICT:
+                    name = val.upper()
+                else:
+                    name = rule.name
+                token = Token(name, val, source_range)
+                self._last_token = token
+                if name in self.state.transitions:
+                    self.state = self.lexer.get_state(self.state.transitions[name])
                 return token
         else:
             raise self.parse_error("unrecognized token")
@@ -140,109 +181,60 @@ class SRLexerStream(LexerStream):
                           self._filename, self._lineno, colno, colno + 1)
 
 
-class StringLexer(Lexer):
-    def lex(self, filename, s, idx, lineno):
-        return SRLexerStream(self, filename, s, idx, lineno)
+class QuillLexer(object):
+    def __init__(self, states):
+        self.states = states
 
-
-class StringLexerGenerator(LexerGenerator):
-    def build(self):
-        return StringLexer(self.rules, self.ignore_rules)
-
-
-def get_string_lexer():
-    lg = StringLexerGenerator()
-
-    for name, rule in STRING_RULES:
-        lg.add(name, rule)
-    return lg.build()
-
-
-class QuillLexerStream(SRLexerStream):
-    _last_token = None
-
-    def lex_string(self):
-        parts = []
-        length = 1
-        for t in self.lexer.string_lexer.lex(self._filename, self.s, self.idx + 1, self._lineno):
-            length += len(t.value)
-            if t.name == 'CLOSING_QUOTE':
-                break
-            elif t.name == 'ESC_QUOTE':
-                parts.append('"')
-            elif t.name == 'ESC_ESC':
-                parts.append('\\')
-            else:
-                assert t.name == 'CHAR'
-                parts.append(t.value)
-        else:
-            raise self.parse_error("unterminated string")
-
-        val = ''.join(parts)
-        str_decode_utf_8(val, len(val), 'strict', final=True)
-        source_range = self._update_pos(self.idx, self.idx + length)
-        return Token('STRING', val, source_range)
-
-    def next(self):
-        while True:
-            if self.idx >= len(self.s):
-                raise StopIteration
-            assert len(self.lexer.ignore_rules) == 1
-            whitespace_rule = self.lexer.ignore_rules[0]
-            match = whitespace_rule.matches(self.s, self.idx)
-            if match is not None:
-                source_range = self._update_pos(match.start, match.end)
-                if "\n" in self.s[match.start:match.end]:
-                    if self._last_token.name not in \
-                       ('RIGHT_CURLY_BRACE', 'RIGHT_PAREN', 'IDENTIFIER', 'INTEGER'):
-                        continue
-                    token = Token(
-                        'SEMICOLON', self.s[match.start:match.end], source_range
-                    )
-                    self._last_token = token
-                    return token
-            else:
-                break
-
-        for rule in self.lexer.rules:
-            match = rule.matches(self.s, self.idx)
-            if match:
-                if rule.name == 'STRING':
-                    token = self.lex_string()
-                    self._last_token = token
-                    return token
-
-                source_range = self._update_pos(match.start, match.end)
-                val = self.s[match.start:match.end]
-                if val in KEYWORD_DICT:
-                    name = val.upper()
-                else:
-                    name = rule.name
-                token = Token(name, val, source_range)
-                self._last_token = token
-                return token
-        else:
-            raise self.parse_error("unrecognized token")
-
-
-class QuillLexer(Lexer):
-    def __init__(self, rules, ignore_rules, string_lexer):
-        self.string_lexer = string_lexer
-        Lexer.__init__(self, rules, ignore_rules)
+    def get_state(self, name):
+        return self.states[name]
 
     def lex(self, filename, s):
         return QuillLexerStream(self, filename, s)
 
 
-class QuillLexerGenerator(LexerGenerator):
+class LexerState(object):
+    def __init__(self, name):
+        self.name = name
+        self.rules = []
+        self.ignore_rules = []
+        self.transitions = {}
+
+    def add(self, name, pattern, flags=0):
+        self.rules.append(Rule(name, pattern, flags=flags))
+
+    def ignore(self, pattern, flags=0):
+        self.ignore_rules.append(Rule("", pattern, flags=flags))
+
+    def transition(self, name, state):
+        assert name not in self.transitions
+        self.transitions[name] = state
+
+
+class QuillLexerGenerator(object):
+    def __init__(self):
+        self.states = {}
+
+    def state(self, name):
+        assert name not in self.states
+        self.states[name] = LexerState(name)
+        return self.states[name]
+
     def build(self):
-        return QuillLexer(self.rules, self.ignore_rules, get_string_lexer())
+        return QuillLexer(self.states)
 
 
 def get_lexer():
     lg = QuillLexerGenerator()
 
-    for name, rule in RULES:
-        lg.add(name, rule)
-    lg.ignore('\s+')
+    initial = lg.state('INITIAL')
+    for name, rule in QUILL_RULES:
+        initial.add(name, rule)
+    initial.ignore('\s+')
+    initial.transition('ST_STRING', 'STRING')
+
+    string = lg.state('STRING')
+    for name, rule in STRING_RULES:
+        string.add(name, rule)
+    string.transition('ST_ENDSTRING', 'INITIAL')
+
     return lg.build()

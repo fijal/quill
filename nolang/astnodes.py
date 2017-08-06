@@ -83,6 +83,14 @@ class String(AstNode):
         state.emit(self.getstartidx(), opcodes.LOAD_CONSTANT, no)
 
 
+class StringContent(AstNode):
+    def __init__(self, strparts):
+        self.strparts = strparts
+
+    def get_strparts(self):
+        return self.strparts
+
+
 class BinOp(AstNode):
     def __init__(self, op, left, right, oppos, srcpos=None):
         AstNode.__init__(self, srcpos)

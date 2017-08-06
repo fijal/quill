@@ -1,6 +1,7 @@
 
 import rply
 from rply.token import Token
+from rpython.rlib.runicode import str_decode_utf_8, unicode_encode_utf_8, UNICHR
 
 from nolang.lexer import TOKENS, ParseError
 from nolang import astnodes as ast
@@ -24,6 +25,11 @@ def errorhandler(state, lookahead):
     raise ParseError('Parsing error', line, state.filename, sourcepos.lineno,
                      sourcepos.colno - 1,
                      len(lookahead.value) + sourcepos.colno - 1)
+
+
+def hex_to_utf8(s):
+    uchr = UNICHR(int(s, 16))
+    return unicode_encode_utf_8(uchr, len(uchr), 'strict')
 
 
 def get_parser():
@@ -220,9 +226,11 @@ def get_parser():
     def expression_number(state, p):
         return ast.Number(int(p[0].getstr()), srcpos=sr(p))
 
-    @pg.production('expression : STRING')
+    @pg.production('expression : ST_STRING stringcontent ST_ENDSTRING')
     def expression_string(state, p):
-        return ast.String(p[0].getstr(), srcpos=sr(p))
+        val = ''.join(p[1].get_strparts())
+        str_decode_utf_8(val, len(val), 'strict', final=True)
+        return ast.String(val, srcpos=sr(p))
 
     @pg.production('expression : atom')
     def expression_atom(state, p):
@@ -235,6 +243,53 @@ def get_parser():
     @pg.production('expression : expression AND expression')
     def expression_and_expression(state, p):
         return ast.And(p[0], p[2], srcpos=sr(p))
+
+    @pg.production('stringcontent : ')
+    def string_empty(state, p):
+        return ast.StringContent([])
+
+    @pg.production('stringcontent : stringcontent ESC_QUOTE')
+    def string_esc_quote(state, p):
+        return ast.StringContent(p[0].get_strparts() + ['"'])
+
+    @pg.production('stringcontent : stringcontent ESC_ESC')
+    def string_esc_esc(state, p):
+        return ast.StringContent(p[0].get_strparts() + ['\\'])
+
+    @pg.production('stringcontent : stringcontent ESC_SIMPLE')
+    def string_esc_simple(state, p):
+        part = {
+            'a': '\a',
+            'b': '\b',
+            'f': '\f',
+            'n': '\n',
+            'r': '\r',
+            't': '\t',
+            'v': '\v',
+            '0': '\0',
+        }[p[1].getstr()[1]]
+        return ast.StringContent(p[0].get_strparts() + [part])
+
+    @pg.production('stringcontent : stringcontent ESC_HEX_8')
+    @pg.production('stringcontent : stringcontent ESC_HEX_16')
+    def string_esc_hex_fixed(state, p):
+        s = p[1].getstr()
+        return ast.StringContent(p[0].get_strparts() + [hex_to_utf8(s[2:])])
+
+    @pg.production('stringcontent : stringcontent ESC_HEX_ANY')
+    def string_esc_hex_any(state, p):
+        s = p[1].getstr()
+        end = len(s) - 1
+        assert end >= 0
+        return ast.StringContent(p[0].get_strparts() + [hex_to_utf8(s[3:end])])
+
+    @pg.production('stringcontent : stringcontent ESC_UNRECOGNISED')
+    def string_esc_unrecognised(state, p):
+        return ast.StringContent(p[0].get_strparts() + [p[1].getstr()])
+
+    @pg.production('stringcontent : stringcontent CHAR')
+    def string_char(state, p):
+        return ast.StringContent(p[0].get_strparts() + [p[1].getstr()])
 
     @pg.production('atom : TRUE')
     def atom_true(state, p):
