@@ -99,9 +99,13 @@ class Book(object):
         self.import_path = import_path
         self.license = license
         self.dependencies = dependencies
-        self.athenaeum = None
 
-    def resolve_module(self, import_path):
+        self.athenaeum = Athenaeum(self.fs_path)
+        if dependencies:
+            self.athenaeum.load_dependencies(dependencies)
+
+    def resolve_local_module(self, import_path):
+        """Resolves a module within the book."""
         pieces = import_path.strip('.').split('.')
         prefix = (self.import_path or '').strip('.').split('.')
 
@@ -117,6 +121,19 @@ class Book(object):
             return fs_path + '.q'
         elif os.path.isfile(os.path.join(fs_path, 'index.q')):
             return os.path.join(fs_path, 'index.q')
+        raise LookupError('Module not found')
+
+    def resolve_module(self, import_path):
+        """Resolve a module with the book or its athenaeum"""
+        try:
+            return self.resolve_local_module(import_path)
+        except LookupError:
+            pass
+        for book in self.athenaeum.books.itervalues():
+            try:
+                return book.resolve_module(import_path)
+            except LookupError:
+                pass
         raise LookupError('Module not found')
 
     @classmethod
@@ -140,31 +157,26 @@ class Book(object):
 
 class Athenaeum(object):
 
-    def __init__(self):
+    def __init__(self, root_path):
+        self.root_path = root_path
         self.books = {}
 
-    def add_book(self, book):
-        if book.athenaeum is not None:
-            raise RuntimeError('Book already added to an athenaeum')
-        if book.name in self.books:
-            raise RuntimeError('Book with name %r already registered'
-                               % book.name)
-        self.books[book.name] = book
-        book.athenaeum = self
+    def load_dependency(self, dep_name, dep_data):
+        if 'book' in dep_data:
+            book = Book.from_definition(dep_data)
+        elif 'path' in dep_data['dependency_reference']:
+            book = Book.from_path(os.path.join(
+                self.root_path, dep_data['dependency_reference']['path']))
+        else:
+            raise NotImplementedError('no search path for modules yet')
+        self.books[dep_name] = book
 
-    def resolve_all(self):
-        # XXX: resolve dependencies here
-        pass
-
-
-def load_book(path):
-    book = Book.from_path(path)
-    athenaeum = Athenaeum()
-    athenaeum.add_book(book)
-    athenaeum.resolve_all()
-    return book
+    def load_dependencies(self, dependencies):
+        for dep_name, dep_data in dependencies.iteritems():
+            self.load_dependency(dep_name, dep_data)
 
 
 def test():
-    book = load_book('example')
+    book = Book.from_path('example')
     print book.resolve_module('org.pocoo.example')
+    print book.resolve_module('org.pocoo.other')
