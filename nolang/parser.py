@@ -1,6 +1,7 @@
 
 import rply
 from rply.token import Token
+from rpython.rlib.runicode import str_decode_utf_8
 
 from nolang.lexer import TOKENS, ParseError
 from nolang import astnodes as ast
@@ -220,9 +221,11 @@ def get_parser():
     def expression_number(state, p):
         return ast.Number(int(p[0].getstr()), srcpos=sr(p))
 
-    @pg.production('expression : STRING')
+    @pg.production('expression : ST_STRING stringcontent ST_ENDSTRING')
     def expression_string(state, p):
-        return ast.String(p[0].getstr(), srcpos=sr(p))
+        val = ''.join(p[1].get_strparts())
+        str_decode_utf_8(val, len(val), 'strict', final=True)
+        return ast.String(val, srcpos=sr(p))
 
     @pg.production('expression : atom')
     def expression_atom(state, p):
@@ -235,6 +238,22 @@ def get_parser():
     @pg.production('expression : expression AND expression')
     def expression_and_expression(state, p):
         return ast.And(p[0], p[2], srcpos=sr(p))
+
+    @pg.production('stringcontent : ')
+    def string_empty(state, p):
+        return ast.StringContent([])
+
+    @pg.production('stringcontent : stringcontent ESC_QUOTE')
+    def string_esc_quote(state, p):
+        return ast.StringContent(p[0].get_strparts() + ['"'])
+
+    @pg.production('stringcontent : stringcontent ESC_ESC')
+    def string_esc_esc(state, p):
+        return ast.StringContent(p[0].get_strparts() + ['\\'])
+
+    @pg.production('stringcontent : stringcontent CHAR')
+    def string_char(state, p):
+        return ast.StringContent(p[0].get_strparts() + [p[1].getstr()])
 
     @pg.production('atom : TRUE')
     def atom_true(state, p):
