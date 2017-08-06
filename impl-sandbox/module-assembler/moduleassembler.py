@@ -168,8 +168,7 @@ class Book(object):
     def resolve_module(self, import_path):
         """Resolve a module with the book or its athenaeum"""
         books_seen = set()
-        to_visit = deque(x.book for x in self.athenaeum.dependencies.values())
-        to_visit.appendleft(self)
+        to_visit = deque([self])
 
         while to_visit:
             book = to_visit.popleft()
@@ -184,7 +183,9 @@ class Book(object):
                 return ModuleMatch(self, import_path, fs_path)
 
             books_seen.add(book)
-            to_visit.extend(x.book for x in book.athenaeum.dependencies.values())
+            to_visit.extend(sorted([
+                x.book for x in book.athenaeum.dependencies.values()],
+                key=lambda x: x.name))
 
         raise LookupError('Module %r not found' % import_path)
 
