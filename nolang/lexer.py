@@ -30,10 +30,8 @@ class ParseError(Exception):
 
     def __str__(self):
         # 6 comes from formatting of ParseError by pytest
-        return ("\n" + self.line + "\n" + " " * (self.start_colno) +
+        return (self.line + "\n" + " " * (self.start_colno - 6) +
                 "^" * (self.end_colno - self.start_colno))
-        # return (self.line + "\n" + " " * (self.start_colno - 6) +
-        #         "^" * (self.end_colno - self.start_colno))
 
 
 QUILL_RULES = [
@@ -94,7 +92,9 @@ TOKENS = [x[0] for x in QUILL_RULES + STRING_RULES] + [x.upper() for x in KEYWOR
 KEYWORD_DICT = dict.fromkeys(KEYWORDS)
 
 
-class StatefulLexerStream(object):
+class QuillLexerStream(object):
+    _last_token = None
+
     def __init__(self, lexer, filename, s, state='INITIAL'):
         self.lexer = lexer
         self._filename = filename
@@ -120,85 +120,6 @@ class StatefulLexerStream(object):
         else:
             colno = match_start - last_nl
         return SourceRange(match_start, match_end, lineno, colno)
-
-    # def next(self):
-    #     while True:
-    #         if self.idx >= len(self.s):
-    #             raise StopIteration
-    #         for rule in self.state.ignore_rules:
-    #             match = rule.matches(self.s, self.idx)
-    #             if match:
-    #                 self._update_pos(match.start, match.end)
-    #                 break
-    #         else:
-    #             break
-
-    #     for rule in self.state.rules:
-    #         match = rule.matches(self.s, self.idx)
-    #         if match:
-    #             source_pos = self._update_pos(match.start, match.end)
-    #             token = Token(
-    #                 rule.name, self.s[match.start:match.end], source_pos
-    #             )
-    #             return token
-    #     else:
-    #         raise self.parse_error("unrecognized token")
-
-    def parse_error(self, msg):
-        last_nl = self.s.rfind("\n", 0, self.idx)
-        if last_nl < 0:
-            colno = self.idx - 1
-        else:
-            colno = self.idx - last_nl - 1
-        return ParseError(msg,
-                          self.s.splitlines()[self._lineno - 1],
-                          self._filename, self._lineno, colno, colno + 1)
-
-
-class StatefulLexer(object):
-    def __init__(self, states):
-        self.states = states
-
-    def get_state(self, name):
-        return self.states[name]
-
-    def lex(self, filename, s):
-        return StatefulLexerStream(self, filename, s)
-
-
-class StatefulLexerState(object):
-    def __init__(self, name):
-        self.name = name
-        self.rules = []
-        self.ignore_rules = []
-        self.transitions = {}
-
-    def add(self, name, pattern, flags=0):
-        self.rules.append(Rule(name, pattern, flags=flags))
-
-    def ignore(self, pattern, flags=0):
-        self.ignore_rules.append(Rule("", pattern, flags=flags))
-
-    def transition(self, name, state):
-        assert name not in self.transitions
-        self.transitions[name] = state
-
-
-class StatefulLexerGenerator(object):
-    def __init__(self):
-        self.states = {}
-
-    def state(self, name):
-        assert name not in self.states
-        self.states[name] = StatefulLexerState(name)
-        return self.states[name]
-
-    def build(self):
-        return StatefulLexer(self.states)
-
-
-class QuillLexerStream(StatefulLexerStream):
-    _last_token = None
 
     def next(self):
         while True:
@@ -249,13 +170,55 @@ class QuillLexerStream(StatefulLexerStream):
         else:
             raise self.parse_error("unrecognized token")
 
+    def parse_error(self, msg):
+        last_nl = self.s.rfind("\n", 0, self.idx)
+        if last_nl < 0:
+            colno = self.idx - 1
+        else:
+            colno = self.idx - last_nl - 1
+        return ParseError(msg,
+                          self.s.splitlines()[self._lineno - 1],
+                          self._filename, self._lineno, colno, colno + 1)
 
-class QuillLexer(StatefulLexer):
+
+class QuillLexer(object):
+    def __init__(self, states):
+        self.states = states
+
+    def get_state(self, name):
+        return self.states[name]
+
     def lex(self, filename, s):
         return QuillLexerStream(self, filename, s)
 
 
-class QuillLexerGenerator(StatefulLexerGenerator):
+class LexerState(object):
+    def __init__(self, name):
+        self.name = name
+        self.rules = []
+        self.ignore_rules = []
+        self.transitions = {}
+
+    def add(self, name, pattern, flags=0):
+        self.rules.append(Rule(name, pattern, flags=flags))
+
+    def ignore(self, pattern, flags=0):
+        self.ignore_rules.append(Rule("", pattern, flags=flags))
+
+    def transition(self, name, state):
+        assert name not in self.transitions
+        self.transitions[name] = state
+
+
+class QuillLexerGenerator(object):
+    def __init__(self):
+        self.states = {}
+
+    def state(self, name):
+        assert name not in self.states
+        self.states[name] = LexerState(name)
+        return self.states[name]
+
     def build(self):
         return QuillLexer(self.states)
 
