@@ -78,12 +78,13 @@ KEYWORDS = [
 STRING_RULES = [
     ('ESC_QUOTE', r'\\"'),
     ('ESC_ESC', r'\\\\'),
+    ('ST_INTERP', r'\$\{'),
     ('CHAR', r'[^"\\]'),
-    ('ESC_SIMPLE', r'\\[abfnrtv0]'),
+    ('ESC_SIMPLE', r'\\[abfnrtv0\$]'),
     ('ESC_HEX_8', r'\\x[0-9a-fA-F]{2}'),
     ('ESC_HEX_16', r'\\u[0-9a-fA-F]{4}'),
     ('ESC_HEX_ANY', r'\\u\{[0-9a-fA-F]+\}'),
-    ('ESC_UNRECOGNISED', r'\\[^abfnrtv0xu"\\]'),
+    ('ESC_UNRECOGNISED', r'\\[^abfnrtv0xu"\\\$]'),
     ('ST_ENDSTRING', r'"'),
 ]
 
@@ -260,11 +261,20 @@ def get_lexer():
     string = lg.state('STRING', end_allowed=False)
     for name, rule in STRING_RULES:
         string.add(name, rule)
+    string.push_state('ST_INTERP', 'INTERP')
     string.pop_state('ST_ENDSTRING')
 
     raw = lg.state('RAWSTRING', end_allowed=False)
     for name, rule in RAWSTRING_RULES:
         raw.add(name, rule)
     raw.pop_state('ST_ENDRAW')
+
+    # This is the same as the main state, except some rules are unused and we
+    # pop the lexer state when we see a RIGHT_CURLY_BRACE.
+    interp = lg.state('INTERP', end_allowed=False)
+    for name, rule in QUILL_RULES:
+        interp.add(name, rule)
+    interp.ignore('\s+')
+    interp.pop_state('RIGHT_CURLY_BRACE')
 
     return lg.build()

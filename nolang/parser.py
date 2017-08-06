@@ -226,9 +226,15 @@ def get_parser():
     def expression_number(state, p):
         return ast.Number(int(p[0].getstr()), srcpos=sr(p))
 
-    @pg.production('expression : ST_STRING stringcontent ST_ENDSTRING')
-    @pg.production('expression : ST_RAW rawstringcontent ST_ENDRAW')
+    @pg.production('expression : ST_STRING interpstr ST_ENDSTRING')
     def expression_string(state, p):
+        strings = p[1].get_strings()
+        if len(strings) == 1:
+            return ast.String(strings[0], srcpos=sr(p))
+        return ast.InterpString(strings, p[1].get_exprs(), srcpos=sr(p))
+
+    @pg.production('expression : ST_RAW rawstringcontent ST_ENDRAW')
+    def expression_rawstring(state, p):
         val = ''.join(p[1].get_strparts())
         str_decode_utf_8(val, len(val), 'strict', final=True)
         return ast.String(val, srcpos=sr(p))
@@ -244,6 +250,19 @@ def get_parser():
     @pg.production('expression : expression AND expression')
     def expression_and_expression(state, p):
         return ast.And(p[0], p[2], srcpos=sr(p))
+
+    @pg.production('interpstr : stringcontent')
+    def interpstr_start(state, p):
+        val = ''.join(p[0].get_strparts())
+        str_decode_utf_8(val, len(val), 'strict', final=True)
+        return ast.InterpStringContents([val], [])
+
+    @pg.production('interpstr : interpstr ST_INTERP expression RIGHT_CURLY_BRACE stringcontent')
+    def interpstr_part(state, p):
+        val = ''.join(p[4].get_strparts())
+        str_decode_utf_8(val, len(val), 'strict', final=True)
+        return ast.InterpStringContents(
+            p[0].get_strings() + [val], p[0].get_exprs() + [p[2]])
 
     @pg.production('stringcontent : ')
     def string_empty(state, p):
@@ -268,6 +287,7 @@ def get_parser():
             't': '\t',
             'v': '\v',
             '0': '\0',
+            '$': '$',
         }[p[1].getstr()[1]]
         return ast.StringContent(p[0].get_strparts() + [part])
 

@@ -12,11 +12,14 @@ class BaseTest(object):
 
 
 class TestStringParser(BaseTest):
-    def parse(self, expr):
+    def parse_expr(self, expr):
         program = "def foo () { " + expr + "; }"
         ast = self.parser.parse(self.lexer.lex('test', program),
                                 ParsingState('test', program))
-        return ast.elements[0].body[0].expr.value
+        return ast.elements[0].body[0].expr
+
+    def parse(self, expr):
+        return self.parse_expr(expr).value
 
     def parse_bad(self, expr):
         try:
@@ -121,6 +124,14 @@ class TestStringParser(BaseTest):
         assert self.parse(r"r'\n'") == r"\n"
         assert self.parse(r"r'\xq'") == r"\xq"
         assert self.parse(r"r'\uq'") == r"\uq"
+
+    def test_interp(self):
+        assert self.parse_expr(r'"${1}"') == ast.InterpString(
+            ['', ''], [ast.Number(1)])
+        assert self.parse_expr(r'"foo${1}bar"') == ast.InterpString(
+            ['foo', 'bar'], [ast.Number(1)])
+        assert self.parse_expr(r'"${1 + 2}"') == ast.InterpString(
+            ['', ''], [ast.BinOp('+', ast.Number(1), ast.Number(2), oppos=(18, 19))])
 
 
 class TestExpressionParser(BaseTest):
