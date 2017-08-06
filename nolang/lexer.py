@@ -80,6 +80,11 @@ STRING_RULES = [
     ('ESC_QUOTE', r'\\"'),
     ('ESC_ESC', r'\\\\'),
     ('CHAR', r'[^"\\]'),
+    ('ESC_SIMPLE', r'\\[abfnrtv0]'),
+    ('ESC_HEX_8', r'\\x[0-9a-fA-F]{2}'),
+    ('ESC_HEX_16', r'\\u[0-9a-fA-F]{4}'),
+    ('ESC_HEX_ANY', r'\\u\{[0-9a-fA-F]+\}'),
+    ('ESC_UNRECOGNISED', r'\\[^abfnrtv0xu"\\]'),
     ('ST_ENDSTRING', r'"'),
 ]
 
