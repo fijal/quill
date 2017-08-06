@@ -1,6 +1,7 @@
 from rply import LexerGenerator
 from rply.lexer import Lexer, LexerStream
 from rply.token import Token as RplyToken
+from rpython.rlib.runicode import str_decode_utf_8
 
 
 class Token(RplyToken):
@@ -178,8 +179,7 @@ class QuillLexerStream(SRLexerStream):
             raise self.parse_error("unterminated string")
 
         val = ''.join(parts)
-        # XXX not rpython
-        val.decode('utf8')
+        str_decode_utf_8(val, len(val), 'strict', final=True)
         source_range = self._update_pos(self.idx, self.idx + length)
         return Token('STRING', val, source_range)
 
