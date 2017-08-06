@@ -1,0 +1,6 @@
+[book]
+name = "std-io"
+version = "1.0.0"
+author = "Quill Team"
+license = "MIT"
+import_path = "std.io"

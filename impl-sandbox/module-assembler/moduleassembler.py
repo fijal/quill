@@ -5,15 +5,18 @@ import pytoml
 from itertools import islice, chain, repeat
 
 
+STD_BASE = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'std')
 DEFAULT_DEPENDENCIES = [
     {
         'name': 'std-io',
+        'path': os.path.join(STD_BASE, 'io'),
         'version': '1.x',
     },
-    {
-        'name': 'std-util',
-        'version': '1.x',
-    },
+    # {
+    #     'name': 'std-util',
+    #     'path': os.path.join(STD_BASE, 'util'),
+    #     'version': '1.x',
+    # },
 ]
 
 
@@ -60,6 +63,7 @@ def load_book_definition(root):
     metadata['dependencies'] = {}
     metadata['root_path'] = os.path.abspath(root)
 
+    found_deps = set([metadata['book']['name']])
     dep_folder = os.path.join(root, 'dependencies')
     if os.path.isdir(dep_folder):
         for dep_ref in os.listdir(dep_folder):
@@ -84,23 +88,30 @@ def load_book_definition(root):
                 continue
 
             metadata['dependencies'][dep['dependency_reference']['name']] = dep
+            found_deps.add(dep['dependency_reference']['name'])
+
+    for dep_ref_data in DEFAULT_DEPENDENCIES:
+        if dep_ref_data['name'] in found_deps:
+            continue
+        metadata['dependencies'][dep_ref_data['name']] = {
+            'dependency_reference': dep_ref_data
+        }
 
     return metadata
 
 
 class ModuleMatch(object):
 
-    def __init__(self, book_name, book_version, import_path, fs_path):
-        self.book_name = book_name
-        self.book_version = book_version
+    def __init__(self, book, import_path, fs_path):
+        self.book = book
         self.import_path = import_path
         self.fs_path = fs_path
 
     @property
     def fqid(self):
         return '{%s@%s}%s' % (
-            self.book_name,
-            self.book_version,
+            self.book.name,
+            self.book.version,
             self.import_path,
         )
 
@@ -153,7 +164,7 @@ class Book(object):
         except LookupError:
             pass
         else:
-            return ModuleMatch(self.name, self.version, import_path, fs_path)
+            return ModuleMatch(self, import_path, fs_path)
         return self.athenaeum.resolve_module(import_path)
 
     def open_resource(self, path):
@@ -227,5 +238,6 @@ def test():
     book = Book.from_path('example')
     print book.resolve_module('org.pocoo.example')
     print book.resolve_module('org.pocoo.other')
+    print book.resolve_module('std.io')
     with book.open_resource('README') as f:
         print f.read().strip()
