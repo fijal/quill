@@ -13,8 +13,19 @@ from nolang.compiler import compile_module
 from nolang.builtins.defaults import default_builtins
 from nolang.lexer import get_lexer
 from nolang.frameobject import format_traceback
+from nolang.importer import Importer
 from nolang.objects.space import Space
 from nolang.error import AppError
+
+
+def dirname(p):
+    """Returns the directory component of a pathname"""
+    i = p.rfind(os.path.sep) + 1
+    assert i >= 0
+    head = p[:i]
+    if head and head != os.path.sep * len(head):
+        head = head.rstrip(os.path.sep)
+    return head
 
 
 def main(argv):
@@ -52,7 +63,8 @@ def run_code(fname):
     except ParseError as pe:
         format_parser_error(pe)
         return 1
-    w_mod = compile_module(space, fname, source, ast)
+    importer = Importer(dirname(os.path.abspath(fname)), parser, lexer)
+    w_mod = compile_module(space, fname, source, ast, importer)
     w_mod.setup(space)
     try:
         space.call_method(w_mod, 'main', [])

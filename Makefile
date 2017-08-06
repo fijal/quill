@@ -1,8 +1,13 @@
 all: test
 
 venv:
+	@git submodule update --init
 	@virtualenv venv -p `python -c "import sys; print('%s/bin/python' % getattr(sys, 'real_prefix', sys.prefix))"`
-	@venv/bin/pip install rpython rply pytest flake8
+	@ln -sf ../../../../vendor/pypy/rpython venv/lib/python2.7/site-packages
+	@echo '#!${PWD}/venv/bin/python\n' > venv/bin/rpython
+	@cat vendor/pypy/rpython/bin/rpython >> venv/bin/rpython
+	@chmod +x venv/bin/rpython
+	@venv/bin/pip install rply pytest flake8
 
 ensure-venv:
 	@if [ ! -f venv/bin/pytest ]; then $(MAKE) venv; fi
