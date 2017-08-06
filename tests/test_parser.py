@@ -110,6 +110,18 @@ class TestStringParser(BaseTest):
         assert self.parse('"\xf0\xbf\xbf\xbf"') == '\xf0\xbf\xbf\xbf'
         assert self.parse('"\xf4\x80\x80\xbf"') == '\xf4\x80\x80\xbf'
 
+    def test_bad_raw_strings(self):
+        self.parse_bad(r"r'\'")
+        self.parse_bad(r"r'\\\'")
+
+    def test_raw_escapes(self):
+        assert self.parse(r"r'\\'") == r"\\"
+        assert self.parse(r"r'\''") == r"\'"
+        assert self.parse(r"r'\\\'\\'") == r"\\\'\\"
+        assert self.parse(r"r'\n'") == r"\n"
+        assert self.parse(r"r'\xq'") == r"\xq"
+        assert self.parse(r"r'\uq'") == r"\uq"
+
 
 class TestExpressionParser(BaseTest):
     def parse(self, expr):

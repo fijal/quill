@@ -227,6 +227,7 @@ def get_parser():
         return ast.Number(int(p[0].getstr()), srcpos=sr(p))
 
     @pg.production('expression : ST_STRING stringcontent ST_ENDSTRING')
+    @pg.production('expression : ST_RAW rawstringcontent ST_ENDRAW')
     def expression_string(state, p):
         val = ''.join(p[1].get_strparts())
         str_decode_utf_8(val, len(val), 'strict', final=True)
@@ -289,6 +290,15 @@ def get_parser():
 
     @pg.production('stringcontent : stringcontent CHAR')
     def string_char(state, p):
+        return ast.StringContent(p[0].get_strparts() + [p[1].getstr()])
+
+    @pg.production('rawstringcontent : ')
+    def rawstring_empty(state, p):
+        return ast.StringContent([])
+
+    @pg.production('rawstringcontent : rawstringcontent RAW_ESC')
+    @pg.production('rawstringcontent : rawstringcontent RAW_CHAR')
+    def rawstring_char(state, p):
         return ast.StringContent(p[0].get_strparts() + [p[1].getstr()])
 
     @pg.production('atom : TRUE')

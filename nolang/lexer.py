@@ -44,6 +44,8 @@ QUILL_RULES = [
     ('TRUEDIV', r'\/\/'),
     ('EQ', r'=='),
     ('ASSIGN', r'='),
+    ('ST_STRING', r'"'),
+    ('ST_RAW', r"r'"),
     ('IDENTIFIER', r'[a-zA-Z_][a-zA-Z0-9_]*'),
     ('LEFT_CURLY_BRACE', r'\{'),
     ('LEFT_PAREN', r'\('),
@@ -51,7 +53,6 @@ QUILL_RULES = [
     ('RIGHT_CURLY_BRACE', r'\}'),
     ('COMMA', r','),
     ('SEMICOLON', r';'),
-    ('ST_STRING', r'"'),
 ]
 
 KEYWORDS = [
@@ -87,7 +88,14 @@ STRING_RULES = [
 ]
 
 
-TOKENS = [x[0] for x in QUILL_RULES + STRING_RULES] + [x.upper() for x in KEYWORDS]
+RAWSTRING_RULES = [
+    ('RAW_ESC', r"\\."),
+    ('RAW_CHAR', r"[^'\\]"),
+    ('ST_ENDRAW', r"'"),
+]
+
+
+TOKENS = [x[0] for x in QUILL_RULES + STRING_RULES + RAWSTRING_RULES] + [x.upper() for x in KEYWORDS]
 
 KEYWORD_DICT = dict.fromkeys(KEYWORDS)
 
@@ -124,7 +132,7 @@ class QuillLexerStream(object):
     def next(self):
         while True:
             if self.idx >= len(self.s):
-                if self.state.name == 'STRING':
+                if not self.state.end_allowed:
                     raise self.parse_error("unterminated string")
                 raise StopIteration
             if self.state.name == 'INITIAL':
@@ -166,6 +174,7 @@ class QuillLexerStream(object):
                 self._last_token = token
                 if name in self.state.transitions:
                     self.state = self.lexer.get_state(self.state.transitions[name])
+                print token
                 return token
         else:
             raise self.parse_error("unrecognized token")
@@ -193,8 +202,9 @@ class QuillLexer(object):
 
 
 class LexerState(object):
-    def __init__(self, name):
+    def __init__(self, name, end_allowed):
         self.name = name
+        self.end_allowed = end_allowed
         self.rules = []
         self.ignore_rules = []
         self.transitions = {}
@@ -214,9 +224,9 @@ class QuillLexerGenerator(object):
     def __init__(self):
         self.states = {}
 
-    def state(self, name):
+    def state(self, name, end_allowed=True):
         assert name not in self.states
-        self.states[name] = LexerState(name)
+        self.states[name] = LexerState(name, end_allowed)
         return self.states[name]
 
     def build(self):
@@ -231,10 +241,16 @@ def get_lexer():
         initial.add(name, rule)
     initial.ignore('\s+')
     initial.transition('ST_STRING', 'STRING')
+    initial.transition('ST_RAW', 'RAWSTRING')
 
-    string = lg.state('STRING')
+    string = lg.state('STRING', end_allowed=False)
     for name, rule in STRING_RULES:
         string.add(name, rule)
     string.transition('ST_ENDSTRING', 'INITIAL')
+
+    raw = lg.state('RAWSTRING', end_allowed=False)
+    for name, rule in RAWSTRING_RULES:
+        raw.add(name, rule)
+    raw.transition('ST_ENDRAW', 'INITIAL')
 
     return lg.build()
