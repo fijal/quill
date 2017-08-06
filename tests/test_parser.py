@@ -11,6 +11,67 @@ class BaseTest(object):
         self.lexer = get_lexer()
 
 
+class TestStringParser(BaseTest):
+    def parse(self, expr):
+        program = "def foo () { " + expr + "; }"
+        ast = self.parser.parse(self.lexer.lex('test', program),
+                                ParsingState('test', program))
+        return ast.elements[0].body[0].expr.value
+
+    def parse_bad(self, expr):
+        try:
+            value = self.parse(expr)
+        except ParseError:
+            pass
+        except UnicodeDecodeError:
+            pass
+        else:
+            raise Exception("Incorrectly parsed %r as %r." % (expr, value))
+
+    def test_simple(self):
+        assert self.parse('"foo"') == 'foo'
+
+    def test_quote(self):
+        assert self.parse(r'"foo\"bar"') == 'foo"bar'
+
+    def test_quote_only(self):
+        assert self.parse(r'"\""') == '"'
+
+    def test_non_strings(self):
+        self.parse_bad(r'"\"')
+        self.parse_bad(r'"\\\"')
+
+    def test_escaped_escapes(self):
+        assert self.parse(r'"\\"') == '\\'
+        assert self.parse(r'"\\\""') == '\\"'
+        assert self.parse(r'"\\\"\\"') == '\\"\\'
+
+    def test_bad_utf8(self):
+        self.parse_bad('"\xff"')
+        self.parse_bad('"\xc0q"')
+        self.parse_bad('"\xc0c0"')
+        self.parse_bad('"\xdfq"')
+        self.parse_bad('"\xe0q"')
+        self.parse_bad('"\xe0\x80q"')
+        self.parse_bad('"\xef\x80q"')
+        self.parse_bad('"\xf0q"')
+        self.parse_bad('"\xf0\x80q"')
+        self.parse_bad('"\xf0\x80\x80q"')
+        self.parse_bad('"\xf7\x80\x80q"')
+        self.parse_bad('"\xf8"')
+
+    def test_good_utf8(self):
+        assert self.parse('"\x00"') == '\x00'
+        assert self.parse('"\x7f"') == '\x7f'
+        assert self.parse('"\xc2\x80"') == '\xc2\x80'
+        assert self.parse('"\xc2\xbf"') == '\xc2\xbf'
+        assert self.parse('"\xdf\xbf"') == '\xdf\xbf'
+        assert self.parse('"\xe0\xbf\xbf"') == '\xe0\xbf\xbf'
+        assert self.parse('"\xef\x80\x80"') == '\xef\x80\x80'
+        assert self.parse('"\xf0\xbf\xbf\xbf"') == '\xf0\xbf\xbf\xbf'
+        assert self.parse('"\xf4\x80\x80\xbf"') == '\xf4\x80\x80\xbf'
+
+
 class TestExpressionParser(BaseTest):
     def parse(self, expr):
         program = "def foo () { " + expr + "; }"
