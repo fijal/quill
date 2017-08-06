@@ -88,6 +88,29 @@ def load_book_definition(root):
     return metadata
 
 
+class ModuleMatch(object):
+
+    def __init__(self, book_name, book_version, import_path, fs_path):
+        self.book_name = book_name
+        self.book_version = book_version
+        self.import_path = import_path
+        self.fs_path = fs_path
+
+    @property
+    def fqid(self):
+        return '{%s@%s}%s' % (
+            self.book_name,
+            self.book_version,
+            self.import_path,
+        )
+
+    def __repr__(self):
+        return '<ModuleName fqid=%r path=%r>' % (
+            self.fqid,
+            self.fs_path,
+        )
+
+
 class Book(object):
 
     def __init__(self, fs_path, name, version, author=None, license=None,
@@ -126,9 +149,11 @@ class Book(object):
     def resolve_module(self, import_path):
         """Resolve a module with the book or its athenaeum"""
         try:
-            return self.resolve_local_module(import_path)
+            fs_path = self.resolve_local_module(import_path)
         except LookupError:
             pass
+        else:
+            return ModuleMatch(self.name, self.version, import_path, fs_path)
         for book in self.athenaeum.books.itervalues():
             try:
                 return book.resolve_module(import_path)
