@@ -107,10 +107,21 @@ class QuillLexerStream(object):
         self.lexer = lexer
         self._filename = filename
         self.s = s
-        self.state = self.lexer.get_state(state)
+        self.state_stack = []
+        self.transition_state(state)
 
         self.idx = 0
         self._lineno = 1
+
+    @property
+    def state(self):
+        return self.state_stack[-1]
+
+    def transition_state(self, name):
+        if name is None:
+            self.state_stack.pop()
+        else:
+            self.state_stack.append(self.lexer.get_state(name))
 
     def __iter__(self):
         return self
@@ -173,8 +184,7 @@ class QuillLexerStream(object):
                 token = Token(name, val, source_range)
                 self._last_token = token
                 if name in self.state.transitions:
-                    self.state = self.lexer.get_state(self.state.transitions[name])
-                print token
+                    self.transition_state(self.state.transitions[name])
                 return token
         else:
             raise self.parse_error("unrecognized token")
@@ -215,9 +225,13 @@ class LexerState(object):
     def ignore(self, pattern, flags=0):
         self.ignore_rules.append(Rule("", pattern, flags=flags))
 
-    def transition(self, name, state):
+    def push_state(self, name, state):
         assert name not in self.transitions
         self.transitions[name] = state
+
+    def pop_state(self, name):
+        assert name not in self.transitions
+        self.transitions[name] = None
 
 
 class QuillLexerGenerator(object):
@@ -240,17 +254,17 @@ def get_lexer():
     for name, rule in QUILL_RULES:
         initial.add(name, rule)
     initial.ignore('\s+')
-    initial.transition('ST_STRING', 'STRING')
-    initial.transition('ST_RAW', 'RAWSTRING')
+    initial.push_state('ST_STRING', 'STRING')
+    initial.push_state('ST_RAW', 'RAWSTRING')
 
     string = lg.state('STRING', end_allowed=False)
     for name, rule in STRING_RULES:
         string.add(name, rule)
-    string.transition('ST_ENDSTRING', 'INITIAL')
+    string.pop_state('ST_ENDSTRING')
 
     raw = lg.state('RAWSTRING', end_allowed=False)
     for name, rule in RAWSTRING_RULES:
         raw.add(name, rule)
-    raw.transition('ST_ENDRAW', 'INITIAL')
+    raw.pop_state('ST_ENDRAW')
 
     return lg.build()
