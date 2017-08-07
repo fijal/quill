@@ -32,6 +32,8 @@ class Space(object):
         self.w_exception = self.builtin_dict['Exception']
         self.setup_builtin(self.make_subclass(self.w_exception, 'IndexError'))
         self.w_indexerror = self.builtin_dict['IndexError']
+        self.setup_builtin(self.make_subclass(self.w_exception, 'TypeError'))
+        self.w_typeerror = self.builtin_dict['TypeError']
         self.coremod = coremod
 
     def setup_builtin(self, builtin):
@@ -87,6 +89,10 @@ class Space(object):
 
     def newlist(self, items):
         return W_ListObject(items)
+
+    # type check helpers
+    def is_w_int(self, w_obj):
+        return isinstance(w_obj, W_IntObject)
 
     # foo_w unwrappers
     def int_w(self, w_obj):

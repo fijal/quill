@@ -1,4 +1,4 @@
-import py
+from nolang.error import AppError
 from support import BaseTest
 
 
@@ -28,9 +28,17 @@ class TestList(BaseTest):
         assert self.space.utf8_w(w_res) == "bar"
 
     def test_getitem_out_of_range(self):
-        py.test.skip("throw an exception?")
-        self.interpret_expr('return ["foo", "bar"][2];')
+        try:
+            self.interpret_expr('return ["foo", "bar"][2];')
+        except AppError as ae:
+            assert ae.w_exception.w_type.name == 'IndexError'
+        else:
+            raise Exception("Applevel IndexError not raised.")
 
     def test_getitem_index_not_int(self):
-        py.test.skip("throw an exception?")
-        self.interpret_expr('return ["foo", "bar"]["zero"];')
+        try:
+            self.interpret_expr('return ["foo", "bar"]["zero"];')
+        except AppError as ae:
+            assert ae.w_exception.w_type.name == 'TypeError'
+        else:
+            raise Exception("Applevel IndexError not raised.")
