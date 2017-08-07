@@ -239,6 +239,10 @@ def get_parser():
         str_decode_utf_8(val, len(val), 'strict', final=True)
         return ast.String(val, srcpos=sr(p))
 
+    @pg.production('expression : LEFT_SQUARE_BRACKET expression_list RIGHT_SQUARE_BRACKET')
+    def expression_list_literal(state, p):
+        return ast.List(p[1].get_element_list(), srcpos=sr(p))
+
     @pg.production('expression : atom')
     def expression_atom(state, p):
         return p[0]

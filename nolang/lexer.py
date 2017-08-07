@@ -51,6 +51,8 @@ QUILL_RULES = [
     ('LEFT_PAREN', r'\('),
     ('RIGHT_PAREN', r'\)'),
     ('RIGHT_CURLY_BRACE', r'\}'),
+    ('LEFT_SQUARE_BRACKET', r'\['),
+    ('RIGHT_SQUARE_BRACKET', r'\]'),
     ('COMMA', r','),
     ('SEMICOLON', r';'),
 ]

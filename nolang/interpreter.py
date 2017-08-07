@@ -119,6 +119,8 @@ class Interpreter(object):
                     self.call(space, frame, index, arg0)
                 elif op == opcodes.RETURN:
                     return frame.pop()
+                elif op == opcodes.LIST_BUILD:
+                    self.list_build(space, frame, bytecode, arg0)
                 else:
                     raise InvalidOpcode(op)
 
@@ -167,6 +169,12 @@ class Interpreter(object):
             args[i] = frame.pop()
         w_callable = frame.pop()
         frame.push(space.call(w_callable, args))
+
+    def list_build(self, space, frame, bytecode, no):
+        items = [None] * no
+        for i in range(no - 1, -1, -1):
+            items[i] = frame.pop()
+        frame.push(space.newlist(items))
 
     def setattr(self, space, frame, bytecode, no):
         w_arg = frame.pop()

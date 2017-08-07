@@ -23,9 +23,11 @@ opcodes = [
     Opcode('LOAD_FALSE', 0, 1, 'load false onto stack'),
     Opcode('STORE', 1, -1, 'store top of the stack into variable'),
     Opcode('DISCARD', 0, -1, 'discard top of the stack'),
-    Opcode('GETATTR', 1, 0, 'get attribut from the object on top of the stack '
+    Opcode('GETATTR', 1, 0, 'get attribute from the object on top of the stack '
                             'with string constant as an argument'),
     Opcode('SETATTR', 1, -2, 'set attribute on an object'),
+    Opcode('LIST_BUILD', 1, 254, 'take N arguments from the stack, build them '
+                                 'into a list, and push the list'),
     # exception handling
     Opcode('PUSH_RESUME_STACK', 1, 0, 'add a new resume point to the stack'),
     Opcode('POP_RESUME_STACK', 0, 0, 'pop one from resume stack'),

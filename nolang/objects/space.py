@@ -6,8 +6,9 @@ from nolang.error import AppError
 from nolang.objects.root import W_None, W_Root
 from nolang.objects.int import W_IntObject
 from nolang.objects.bool import W_BoolObject
-from nolang.objects.unicode import W_StrObject
 from nolang.objects.buffer import W_BufObject
+from nolang.objects.list import W_ListObject
+from nolang.objects.unicode import W_StrObject
 from nolang.builtins.spec import wrap_builtin
 from nolang.builtins.exception import W_Exception
 
@@ -42,6 +43,9 @@ class Space(object):
     def str(self, w_obj):
         return w_obj.str(self)
 
+    def len(self, w_obj):
+        return w_obj.len(self)
+
     # object stuff, hacks so far
     def issubclass(self, w_left, w_right):
         return w_left.issubclass(w_right)
@@ -64,6 +68,9 @@ class Space(object):
 
     def newbuf(self, charsval):
         return W_BufObject(charsval)
+
+    def newlist(self, items):
+        return W_ListObject(items)
 
     # foo_w unwrappers
     def int_w(self, w_obj):
