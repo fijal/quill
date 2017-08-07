@@ -19,7 +19,7 @@
 		"keywords": {
 			"patterns": [{
 				"name": "keyword.control.quill",
-				"match": "\\b(def|class|return|var|while|if|or|and|true|false|try|except|finally|as|raise|import)\\b"
+				"match": "\\b(def|class|return|var|while|if|or|and|true|false|try|for|in|except|finally|as|raise|import)\\b"
 			}]
 		},
 		"comments": {
@@ -48,7 +48,10 @@
 		"literals": {
 			"patterns": [
 				{
-					"include": "#strings"
+					"include": "#double-string"
+				},
+				{
+					"include": "#single-string"
 				},
 				{
 					"include": "#bools"
@@ -58,10 +61,21 @@
 				}
 			]
 		},
-		"strings": {
+		"double-string": {
 			"name": "string.quoted.double.quill",
 			"begin": "\"",
 			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.quill",
+					"match": "\\\\."
+				}
+			]
+		},
+		"single-string": {
+			"name": "string.quoted.single.quill",
+			"begin": "'",
+			"end": "'",
 			"patterns": [
 				{
 					"name": "constant.character.escape.quill",
