@@ -83,6 +83,10 @@ class Interpreter(object):
                     self.setattr(space, frame, bytecode, arg0)
                 elif op == opcodes.GETATTR:
                     self.getattr(space, frame, bytecode, arg0)
+                elif op == opcodes.SETITEM:
+                    self.setitem(space, frame)
+                elif op == opcodes.GETITEM:
+                    self.getitem(space, frame)
                 elif op == opcodes.PUSH_RESUME_STACK:
                     self.push_resume_stack(space, frame, bytecode, arg0)
                 elif op == opcodes.RAISE:
@@ -184,6 +188,17 @@ class Interpreter(object):
     def getattr(self, space, frame, bytecode, no):
         w_lhand = frame.pop()
         frame.push(space.getattr(w_lhand, space.utf8_w(bytecode.constants[no])))
+
+    def setitem(self, space, frame):
+        w_arg = frame.pop()
+        w_idx = frame.pop()
+        w_lhand = frame.pop()
+        space.setitem(w_lhand, w_idx, w_arg)
+
+    def getitem(self, space, frame):
+        w_idx = frame.pop()
+        w_lhand = frame.pop()
+        frame.push(space.getitem(w_lhand, w_idx))
 
     def push_resume_stack(self, space, frame, bytecode, arg0):
         frame.resume_stack[frame.resume_stack_depth] = arg0

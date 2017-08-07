@@ -372,6 +372,32 @@ class Setattr(AstNode):
         state.emit(self.rhand.getendidx(), opcodes.SETATTR, no)
 
 
+class Getitem(AstNode):
+    def __init__(self, lhand, expr, srcpos=None):
+        AstNode.__init__(self, srcpos)
+        self.lhand = lhand
+        self.expr = expr
+
+    def compile(self, state):
+        self.lhand.compile(state)
+        self.expr.compile(state)
+        state.emit(self.lhand.getendidx(), opcodes.GETITEM)
+
+
+class Setitem(AstNode):
+    def __init__(self, lhand, expr, rhand, srcpos=None):
+        AstNode.__init__(self, srcpos)
+        self.lhand = lhand
+        self.expr = expr
+        self.rhand = rhand
+
+    def compile(self, state):
+        self.lhand.compile(state)
+        self.expr.compile(state)
+        self.rhand.compile(state)
+        state.emit(self.rhand.getendidx(), opcodes.SETITEM)
+
+
 class ArgList(AstNode):
     def __init__(self, arglist, srcpos=None):
         AstNode.__init__(self, srcpos)

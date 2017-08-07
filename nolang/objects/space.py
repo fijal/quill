@@ -40,6 +40,12 @@ class Space(object):
             return self.getattr(self.type(w_obj), attrname).bind(self, w_obj)
         return w_res
 
+    def setitem(self, w_obj, w_index, w_value):
+        w_obj.setitem(self, w_index, w_value)
+
+    def getitem(self, w_obj, w_index):
+        return w_obj.getitem(self, w_index)
+
     def str(self, w_obj):
         return w_obj.str(self)
 

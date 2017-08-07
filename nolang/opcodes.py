@@ -26,6 +26,9 @@ opcodes = [
     Opcode('GETATTR', 1, 0, 'get attribute from the object on top of the stack '
                             'with string constant as an argument'),
     Opcode('SETATTR', 1, -2, 'set attribute on an object'),
+    Opcode('GETITEM', 0, -1, 'get item from the object on top of the stack '
+                             'with next value as index'),
+    Opcode('SETITEM', 0, -3, 'set item on an object'),
     Opcode('LIST_BUILD', 1, 254, 'take N arguments from the stack, build them '
                                  'into a list, and push the list'),
     # exception handling
