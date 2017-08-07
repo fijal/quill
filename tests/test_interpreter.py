@@ -112,6 +112,22 @@ class TestInterpreter(BaseTest):
             ''')
         assert self.space.int_w(w_res) == 4
 
+    def test_function_call_wrong_args(self):
+        w_res = self.interpret('''
+            def foo(a0, a1) {
+            }
+
+            def main() {
+                try {
+                    foo(13)
+                } except ArgumentError {
+                    return true
+                }
+                return false
+            }
+            ''')
+        assert self.space.is_true(w_res)
+
     def test_recursive_call(self):
         w_res = self.interpret('''
             def fib(n) {

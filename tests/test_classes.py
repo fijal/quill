@@ -74,3 +74,23 @@ class TestClasses(BaseTest):
             }
             ''')
         assert self.space.int_w(w_res) == 12
+
+    def test_class_attributes(self):
+        import py
+        py.test.skip("foo")
+        w_res = self.interpret("""
+            class X {
+                var attr;
+
+                def __init__(self, x) {
+                    self.attr = x;
+                }
+            }
+
+            def main() {
+                var x;
+                x = X(13);
+                return x.attr;
+            }
+            """)
+        assert self.space.int_w(w_res) == 13

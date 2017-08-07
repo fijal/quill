@@ -2,7 +2,6 @@
 """
 
 from nolang.objects.root import W_Root
-from nolang.error import ArgumentMismatchError
 
 
 class W_UserType(W_Root):
@@ -32,7 +31,8 @@ class W_UserType(W_Root):
             space.call(self.dict_w['__init__'], [w_obj] + args_w)
         elif self.default_alloc:
             if len(args_w) != 0:
-                raise ArgumentMismatchError
+                raise space.apperr(space.w_argerror, "Default constructor"
+                    " expecting no arguments")
         return w_obj
 
     def getattr(self, space, attrname):

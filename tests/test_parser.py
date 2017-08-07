@@ -10,17 +10,6 @@ class BaseTest(object):
         self.parser = get_parser()
         self.lexer = get_lexer()
 
-
-class TestStringParser(BaseTest):
-    def parse_expr(self, expr):
-        program = "def foo () { " + expr + "; }"
-        ast = self.parser.parse(self.lexer.lex('test', program),
-                                ParsingState('test', program))
-        return ast.elements[0].body[0].expr
-
-    def parse(self, expr):
-        return self.parse_expr(expr).value
-
     def parse_bad(self, expr):
         try:
             value = self.parse(expr)
@@ -32,6 +21,17 @@ class TestStringParser(BaseTest):
             pass
         else:
             raise Exception("Incorrectly parsed %r as %r." % (expr, value))
+
+
+class TestStringParser(BaseTest):
+    def parse_expr(self, expr):
+        program = "def foo () { " + expr + "; }"
+        ast = self.parser.parse(self.lexer.lex('test', program),
+                                ParsingState('test', program))
+        return ast.elements[0].body[0].expr
+
+    def parse(self, expr):
+        return self.parse_expr(expr).value
 
     def test_simple(self):
         assert self.parse('"foo"') == 'foo'
@@ -295,3 +295,11 @@ class TestFullProgram(BaseTest):
         [except_A, except_Exception] = try_except.except_blocks
         assert except_A.getsrcpos() == (77, 119)
         assert except_Exception.getsrcpos() == (120, 148)
+
+    def test_var_in_body_decl(self):
+        self.parse_bad('''
+            var foo;
+
+            def main() {
+            }
+            ''')

@@ -31,6 +31,14 @@ class InvalidStackDepth(Exception):
     pass
 
 
+class UnknownGlobalName(Exception):
+    def __init__(self, name):
+        self.name = name
+
+    def __str__(self):
+        return "<UnknownGlobalName %s>" % self.name
+
+
 class Bytecode(object):
     def __init__(self, filename, source, varnames, module, constants, bytecode,
                  arglist, exception_blocks, lnotab):
@@ -119,6 +127,9 @@ class UndeclaredVariable(Exception):
     def __init__(self, name):
         self.name = name
 
+    def __str__(self):
+        return '<UndeclaredVariable %s>' % self.name
+
 
 class ExceptionBlock(object):
     def __init__(self, types_w):
@@ -177,7 +188,11 @@ class _BytecodeBuilder(object):
     def register_exception_setup(self, exc_names):
         types_w = []
         for name in exc_names:
-            types_w.append(self.w_mod.functions[self.w_mod.name2index[name]])
+            try:
+                no = self.w_mod.name2index[name]
+            except KeyError:
+                raise UnknownGlobalName(name)
+            types_w.append(self.w_mod.functions[no])
         self.exception_blocks.append(ExceptionBlock(types_w))
         return len(self.exception_blocks) - 1
 

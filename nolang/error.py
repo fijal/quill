@@ -20,7 +20,3 @@ class AppError(Exception):
 
     def __repr__(self):
         return '<AppError %r>' % (self.w_exception,)
-
-
-class ArgumentMismatchError(Exception):
-    pass

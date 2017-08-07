@@ -1,6 +1,5 @@
 
 import rply
-from rply.token import Token
 from rpython.rlib.runicode import str_decode_utf_8, unicode_encode_utf_8, UNICHR
 
 from nolang.lexer import TOKENS, ParseError
@@ -17,14 +16,23 @@ class ParsingState(object):
         self.filename = filename
 
 
-def errorhandler(state, lookahead):
-    lines = state.input.splitlines()
-    sourcepos = lookahead.getsourcepos()
-    line = lines[sourcepos.lineno - 1]
-    assert isinstance(lookahead, Token)
-    raise ParseError('Parsing error', line, state.filename, sourcepos.lineno,
-                     sourcepos.colno - 1,
-                     len(lookahead.value) + sourcepos.colno - 1)
+def errorhandler(state, lookahead, msg="Parsing error"):
+    sourcepos = lookahead.getsrcpos()
+    idx = sourcepos[0]
+    source = state.input
+    last_nl = source.rfind("\n", 0, idx)
+    lineno = source.count("\n", 0, idx)
+    if last_nl < 0:
+        last_nl = 0
+        colno = idx - 1
+    else:
+        colno = idx - last_nl - 1
+    next_nl = source.find("\n", idx)
+    if next_nl < 0:
+        next_nl = len(source)
+    line = source[last_nl:next_nl]
+    raise ParseError(msg, line, state.filename, lineno, colno - 1,
+                     (sourcepos[1] - sourcepos[0]) + colno - 1)
 
 
 def hex_to_utf8(s):
@@ -47,6 +55,10 @@ def get_parser():
     @pg.production('program : body')
     def program_body(state, p):
         element_list = p[0].get_element_list()
+        for elem in element_list:
+            if isinstance(elem, ast.VarDeclaration):
+                raise errorhandler(state, elem,
+                                   'var declarations in body disallowed')
         return ast.Program(element_list, srcpos=sr(element_list))
 
     @pg.production('body :')
@@ -68,6 +80,10 @@ def get_parser():
     @pg.production('body_element : SEMICOLON')
     def body_element_semicolon(state, p):
         return None
+
+    @pg.production('body_element : VAR IDENTIFIER var_decl SEMICOLON')
+    def body_element_var_decl(state, p):
+        return ast.VarDeclaration([p[1].getstr()] + p[2].get_names(), srcpos=sr(p))
 
     @pg.production('body_element : IMPORT IDENTIFIER dot_identifier_list'
                    ' optional_import SEMICOLON')

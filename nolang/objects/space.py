@@ -30,15 +30,18 @@ class Space(object):
         for builtin in builtins:
             self.setup_builtin(wrap_builtin(self, builtin))
         self.w_exception = self.builtin_dict['Exception']
-        self.setup_builtin(self.make_subclass(self.w_exception, 'IndexError'))
-        self.w_indexerror = self.builtin_dict['IndexError']
-        self.setup_builtin(self.make_subclass(self.w_exception, 'TypeError'))
-        self.w_typeerror = self.builtin_dict['TypeError']
+        self.w_indexerror = self.setup_builtin(
+            self.make_subclass(self.w_exception, 'IndexError'))
+        self.w_typeerror = self.setup_builtin(
+            self.make_subclass(self.w_exception, 'TypeError'))
+        self.w_argerror = self.setup_builtin(
+            self.make_subclass(self.w_exception, 'ArgumentError'))
         self.coremod = coremod
 
     def setup_builtin(self, builtin):
         self.builtins_w.append(builtin)
         self.builtin_dict[builtin.name] = builtin
+        return builtin
 
     def make_subclass(self, w_tp, name):
         return W_UserType(w_tp.allocate, name, [], w_tp, w_tp.default_alloc)

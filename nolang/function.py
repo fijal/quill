@@ -3,7 +3,6 @@
 
 from nolang.objects.root import W_Root
 from nolang.frameobject import Frame
-from nolang.error import ArgumentMismatchError
 
 
 class W_Function(W_Root):
@@ -16,8 +15,11 @@ class W_Function(W_Root):
 
     def call(self, space, interpreter, args_w):
         frame = Frame(self.bytecode, self.name)
-        if len(self.bytecode.arglist) != len(args_w):
-            raise ArgumentMismatchError()
+        exp = len(self.bytecode.arglist)
+        if exp != len(args_w):
+            msg = "Function %s got %d arguments, expected %d" % (
+                self.name, len(args_w), exp)
+            raise space.apperr(space.w_argerror, msg)
         frame.populate_args(args_w)
         return interpreter.interpret(space, self.bytecode, frame)
 
@@ -36,7 +38,9 @@ class W_BuiltinFunction(W_Root):
 
     def call(self, space, interpreter, args_w):
         if self.num_args != -1 and self.num_args != len(args_w):
-            raise ArgumentMismatchError()
+            msg = "Function %s got %d arguments, expected %d" % (self.name,
+                len(args_w), self.num_args)
+            raise space.apperr(space.w_argerror, msg)
         return self.callable(space, args_w)
 
     def __repr__(self):
