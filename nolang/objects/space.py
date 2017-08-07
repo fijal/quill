@@ -90,10 +90,6 @@ class Space(object):
     def newlist(self, items):
         return W_ListObject(items)
 
-    # type check helpers
-    def is_w_int(self, w_obj):
-        return isinstance(w_obj, W_IntObject)
-
     # foo_w unwrappers
     def int_w(self, w_obj):
         return w_obj.int_w(self)

@@ -1,3 +1,4 @@
+from nolang.error import AppError
 from nolang.objects.root import W_Root
 
 
@@ -12,9 +13,12 @@ class W_ListObject(W_Root):
         return len(self._w_items)
 
     def unwrap_index(self, space, w_index):
-        if not space.is_w_int(w_index):
-            raise space.apperr(space.w_typeerror, 'list index must be int')
-        i = space.int_w(w_index)
+        try:
+            i = space.int_w(w_index)
+        except AppError as ae:
+            if space.type(ae.w_exception) == space.w_typeerror:
+                raise space.apperr(space.w_typeerror, 'list index must be int')
+            raise
         if i < 0 or i >= len(self._w_items):
             raise space.apperr(space.w_indexerror, 'list index out of range')
         return i
