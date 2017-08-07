@@ -45,8 +45,9 @@ class BaseTest(object):
     def compile(self, body):
         program = reformat_expr(body)
         ast = self.parse(program)
-        imp = Importer()
-        w_mod = compile_module(self.space, '<test>', program, ast, imp)
+        imp = Importer(self.space)
+        w_mod = compile_module(self.space, '<test>', 'self.test', program, ast,
+                               imp)
         return compile_bytecode(ast.elements[0], program, w_mod)
 
     def parse(self, program):
@@ -59,7 +60,8 @@ class BaseTest(object):
     def interpret(self, code):
         source = reformat_code(code)
         ast = self.parse(source)
-        imp = Importer()
-        w_mod = compile_module(self.space, 'test', source, ast, imp)
+        imp = Importer(self.space)
+        w_mod = compile_module(self.space, 'test', 'self.test', source, ast,
+                               imp)
         w_mod.setup(self.space)
         return self.space.call_method(w_mod, 'main', [])

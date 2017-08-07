@@ -533,14 +533,10 @@ class Import(AstNode):
             mapping[name] = len(mapping)
 
     def add_missing_imports(self, space, w_mod, globals_w, importer):
-        imp_mod = importer.import_package(space, self.import_part)
         idx = globals_w.index(None)
         assert idx >= 0
-        if self.names is None:
-            globals_w[idx] = imp_mod
-        else:
-            for i, name in enumerate(self.names):
-                globals_w[i + idx] = space.getattr(imp_mod, name)
+        importer.import_names(space, self.import_part, self.names,
+                              globals_w, idx)
 
     def add_global_symbols(self, space, globals_w, source, w_mod):
         if self.names is None:

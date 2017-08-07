@@ -12,7 +12,8 @@ class TestCompiler(BaseTest):
                 return 3;
             }
         ''')
-        imp = Importer()
-        w_mod = compile_module(self.space, 'test', code, self.parse(code), imp)
+        imp = Importer(self.space)
+        w_mod = compile_module(self.space, 'test', 'self.test', code,
+                               self.parse(code), imp)
         assert isinstance(w_mod, W_Module)
         assert w_mod.name2index['foo'] == len(self.space.builtins_w)

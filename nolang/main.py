@@ -28,6 +28,17 @@ def dirname(p):
     return head
 
 
+def path_split(p):
+    """Split a pathname.  Returns tuple "(head, tail)" where "tail" is                                                                   
+    everything after the final slash.  Either part may be empty."""
+    i = p.rfind('/') + 1
+    assert i >= 0
+    head, tail = p[:i], p[i:]
+    if head and head != '/' * len(head):
+        head = head.rstrip('/')
+    return head, tail
+
+
 def main(argv):
     if len(argv) != 2:
         print __doc__
@@ -48,6 +59,15 @@ def format_parser_error(pe):
     print "  " + " " * pe.start_colno + "^" * (pe.end_colno - pe.start_colno)
 
 
+def parse_name(fname):
+    name = path_split(fname)[-1]
+    p = name.rfind(".")
+    if p > 0:
+        name = name[:p]
+    name = name.replace(".", "_") # explode?
+    return "self." + name
+
+
 def run_code(fname):
     interpreter = Interpreter()
     space.setup(interpreter)
@@ -63,8 +83,9 @@ def run_code(fname):
     except ParseError as pe:
         format_parser_error(pe)
         return 1
-    importer = Importer(dirname(os.path.abspath(fname)), parser, lexer)
-    w_mod = compile_module(space, fname, source, ast, importer)
+    importer = Importer(space, dirname(os.path.abspath(fname)), parser, lexer)
+    dotted_name = parse_name(fname)
+    w_mod = compile_module(space, fname, dotted_name, source, ast, importer)
     w_mod.setup(space)
     try:
         space.call_method(w_mod, 'main', [])

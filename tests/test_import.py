@@ -7,9 +7,10 @@ class TestImport(BaseTest):
         main_file = tmpdir.join('main.q')
         main_file.write(reformat_code('''
             import self.foo.bar
+            import self.foo
 
             def main() {
-                print(bar(3))
+                print(bar(3) + foo.bar(13))
             }
             '''))
 
