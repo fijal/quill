@@ -43,6 +43,9 @@ class W_BuiltinFunction(W_Root):
             raise space.apperr(space.w_argerror, msg)
         return self.callable(space, args_w)
 
+    def bind(self, space, w_obj):
+        return W_BoundMethod(w_obj, self)
+
     def __repr__(self):
         return "<BuiltinFunction %s/%d>" % (self.name, self.num_args)
 

@@ -27,6 +27,17 @@ class TestList(BaseTest):
         ''')
         assert self.space.utf8_w(w_res) == "bar"
 
+    def test_append(self):
+        w_res = self.interpret_expr('''
+            var x;
+            x = ["foo"];
+            x.append("bar");
+            return x;
+        ''')
+        space = self.space
+        assert space.len(w_res) == 2
+        assert space.utf8_w(space.getitem(w_res, space.newint(1))) == "bar"
+
     def test_getitem_out_of_range(self):
         try:
             self.interpret_expr('return ["foo", "bar"][2];')
@@ -44,3 +55,20 @@ class TestList(BaseTest):
             assert ae.w_exception.message == 'list index must be int'
         else:
             raise Exception("Applevel TypeError not raised.")
+
+    def test_execution_order(self):
+        w_res = self.interpret('''
+            def check(l, x) {
+                l.append(x);
+                return x;
+            }
+
+            def main() {
+                var l;
+                l = [];
+                [check(l, 0), check(l, 1)];
+                return l;
+            }
+        ''')
+        [w_0, w_1] = self.space.list_w(w_res)
+        assert [self.space.int_w(w_0), self.space.int_w(w_1)] == [0, 1]

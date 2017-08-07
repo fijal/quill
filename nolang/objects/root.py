@@ -9,6 +9,9 @@ class W_Root(object):
     def int_w(self, space):
         raise space.apperr(space.w_typeerror, 'expected integer')
 
+    def list_w(self, space):
+        raise space.apperr(space.w_typeerror, 'expected list')
+
     def getattr(self, space, attrname):
         return space.w_NotImplemented
 
