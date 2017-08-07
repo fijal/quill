@@ -81,9 +81,9 @@ def get_parser():
     def body_element_semicolon(state, p):
         return None
 
-    @pg.production('body_element : VAR IDENTIFIER var_decl SEMICOLON')
+    @pg.production('body_element : var_declaration')
     def body_element_var_decl(state, p):
-        return ast.VarDeclaration([p[1].getstr()] + p[2].get_names(), srcpos=sr(p))
+        return p[0]
 
     @pg.production('body_element : IMPORT IDENTIFIER dot_identifier_list'
                    ' optional_import SEMICOLON')
@@ -123,7 +123,7 @@ def get_parser():
                    ' function_body RIGHT_CURLY_BRACE')
     def function_function_body(state, p):
         lineno = p[0].getsourcepos().lineno
-        return ast.Function(p[1].getstr(), p[2].get_names(),
+        return ast.Function(p[1].getstr(), p[2].get_vars(),
                             p[4].get_element_list(), lineno, srcpos=sr(p))
 
     @pg.production('function_body :')
@@ -142,17 +142,31 @@ def get_parser():
     def staement_empty(state, p):
         return None
 
-    @pg.production('statement : VAR IDENTIFIER var_decl SEMICOLON')
+    @pg.production('statement : var_declaration')
     def statement_var_decl(state, p):
-        return ast.VarDeclaration([p[1].getstr()] + p[2].get_names(), srcpos=sr(p))
+        return p[0]
+
+    @pg.production('var_declaration : VAR IDENTIFIER type_decl var_decl SEMICOLON')
+    def var_declaration_basic(state, p):
+        vars = [ast.Var(p[1].getstr(), p[2], srcpos=sr([p[1], p[2]]))] + \
+            p[3].get_vars()
+        return ast.VarDeclaration(vars, srcpos=sr(p))
 
     @pg.production('var_decl : ')
     def var_decl_empty(state, p):
-        return ast.VarDeclPartial([])
+        return ast.VarDeclPartial(None, None, None, srcpos=(0, 0))
 
-    @pg.production('var_decl : COMMA IDENTIFIER var_decl')
+    @pg.production('var_decl : COMMA IDENTIFIER type_decl var_decl')
     def var_decl_identifier(state, p):
-        return ast.VarDeclPartial([p[1].getstr()] + p[2].get_names())
+        return ast.VarDeclPartial(p[1].getstr(), p[2], p[3], srcpos=sr(p))
+
+    @pg.production('type_decl : ')
+    def type_decl_empty(state, p):
+        return ast.NoTypeDecl(srcpos=(0, 0))
+
+    @pg.production('type_decl : COLON IDENTIFIER')
+    def type_decl_non_empty(state, p):
+        return ast.BaseTypeDecl(p[1].getstr(), srcpos=sr([p[1]]))
 
     @pg.production('statement : IDENTIFIER ASSIGN expression SEMICOLON')
     def statement_identifier_assign_expr(state, p):
@@ -239,9 +253,10 @@ def get_parser():
     def arglist(state, p):
         return ast.ArgList([], srcpos=sr(p))
 
-    @pg.production('arglist : LEFT_PAREN IDENTIFIER var_decl RIGHT_PAREN')
+    @pg.production('arglist : LEFT_PAREN IDENTIFIER type_decl var_decl RIGHT_PAREN')
     def arglist_non_empty(state, p):
-        return ast.ArgList([p[1].getstr()] + p[2].get_names(), srcpos=sr(p))
+        vars = [ast.Var(p[1].getstr(), p[2], p[1].getsrcpos())] + p[3].get_vars()
+        return ast.ArgList(vars, srcpos=sr(p))
 
     @pg.production('expression : INTEGER')
     def expression_number(state, p):

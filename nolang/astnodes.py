@@ -25,7 +25,7 @@ class StoringIntoGlobal(Exception):
 class AstNode(BaseBox):
     def __init__(self, srcpos=None):
         if srcpos is None:
-            srcpos = (None, None)
+            srcpos = (0, 0)  # This is NOT rpython
         self._startidx, self._endidx = srcpos
 
     def getsrcpos(self):
@@ -74,7 +74,7 @@ class Number(AstNode):
 
 
 class String(AstNode):
-    def __init__(self, value, srcpos=None):
+    def __init__(self, value, srcpos):
         AstNode.__init__(self, srcpos)
         self.value = value
 
@@ -120,7 +120,7 @@ class InterpStringContents(AstNode):
 
 
 class List(AstNode):
-    def __init__(self, items, srcpos=None):
+    def __init__(self, items, srcpos):
         AstNode.__init__(self, srcpos)
         self.items = items
 
@@ -158,7 +158,7 @@ class BinOp(AstNode):
 
 
 class And(AstNode):
-    def __init__(self, left, right, srcpos=None):
+    def __init__(self, left, right, srcpos):
         AstNode.__init__(self, srcpos)
         self.left = left
         self.right = right
@@ -173,7 +173,7 @@ class And(AstNode):
 
 
 class Or(AstNode):
-    def __init__(self, left, right, srcpos=None):
+    def __init__(self, left, right, srcpos):
         AstNode.__init__(self, srcpos)
         self.left = left
         self.right = right
@@ -256,7 +256,7 @@ class ClassDefinition(AstNode):
             if isinstance(item, VarDeclaration):
                 if force_names is None:
                     force_names = []
-                force_names.extend(item.varnames)
+                force_names.extend([x.name for x in item.vars])
         t = compile_class(space, source, self, w_mod, self.parent)
         alloc, class_elements_w, w_parent, default_alloc = t
         w_g = W_UserType(alloc, self.name, class_elements_w, w_parent,
@@ -282,7 +282,7 @@ class While(AstNode):
 
 
 class If(AstNode):
-    def __init__(self, expr, block, srcpos=None):
+    def __init__(self, expr, block, srcpos):
         AstNode.__init__(self, srcpos)
         self.expr = expr
         self.block = block
@@ -297,7 +297,7 @@ class If(AstNode):
 
 
 class TryExcept(AstNode):
-    def __init__(self, block, except_blocks, srcpos=None):
+    def __init__(self, block, except_blocks, srcpos):
         AstNode.__init__(self, srcpos)
         self.block = block
         if isinstance(except_blocks[-1], FinallyClause):
@@ -332,7 +332,7 @@ class TryExcept(AstNode):
 
 
 class Raise(AstNode):
-    def __init__(self, expr, srcpos=None):
+    def __init__(self, expr, srcpos):
         AstNode.__init__(self, srcpos)
         self.expr = expr
 
@@ -342,7 +342,7 @@ class Raise(AstNode):
 
 
 class Statement(AstNode):
-    def __init__(self, expr, srcpos=None):
+    def __init__(self, expr, srcpos):
         AstNode.__init__(self, srcpos)
         self.expr = expr
 
@@ -353,7 +353,7 @@ class Statement(AstNode):
 
 
 class Getattr(AstNode):
-    def __init__(self, lhand, identifier, srcpos=None):
+    def __init__(self, lhand, identifier, srcpos):
         AstNode.__init__(self, srcpos)
         self.lhand = lhand
         self.identifier = identifier
@@ -365,7 +365,7 @@ class Getattr(AstNode):
 
 
 class Setattr(AstNode):
-    def __init__(self, lhand, identifier, rhand, srcpos=None):
+    def __init__(self, lhand, identifier, rhand, srcpos):
         AstNode.__init__(self, srcpos)
         self.lhand = lhand
         self.identifier = identifier
@@ -379,7 +379,7 @@ class Setattr(AstNode):
 
 
 class Getitem(AstNode):
-    def __init__(self, lhand, expr, srcpos=None):
+    def __init__(self, lhand, expr, srcpos):
         AstNode.__init__(self, srcpos)
         self.lhand = lhand
         self.expr = expr
@@ -391,7 +391,7 @@ class Getitem(AstNode):
 
 
 class Setitem(AstNode):
-    def __init__(self, lhand, expr, rhand, srcpos=None):
+    def __init__(self, lhand, expr, rhand, srcpos):
         AstNode.__init__(self, srcpos)
         self.lhand = lhand
         self.expr = expr
@@ -405,11 +405,11 @@ class Setitem(AstNode):
 
 
 class ArgList(AstNode):
-    def __init__(self, arglist, srcpos=None):
+    def __init__(self, arglist, srcpos):
         AstNode.__init__(self, srcpos)
         self.arglist = arglist
 
-    def get_names(self):
+    def get_vars(self):
         return self.arglist
 
 
@@ -443,13 +443,13 @@ class FunctionBody(AstNode):
 
 
 class VarDeclaration(AstNode):
-    def __init__(self, varnames, srcpos=None):
+    def __init__(self, vars, srcpos=None):
         AstNode.__init__(self, srcpos)
-        self.varnames = varnames
+        self.vars = vars
 
     def compile(self, state):
-        for varname in self.varnames:
-            state.register_variable(varname)
+        for var in self.vars:
+            state.register_variable(var.name, var.tp)
 
     def add_global_symbols(self, space, class_elements_w, source, w_mod):
         pass  # handled somewhere else
@@ -511,15 +511,49 @@ class ExpressionListPartial(AstNode):
 
 
 class VarDeclPartial(AstNode):
-    def __init__(self, names):
-        self.names = names
+    def __init__(self, name, tp, next, srcpos):
+        AstNode.__init__(self, srcpos)
+        self.name = name
+        self.tp = tp
+        self.next = next
 
-    def get_names(self):
-        return self.names
+    def get_vars(self):
+        i = 0
+        cur = self
+        while cur.next:
+            cur = cur.next
+            assert isinstance(cur, VarDeclPartial)
+            i += 1
+        vars = [None] * i
+        i = 0
+        cur = self
+        while cur.next:
+            vars[i] = Var(cur.name, cur.tp, srcpos=cur.getsrcpos())
+            i += 1
+            cur = cur.next
+            assert isinstance(cur, VarDeclPartial)
+        return vars
+
+
+class Var(AstNode):
+    def __init__(self, name, tp, srcpos=None):
+        AstNode.__init__(self, srcpos)
+        self.name = name
+        self.tp = tp
+
+
+class BaseTypeDecl(AstNode):
+    def __init__(self, name, srcpos):
+        AstNode.__init__(self, srcpos)
+        self.name = name
+
+
+class NoTypeDecl(AstNode):
+    pass
 
 
 class ExceptClause(AstNode):
-    def __init__(self, exception_names, varname, block, srcpos=None):
+    def __init__(self, exception_names, varname, block, srcpos):
         AstNode.__init__(self, srcpos)
         self.exception_names = exception_names
         self.varname = varname
@@ -531,7 +565,7 @@ class ExceptClause(AstNode):
         pos = state.get_patch_position()
         if self.varname is not None:
             state.emit(self.getstartidx(), opcodes.PUSH_CURRENT_EXC)
-            no = state.register_variable(self.varname)
+            no = state.register_variable(self.varname, None)
             state.emit(self.getstartidx(), opcodes.STORE, no)
         for item in self.block:
             item.compile(state)
@@ -563,7 +597,7 @@ class BaseExcNode(AstNode):
 
 
 class ExceptClauseList(BaseExcNode):
-    def __init__(self, exception_names, varname, block, next, srcpos=None):
+    def __init__(self, exception_names, varname, block, next, srcpos):
         self.exception_names = exception_names
         self.varname = varname
         self.block = block
@@ -578,7 +612,7 @@ class ExceptClauseList(BaseExcNode):
 class FinallyClause(BaseExcNode):
     next = None
 
-    def __init__(self, block, srcpos=None):
+    def __init__(self, block, srcpos):
         AstNode.__init__(self, srcpos)
         self.block = block
 

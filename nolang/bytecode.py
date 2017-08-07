@@ -151,8 +151,8 @@ class _BytecodeBuilder(object):
         self.constants = []  # XXX implement interning of integers, strings etc.
         self.exception_blocks = []
         self.w_mod = w_mod
-        for name in arglist:
-            self.register_variable(name)
+        for var in arglist:
+            self.register_variable(var.name, var.tp)
         self.arglist = arglist
         self.lnotab = []
 
@@ -178,7 +178,7 @@ class _BytecodeBuilder(object):
             pass
         raise UndeclaredVariable(name)
 
-    def register_variable(self, v):
+    def register_variable(self, v, tp):
         no = len(self.vars)
         self.varnames.append(no)  # XXX should we rely on dicts being ordered?
         self.vars[v] = no

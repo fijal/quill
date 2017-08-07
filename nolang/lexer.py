@@ -42,6 +42,7 @@ QUILL_RULES = [
     ('STAR', r'\*'),
     ('DOT', r'\.'),
     ('TRUEDIV', r'\/\/'),
+    ('COLON', r':'),
     ('EQ', r'=='),
     ('ASSIGN', r'='),
     ('ST_STRING', r'"'),
