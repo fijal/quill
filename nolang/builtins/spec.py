@@ -59,6 +59,9 @@ def wrap_function(space, f):
             elif spec == 'int':
                 argval = 'space.int_w(args_w[%d])' % j
                 j += 1
+            elif spec == 'list':
+                argval = 'space.list_w(args_w[%d])' % j
+                j += 1
             else:
                 assert False
         lines.append('    arg%d = %s' % (i, argval))
@@ -84,6 +87,8 @@ def wrap_type(space, tp):
         if set_prop is not None:
             set_prop = set_prop.im_func
         properties.append(W_Property(name, get_prop.im_func, set_prop))
+    for name, meth in spec.methods.iteritems():
+        properties.append(wrap_function(space, meth))
     if spec.parent_name is None:
         parent = None
     else:

@@ -87,8 +87,8 @@ class Space(object):
     def newbuf(self, charsval):
         return W_BufObject(charsval)
 
-    def newlist(self, items):
-        return W_ListObject(items)
+    def newlist(self, items_w):
+        return W_ListObject(items_w)
 
     # foo_w unwrappers
     def int_w(self, w_obj):
@@ -99,6 +99,9 @@ class Space(object):
 
     def buffer_w(self, w_obj):
         return w_obj.buffer_w(self)
+
+    def list_w(self, w_obj):
+        return w_obj.list_w(self)
 
     # unary operations
     def is_true(self, w_obj):

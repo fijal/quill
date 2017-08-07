@@ -27,6 +27,17 @@ class TestList(BaseTest):
         ''')
         assert self.space.utf8_w(w_res) == "bar"
 
+    def test_append(self):
+        w_res = self.interpret_expr('''
+            var x;
+            x = ["foo"];
+            x.append("bar");
+            return x;
+        ''')
+        space = self.space
+        assert space.len(w_res) == 2
+        assert space.utf8_w(space.getitem(w_res, space.newint(1))) == "bar"
+
     def test_getitem_out_of_range(self):
         try:
             self.interpret_expr('return ["foo", "bar"][2];')
