@@ -146,6 +146,11 @@ def get_parser():
     def statement_setattr(state, p):
         return ast.Setattr(p[0], p[2].getstr(), p[4], srcpos=sr(p))
 
+    @pg.production('statement : atom LEFT_SQUARE_BRACKET expression RIGHT_SQUARE_BRACKET'
+                   ' ASSIGN expression SEMICOLON')
+    def statement_setitem(state, p):
+        return ast.Setitem(p[0], p[2], p[5], srcpos=sr(p))
+
     @pg.production('statement : RETURN expression SEMICOLON')
     def statement_return(state, p):
         return ast.Return(p[1], srcpos=sr(p))
@@ -345,6 +350,14 @@ def get_parser():
     @pg.production('atom : atom DOT IDENTIFIER')
     def atom_dot_identifier(state, p):
         return ast.Getattr(p[0], p[2].getstr(), srcpos=sr(p))
+
+    @pg.production('atom : LEFT_SQUARE_BRACKET expression_list RIGHT_SQUARE_BRACKET')
+    def atom_list_literal(state, p):
+        return ast.List(p[1].get_element_list(), srcpos=sr(p))
+
+    @pg.production('atom : atom LEFT_SQUARE_BRACKET expression RIGHT_SQUARE_BRACKET')
+    def atom_getitem(state, p):
+        return ast.Getitem(p[0], p[2], srcpos=sr(p))
 
     @pg.production('expression : expression PLUS expression')
     @pg.production('expression : expression MINUS expression')

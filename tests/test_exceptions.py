@@ -106,3 +106,13 @@ class TestExceptions(BaseTest):
             }
             ''')
         assert self.space.utf8_w(w_res) == "baz"
+
+    def test_exc_type(self):
+        w_res = self.interpret_expr('return Exception("foo");')
+        assert self.space.type(w_res) == self.space.w_exception
+        assert self.space.type(w_res).w_parent is None
+
+    def test_indexerror_type(self):
+        w_res = self.interpret_expr('return IndexError("foo");')
+        assert self.space.type(w_res) == self.space.w_indexerror
+        assert self.space.type(w_res).w_parent == self.space.w_exception

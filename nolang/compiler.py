@@ -38,7 +38,7 @@ def new_user_object(space, args_w):
 
 @specialize.memo()
 def get_alloc(space):
-    return wrap_function(new_user_object)
+    return wrap_function(space, new_user_object)
 
 
 def compile_class(space, source, ast, w_mod, parent=None):

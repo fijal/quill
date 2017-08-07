@@ -6,8 +6,10 @@ from nolang.error import AppError
 from nolang.objects.root import W_None, W_Root
 from nolang.objects.int import W_IntObject
 from nolang.objects.bool import W_BoolObject
-from nolang.objects.unicode import W_StrObject
 from nolang.objects.buffer import W_BufObject
+from nolang.objects.list import W_ListObject
+from nolang.objects.unicode import W_StrObject
+from nolang.objects.usertype import W_UserType
 from nolang.builtins.spec import wrap_builtin
 from nolang.builtins.exception import W_Exception
 
@@ -23,12 +25,23 @@ class Space(object):
         self.interpreter = interpreter
 
     def setup_builtins(self, builtins, coremod):
-        self.builtins_w = [wrap_builtin(builtin) for builtin in builtins]
+        self.builtins_w = []
         self.builtin_dict = {}
-        for builtin in self.builtins_w:
-            self.builtin_dict[builtin.name] = builtin
+        for builtin in builtins:
+            self.setup_builtin(wrap_builtin(self, builtin))
         self.w_exception = self.builtin_dict['Exception']
+        self.setup_builtin(self.make_subclass(self.w_exception, 'IndexError'))
+        self.w_indexerror = self.builtin_dict['IndexError']
+        self.setup_builtin(self.make_subclass(self.w_exception, 'TypeError'))
+        self.w_typeerror = self.builtin_dict['TypeError']
         self.coremod = coremod
+
+    def setup_builtin(self, builtin):
+        self.builtins_w.append(builtin)
+        self.builtin_dict[builtin.name] = builtin
+
+    def make_subclass(self, w_tp, name):
+        return W_UserType(w_tp.allocate, name, [], w_tp, w_tp.default_alloc)
 
     def setattr(self, w_obj, attrname, w_value):
         w_obj.setattr(self, attrname, w_value)
@@ -39,8 +52,17 @@ class Space(object):
             return self.getattr(self.type(w_obj), attrname).bind(self, w_obj)
         return w_res
 
+    def setitem(self, w_obj, w_index, w_value):
+        w_obj.setitem(self, w_index, w_value)
+
+    def getitem(self, w_obj, w_index):
+        return w_obj.getitem(self, w_index)
+
     def str(self, w_obj):
         return w_obj.str(self)
+
+    def len(self, w_obj):
+        return w_obj.len(self)
 
     # object stuff, hacks so far
     def issubclass(self, w_left, w_right):
@@ -64,6 +86,9 @@ class Space(object):
 
     def newbuf(self, charsval):
         return W_BufObject(charsval)
+
+    def newlist(self, items):
+        return W_ListObject(items)
 
     # foo_w unwrappers
     def int_w(self, w_obj):

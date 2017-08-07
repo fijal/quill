@@ -49,7 +49,7 @@ def main(argv):
 parser = get_parser()
 lexer = get_lexer()
 space = Space()
-space.setup_builtins(*default_builtins())
+space.setup_builtins(*default_builtins(space))
 
 
 def format_parser_error(pe):
