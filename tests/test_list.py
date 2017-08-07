@@ -55,3 +55,20 @@ class TestList(BaseTest):
             assert ae.w_exception.message == 'list index must be int'
         else:
             raise Exception("Applevel TypeError not raised.")
+
+    def test_execution_order(self):
+        w_res = self.interpret('''
+            def check(l, x) {
+                l.append(x);
+                return x;
+            }
+
+            def main() {
+                var l;
+                l = [];
+                [check(l, 0), check(l, 1)];
+                return l;
+            }
+        ''')
+        [w_0, w_1] = self.space.list_w(w_res)
+        assert [self.space.int_w(w_0), self.space.int_w(w_1)] == [0, 1]

@@ -9,6 +9,9 @@ class W_ListObject(W_Root):
     def str(self, space):
         return '[' + ', '.join([space.str(i) for i in self._items_w]) + ']'
 
+    def list_w(self, space):
+        return self._items_w
+
     def len(self, space):
         return len(self._items_w)
 
