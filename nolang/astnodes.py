@@ -91,6 +91,34 @@ class StringContent(AstNode):
         return self.strparts
 
 
+class InterpString(AstNode):
+    def __init__(self, strings, exprs, srcpos=None):
+        AstNode.__init__(self, srcpos)
+        self.strings = strings
+        self.exprs = exprs
+
+    def get_strings(self):
+        return self.strings
+
+    def get_exprs(self):
+        return self.exprs
+
+    def compile(self, state):
+        raise NotImplementedError('XXX')
+
+
+class InterpStringContents(AstNode):
+    def __init__(self, strings, exprs):
+        self.strings = strings
+        self.exprs = exprs
+
+    def get_strings(self):
+        return self.strings
+
+    def get_exprs(self):
+        return self.exprs
+
+
 class BinOp(AstNode):
     def __init__(self, op, left, right, oppos, srcpos=None):
         AstNode.__init__(self, srcpos)
