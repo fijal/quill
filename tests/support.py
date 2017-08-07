@@ -38,7 +38,7 @@ class BaseTest(object):
         self.parser = get_parser()
         self.lexer = get_lexer()
         self.space = Space()
-        self.space.setup_builtins(*default_builtins())
+        self.space.setup_builtins(*default_builtins(self.space))
         self.interpreter = Interpreter()
         self.space.setup(self.interpreter)
 

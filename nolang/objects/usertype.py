@@ -48,3 +48,6 @@ class W_UserType(W_Root):
 
     def __repr__(self):
         return "<UserType %s>" % (self.name,)
+
+    def subclass(self, name):
+        return W_UserType(self.allocate, name, [], self, self.default_alloc)

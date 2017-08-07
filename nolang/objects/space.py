@@ -9,6 +9,7 @@ from nolang.objects.bool import W_BoolObject
 from nolang.objects.buffer import W_BufObject
 from nolang.objects.list import W_ListObject
 from nolang.objects.unicode import W_StrObject
+from nolang.objects.usertype import W_UserType
 from nolang.builtins.spec import wrap_builtin
 from nolang.builtins.exception import W_Exception
 
@@ -24,12 +25,21 @@ class Space(object):
         self.interpreter = interpreter
 
     def setup_builtins(self, builtins, coremod):
-        self.builtins_w = [wrap_builtin(builtin) for builtin in builtins]
+        self.builtins_w = []
         self.builtin_dict = {}
-        for builtin in self.builtins_w:
-            self.builtin_dict[builtin.name] = builtin
+        for builtin in builtins:
+            self.setup_builtin(wrap_builtin(self, builtin))
         self.w_exception = self.builtin_dict['Exception']
+        self.setup_builtin(self.make_subclass(self.w_exception, 'IndexError'))
+        self.w_indexerror = self.builtin_dict['IndexError']
         self.coremod = coremod
+
+    def setup_builtin(self, builtin):
+        self.builtins_w.append(builtin)
+        self.builtin_dict[builtin.name] = builtin
+
+    def make_subclass(self, w_tp, name):
+        return W_UserType(w_tp.allocate, name, [], w_tp, w_tp.default_alloc)
 
     def setattr(self, w_obj, attrname, w_value):
         w_obj.setattr(self, attrname, w_value)

@@ -22,14 +22,15 @@ def parameters(**args):
 
 
 class TypeSpec(object):
-    def __init__(self, name, constructor, methods, properties):
+    def __init__(self, name, constructor, methods, properties, parent_name=None):
         self.constructor = constructor
         self.name = name
         self.methods = methods
         self.properties = properties
+        self.parent_name = parent_name
 
 
-def wrap_function(f):
+def wrap_function(space, f):
     name = f.__name__
     argnames = f.__code__.co_varnames[:f.__code__.co_argcount]
     lines = ['def %s(space, args_w):' % name]
@@ -72,22 +73,26 @@ def wrap_function(f):
     return W_BuiltinFunction(exported_name, d[name], numargs)
 
 
-def wrap_type(tp):
+def wrap_type(space, tp):
     spec = tp.spec
     if spec.constructor is None:
         allocate = None
     else:
-        allocate = wrap_function(spec.constructor)
+        allocate = wrap_function(space, spec.constructor)
     properties = []
     for name, (get_prop, set_prop) in spec.properties.iteritems():
         if set_prop is not None:
             set_prop = set_prop.im_func
         properties.append(W_Property(name, get_prop.im_func, set_prop))
-    return W_UserType(allocate, spec.name, properties, None, default_alloc=False)
-
-
-def wrap_builtin(builtin):
-    if isinstance(builtin, types.FunctionType):
-        return wrap_function(builtin)
+    if spec.parent_name is None:
+        parent = None
     else:
-        return wrap_type(builtin)
+        parent = space.builtin_dict[spec.parent_name]
+    return W_UserType(allocate, spec.name, properties, parent, default_alloc=False)
+
+
+def wrap_builtin(space, builtin):
+    if isinstance(builtin, types.FunctionType):
+        return wrap_function(space, builtin)
+    else:
+        return wrap_type(space, builtin)
