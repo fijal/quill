@@ -18,5 +18,8 @@ class AppError(Exception):
     def record_position(self, frame, bytecode, index):
         self.traceback = TracebackElem(frame, index, bytecode, self.traceback)
 
+    def match(self, space, w_expected):
+        return space.issubclass(space.type(self.w_exception), w_expected)
+
     def __repr__(self):
         return '<AppError %r>' % (self.w_exception,)

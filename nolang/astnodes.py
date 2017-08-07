@@ -251,10 +251,16 @@ class ClassDefinition(AstNode):
         return self.body.get_element_list()
 
     def add_global_symbols(self, space, globals_w, source, w_mod):
+        force_names = None
+        for item in self.body.get_element_list():
+            if isinstance(item, VarDeclaration):
+                if force_names is None:
+                    force_names = []
+                force_names.extend(item.varnames)
         t = compile_class(space, source, self, w_mod, self.parent)
         alloc, class_elements_w, w_parent, default_alloc = t
         w_g = W_UserType(alloc, self.name, class_elements_w, w_parent,
-                         default_alloc)
+                         default_alloc, force_names)
         globals_w.append(w_g)
 
 
@@ -444,6 +450,9 @@ class VarDeclaration(AstNode):
     def compile(self, state):
         for varname in self.varnames:
             state.register_variable(varname)
+
+    def add_global_symbols(self, space, class_elements_w, source, w_mod):
+        pass  # handled somewhere else
 
 
 class Identifier(AstNode):

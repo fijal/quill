@@ -36,6 +36,8 @@ class Space(object):
             self.make_subclass(self.w_exception, 'TypeError'))
         self.w_argerror = self.setup_builtin(
             self.make_subclass(self.w_exception, 'ArgumentError'))
+        self.w_attrerror = self.setup_builtin(
+            self.make_subclass(self.w_exception, 'AttributeError'))
         self.coremod = coremod
 
     def setup_builtin(self, builtin):

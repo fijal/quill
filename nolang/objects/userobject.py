@@ -13,6 +13,11 @@ class W_UserObject(W_Root):
         return self.w_type
 
     def setattr(self, space, attrname, w_val):
+        if self.w_type.force_names is not None:
+            if attrname not in self.w_type.force_names:
+                msg = '%s is not an allowed attribute of object of class %s' % (
+                    attrname, self.w_type.name)
+                raise space.apperr(space.w_attrerror, msg)
         self.dict_w[attrname] = w_val
 
     def getattr(self, space, attrname):

@@ -1,5 +1,6 @@
 
 from support import BaseTest
+from nolang.error import AppError
 
 
 class TestClasses(BaseTest):
@@ -76,8 +77,6 @@ class TestClasses(BaseTest):
         assert self.space.int_w(w_res) == 12
 
     def test_class_attributes(self):
-        import py
-        py.test.skip("foo")
         w_res = self.interpret("""
             class X {
                 var attr;
@@ -94,3 +93,26 @@ class TestClasses(BaseTest):
             }
             """)
         assert self.space.int_w(w_res) == 13
+
+    def test_class_attributes_illegal(self):
+        try:
+            self.interpret("""
+            class X {
+                var attr;
+
+                def __init__(self, x) {
+                    self.attr2 = x;
+                }
+            }
+
+            def main() {
+                var x;
+                x = X(13);
+                return x.attr2;
+            }
+            """)
+        except AppError as e:
+            if not e.match(self.space, self.space.w_attrerror):
+                raise
+        else:
+            raise Exception("did not raise")

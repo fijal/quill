@@ -6,7 +6,7 @@ from nolang.objects.root import W_Root
 
 class W_UserType(W_Root):
     def __init__(self, allocate, name, class_elements_w, w_parent,
-                 default_alloc=True):
+                 default_alloc=True, force_names=None):
         self.name = name
         self.allocate = allocate
         self.class_elements_w = class_elements_w
@@ -18,6 +18,12 @@ class W_UserType(W_Root):
         for item in class_elements_w:
             self.dict_w[item.name] = item
         self.w_parent = w_parent
+        if force_names is None:
+            self.force_names = None
+        else:
+            self.force_names = {}
+            for elem in force_names:
+                self.force_names[elem] = None
 
     def setup(self, space):
         for item in self.class_elements_w:
