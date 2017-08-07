@@ -29,7 +29,7 @@ def dirname(p):
 
 
 def path_split(p):
-    """Split a pathname.  Returns tuple "(head, tail)" where "tail" is                                                                   
+    """Split a pathname.  Returns tuple "(head, tail)" where "tail" is
     everything after the final slash.  Either part may be empty."""
     i = p.rfind('/') + 1
     assert i >= 0
@@ -64,7 +64,7 @@ def parse_name(fname):
     p = name.rfind(".")
     if p > 0:
         name = name[:p]
-    name = name.replace(".", "_") # explode?
+    name = name.replace(".", "_")  # explode?
     return "self." + name
 
 

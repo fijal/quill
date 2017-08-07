@@ -75,7 +75,6 @@ class Importer(object):
                 w_mod = self.import_module(space, imp_path[1:last_elem])
                 return space.getattr(w_mod, imp_path[last_elem])
         raise ImportError(".".join(imp_path))
-    
 
     def import_names(self, space, imp_path, names, globals_w, idx):
         for name in names:
