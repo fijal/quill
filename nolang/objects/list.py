@@ -30,4 +30,4 @@ class W_ListObject(W_Root):
         self._items_w[self.unwrap_index(space, w_index)] = w_value
 
     def append(self, space, w_obj):
-        self._items_w += [w_obj]
+        self._items_w.append(w_obj)
