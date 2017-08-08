@@ -34,3 +34,6 @@ class W_ListObject(W_Root):
 
     def append(self, space, w_obj):
         self._items_w.append(w_obj)
+
+    def extend(self, space, w_other):
+        self._items_w.extend(space.list_w(w_other))

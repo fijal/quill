@@ -68,6 +68,25 @@ class TestList(BaseTest):
         assert space.len(w_res) == 2
         assert space.utf8_w(space.getitem(w_res, space.newint(1))) == "bar"
 
+    def test_extend(self):
+        w_res = self.interpret_expr('''
+            var x;
+            x = ["a", "b"];
+            x.extend(["c", "d"]);
+            return x;
+        ''')
+        list_w = self.space.list_w(w_res)
+        assert [self.space.utf8_w(w) for w in list_w] == ["a", "b", "c", "d"]
+
+    def test_extend_nonlist(self):
+        try:
+            self.interpret_expr('["a", "b"].extend("c");')
+        except AppError as ae:
+            assert ae.match(self.space, self.space.w_typeerror)
+            assert ae.w_exception.message == 'expected list'
+        else:
+            raise Exception("Applevel TypeError not raised.")
+
     def test_getitem_out_of_range(self):
         try:
             self.interpret_expr('return ["foo", "bar"][2];')
