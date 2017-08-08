@@ -18,5 +18,6 @@ W_ListObject.spec = TypeSpec(
     methods={
         'append': append,
     },
-    properties={}
+    properties={},
+    set_cls_w_type=True
 )

@@ -5,6 +5,7 @@ from support import BaseTest
 class TestList(BaseTest):
     def test_empty_list(self):
         w_res = self.interpret_expr('return [];')
+        assert self.space.type(w_res) is self.space.builtin_dict['List']
         assert self.space.len(w_res) == 0
 
     def test_short_list(self):

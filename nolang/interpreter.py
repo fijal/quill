@@ -125,6 +125,8 @@ class Interpreter(object):
                     return frame.pop()
                 elif op == opcodes.LIST_BUILD:
                     self.list_build(space, frame, bytecode, arg0)
+                elif op == opcodes.DICT_BUILD:
+                    self.dict_build(space, frame, bytecode, arg0)
                 else:
                     raise InvalidOpcode(op)
 
@@ -179,6 +181,14 @@ class Interpreter(object):
         for i in range(no - 1, -1, -1):
             items[i] = frame.pop()
         frame.push(space.newlist(items))
+
+    def dict_build(self, space, frame, bytecode, no):
+        items = {}
+        for i in range((no - 1) / 2, -1, -1):
+            v = frame.pop()
+            k = frame.pop()
+            items[k] = v
+        frame.push(space.newdict(items))
 
     def setattr(self, space, frame, bytecode, no):
         w_arg = frame.pop()

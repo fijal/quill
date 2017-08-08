@@ -386,6 +386,10 @@ def get_parser():
     def atom_list_literal(state, p):
         return ast.List(p[1].get_element_list(), srcpos=sr(p))
 
+    @pg.production('atom : LEFT_CURLY_BRACE dict_pair_list RIGHT_CURLY_BRACE')
+    def atom_dict_literal(state, p):
+        return ast.Dict(p[1].get_element_list(), srcpos=sr(p))
+
     @pg.production('atom : atom LEFT_SQUARE_BRACKET expression RIGHT_SQUARE_BRACKET')
     def atom_getitem(state, p):
         return ast.Getitem(p[0], p[2], srcpos=sr(p))
@@ -414,6 +418,22 @@ def get_parser():
     @pg.production('expression_sublist : COMMA expression expression_sublist')
     def expression_sublist_expression(state, p):
         return ast.ExpressionListPartial([p[1]] + p[2].get_element_list())
+
+    @pg.production('dict_pair_list : ')
+    def dict_pair_list_empty(state, p):
+        return ast.ExpressionListPartial([])
+
+    @pg.production('dict_pair_list : expression COLON expression dict_pair_sublist')
+    def dict_pair_list_expression(state, p):
+        return ast.ExpressionListPartial([p[0], p[2]] + p[3].get_element_list())
+
+    @pg.production('dict_pair_sublist : ')
+    def dict_pair_sublist_empty(state, p):
+        return ast.ExpressionListPartial([])
+
+    @pg.production('dict_pair_sublist : COMMA expression COLON expression dict_pair_sublist')
+    def dict_pair_sublist_expression(state, p):
+        return ast.ExpressionListPartial([p[1], p[3]] + p[4].get_element_list())
 
     res = pg.build()
     if res.lr_table.sr_conflicts:

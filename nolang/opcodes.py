@@ -31,6 +31,8 @@ opcodes = [
     Opcode('SETITEM', 0, -3, 'set item on an object'),
     Opcode('LIST_BUILD', 1, 254, 'take N arguments from the stack, build them '
                                  'into a list, and push the list'),
+    Opcode('DICT_BUILD', 1, 254, 'take N arguments from the stack, build them '
+                                 'into a dict, and push the dict'),
     # exception handling
     Opcode('PUSH_RESUME_STACK', 1, 0, 'add a new resume point to the stack'),
     Opcode('POP_RESUME_STACK', 0, 0, 'pop one from resume stack'),

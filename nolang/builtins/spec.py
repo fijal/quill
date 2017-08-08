@@ -22,12 +22,14 @@ def parameters(**args):
 
 
 class TypeSpec(object):
-    def __init__(self, name, constructor, methods, properties, parent_name=None):
+    def __init__(self, name, constructor, methods, properties,
+                 parent_name=None, set_cls_w_type=False):
         self.constructor = constructor
         self.name = name
         self.methods = methods
         self.properties = properties
         self.parent_name = parent_name
+        self.set_cls_w_type = set_cls_w_type
 
 
 def wrap_function(space, f):
@@ -62,6 +64,9 @@ def wrap_function(space, f):
             elif spec == 'list':
                 argval = 'space.list_w(args_w[%d])' % j
                 j += 1
+            elif spec == 'dict':
+                argval = 'space.dict_w(args_w[%d])' % j
+                j += 1
             else:
                 assert False
         lines.append('    arg%d = %s' % (i, argval))
@@ -93,7 +98,10 @@ def wrap_type(space, tp):
         parent = None
     else:
         parent = space.builtin_dict[spec.parent_name]
-    return W_UserType(allocate, spec.name, properties, parent, default_alloc=False)
+    w_tp = W_UserType(allocate, spec.name, properties, parent, default_alloc=False)
+    if spec.set_cls_w_type:
+        tp.cls_w_type = w_tp
+    return w_tp
 
 
 def wrap_builtin(space, builtin):

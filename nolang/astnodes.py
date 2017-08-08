@@ -130,6 +130,17 @@ class List(AstNode):
         state.emit(self.getstartidx(), opcodes.LIST_BUILD, len(self.items))
 
 
+class Dict(AstNode):
+    def __init__(self, items, srcpos):
+        AstNode.__init__(self, srcpos)
+        self.items = items
+
+    def compile(self, state):
+        for item in self.items:
+            item.compile(state)
+        state.emit(self.getstartidx(), opcodes.DICT_BUILD, len(self.items))
+
+
 class BinOp(AstNode):
     def __init__(self, op, left, right, oppos, srcpos=None):
         AstNode.__init__(self, srcpos)
