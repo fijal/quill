@@ -56,14 +56,18 @@ class BaseTest(object):
     def interpret_expr(self, code):
         return self.interpret(reformat_expr(code))
 
-    def interpret(self, code):
+    def interpret(self, code, args=None):
         source = reformat_code(code)
         ast = self.parse(source)
         imp = Importer(self.space)
         w_mod = compile_module(self.space, 'test', 'self.test', source, ast,
                                imp)
         w_mod.setup(self.space)
-        return self.space.call_method(w_mod, 'main', [])
+        if args is not None:
+            args_w = [self.space.newlist([self.space.newtext(x) for x in args])]
+        else:
+            args_w = []
+        return self.space.call_method(w_mod, 'main', args_w)
 
     def assert_expr_parse_error(self, code):
         try:

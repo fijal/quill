@@ -90,6 +90,8 @@ class Interpreter(object):
                     self.getitem(space, frame)
                 elif op == opcodes.PUSH_RESUME_STACK:
                     self.push_resume_stack(space, frame, bytecode, arg0)
+                elif op == opcodes.POP_RESUME_STACK:
+                    self.pop_resume_stack(frame)
                 elif op == opcodes.RAISE:
                     w_exception = frame.pop()
                     if not isinstance(w_exception, W_Exception):
@@ -214,6 +216,9 @@ class Interpreter(object):
     def push_resume_stack(self, space, frame, bytecode, arg0):
         frame.resume_stack[frame.resume_stack_depth] = arg0
         frame.resume_stack_depth += 1
+
+    def pop_resume_stack(self, frame):
+        frame.resume_stack_depth -= 1
 
     def binop_lt(self, space, frame):
         w_right = frame.pop()

@@ -155,6 +155,7 @@ class _BytecodeBuilder(object):
             self.register_variable(var.name, var.tp)
         self.arglist = arglist
         self.lnotab = []
+        self.accumulator = []
 
     def add_constant(self, const):
         no = len(self.constants)

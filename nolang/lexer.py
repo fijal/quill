@@ -69,6 +69,7 @@ KEYWORDS = [
     'and',
     'true',
     'false',
+    'else',
     'try',
     'except',
     'finally',
