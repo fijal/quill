@@ -56,7 +56,7 @@ class TestList(BaseTest):
         try:
             self.interpret_expr('return ["foo", "bar"][2];')
         except AppError as ae:
-            assert ae.w_exception.w_type.name == 'IndexError'
+            assert ae.match(self.space, self.space.w_indexerror)
             assert ae.w_exception.message == 'list index out of range'
         else:
             raise Exception("Applevel IndexError not raised.")
@@ -65,7 +65,7 @@ class TestList(BaseTest):
         try:
             self.interpret_expr('return ["foo", "bar"]["zero"];')
         except AppError as ae:
-            assert ae.w_exception.w_type.name == 'TypeError'
+            assert ae.match(self.space, self.space.w_typeerror)
             assert ae.w_exception.message == 'list index must be int'
         else:
             raise Exception("Applevel TypeError not raised.")

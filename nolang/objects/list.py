@@ -19,7 +19,7 @@ class W_ListObject(W_Root):
         try:
             i = space.int_w(w_index)
         except AppError as ae:
-            if space.type(ae.w_exception) is space.w_typeerror:
+            if ae.match(space, space.w_typeerror):
                 raise space.apperr(space.w_typeerror, 'list index must be int')
             raise
         if i < 0 or i >= len(self._items_w):

@@ -55,7 +55,7 @@ class TestDict(BaseTest):
         try:
             self.interpret_expr('return {"foo": "bar"}["baz"];')
         except AppError as ae:
-            assert ae.w_exception.w_type.name == 'KeyError'
+            assert ae.match(self.space, self.space.w_keyerror)
             assert ae.w_exception.message == 'baz'
         else:
             raise Exception("Applevel KeyError not raised.")

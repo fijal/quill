@@ -27,7 +27,7 @@ class W_IntObject(W_Root):
         try:
             other = space.int_w(w_other)
         except AppError as ae:
-            if space.type(ae.w_exception) is space.w_typeerror:
+            if ae.match(space, space.w_typeerror):
                 return space.w_NotImplemented
             raise
         return space.newbool(self._intval == other)
