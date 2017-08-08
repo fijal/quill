@@ -23,6 +23,11 @@ class W_DictObject(W_Root):
             raise space.apperr(space.w_keyerror, space.str(w_key))
         return self._items_w[w_key]
 
+    def get(self, space, w_key, w_default):
+        if w_key not in self._items_w:
+            return w_default
+        return self._items_w[w_key]
+
     def setitem(self, space, w_key, w_value):
         self._items_w[w_key] = w_value
 

@@ -34,6 +34,12 @@ class TestDict(BaseTest):
         w_res = self.interpret_expr('return len({"a": "foo", 1: "bar"});')
         assert self.space.int_w(w_res) == 2
 
+    def test_get(self):
+        w_res = self.interpret_expr('return {"a": "foo"}.get("a", "dflt");')
+        assert self.space.utf8_w(w_res) == "foo"
+        w_res = self.interpret_expr('return {"a": "foo"}.get("b", "dflt");')
+        assert self.space.utf8_w(w_res) == "dflt"
+
     def test_getitem(self):
         w_res = self.interpret_expr('''
             return {
