@@ -350,25 +350,25 @@ class TryExcept(AstNode):
         jump_pos = state.get_patch_position()
         state.patch_position(pos, state.get_position())
         if self.else_clause is None:
-            state.accumulator = [jump_pos]
+            state.accumulator.append([jump_pos])
             for item in self.except_blocks:
                 item.compile(state)
-            for pos in state.accumulator:
+            for pos in state.accumulator[-1]:
                 state.patch_position(pos, state.get_position())
             if self.finally_clause is not None:
                 self.finally_clause.compile(state)
             state.emit(self.getendidx(), opcodes.RERAISE)
-            state.accumulator = None
+            state.accumulator.pop()
         else:
             assert self.finally_clause is None
             # no support for else and finally for now
-            state.accumulator = []
+            state.accumulator.append([])
             for item in self.except_blocks:
                 item.compile(state)
-            for pos in state.accumulator:
+            for pos in state.accumulator[-1]:
                 state.patch_position(pos, state.get_position())
             state.emit(self.getendidx(), opcodes.RERAISE)
-            state.accumulator = None
+            state.accumulator.pop()
             state.emit(self.else_clause.getstartidx(), opcodes.JUMP_ABSOLUTE, 0)
             pos = state.get_patch_position()
             state.patch_position(jump_pos, state.get_position())
@@ -617,7 +617,7 @@ class ExceptClause(AstNode):
         idx = self.getendidx()
         state.emit(idx, opcodes.CLEAR_CURRENT_EXC)
         state.emit(idx, opcodes.JUMP_ABSOLUTE, 0)
-        state.accumulator.append(state.get_patch_position())
+        state.accumulator[-1].append(state.get_patch_position())
         state.patch_position(pos, state.get_position())
 
 

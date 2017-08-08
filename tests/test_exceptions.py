@@ -135,3 +135,18 @@ class TestExceptions(BaseTest):
         assert self.space.int_w(w_res) == 13
         w_res = self.interpret(code, ["foo"])
         assert self.space.int_w(w_res) == 11
+
+    def test_nested_exception_handling(self):
+        self.interpret('''
+        def main() {
+            try {
+            } except Exception {
+                try {
+
+                } except Exception {
+
+                }
+            }
+        }
+        ''')
+        # assert did not explode in compile()
