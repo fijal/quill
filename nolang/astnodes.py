@@ -300,14 +300,43 @@ class TryExcept(AstNode):
     def __init__(self, block, except_blocks, srcpos):
         AstNode.__init__(self, srcpos)
         self.block = block
-        if isinstance(except_blocks[-1], FinallyClause):
-            self.finally_clause = except_blocks[-1]
+        last_exc_block = except_blocks[-1]
+        self.else_clause = None
+        self.finally_clause = None
+        if isinstance(last_exc_block, FinallyClause):
+            if last_exc_block.is_else():
+                self.else_clause = last_exc_block
+            else:
+                self.finally_clause = last_exc_block
             self.except_blocks = except_blocks[:-1]
         else:
-            self.finally_clause = None
             self.except_blocks = except_blocks
 
     def compile(self, state):
+        """ A bit of complicated logic, but we want something like that:
+
+        push_resume_stack <label1>
+        try_block
+        jump <label2>
+        <label1>
+        except blocks
+        <label2>
+        finally_block
+
+        -or-
+
+        push_resume_stack <label1>
+        try_block
+        jump <label2>
+        <label1>
+        except blocks
+        jump <label3>
+        <label2>
+        else_block
+        <label3>
+
+
+        """
         state.emit(self.getstartidx(), opcodes.PUSH_RESUME_STACK, 0)
         pos = state.get_patch_position()
         for item in self.block:
@@ -320,15 +349,31 @@ class TryExcept(AstNode):
         state.emit(idx, opcodes.JUMP_ABSOLUTE, 0)
         jump_pos = state.get_patch_position()
         state.patch_position(pos, state.get_position())
-        state.accumulator = [jump_pos]
-        for item in self.except_blocks:
-            item.compile(state)
-        for pos in state.accumulator:
+        if self.else_clause is None:
+            state.accumulator = [jump_pos]
+            for item in self.except_blocks:
+                item.compile(state)
+            for pos in state.accumulator:
+                state.patch_position(pos, state.get_position())
+            if self.finally_clause is not None:
+                self.finally_clause.compile(state)
+            state.emit(self.getendidx(), opcodes.RERAISE)
+            state.accumulator = None
+        else:
+            assert self.finally_clause is None
+            # no support for else and finally for now
+            state.accumulator = []
+            for item in self.except_blocks:
+                item.compile(state)
+            for pos in state.accumulator:
+                state.patch_position(pos, state.get_position())
+            state.emit(self.getendidx(), opcodes.RERAISE)
+            state.accumulator = None
+            state.emit(self.else_clause.getstartidx(), opcodes.JUMP_ABSOLUTE, 0)
+            pos = state.get_patch_position()
+            state.patch_position(jump_pos, state.get_position())
+            self.else_clause.compile(state)
             state.patch_position(pos, state.get_position())
-        if self.finally_clause is not None:
-            self.finally_clause.compile(state)
-        state.emit(self.getendidx(), opcodes.RERAISE)
-        state.accumulator = None
 
 
 class Raise(AstNode):
@@ -612,9 +657,13 @@ class ExceptClauseList(BaseExcNode):
 class FinallyClause(BaseExcNode):
     next = None
 
-    def __init__(self, block, srcpos):
+    def __init__(self, block, is_else, srcpos):
         AstNode.__init__(self, srcpos)
+        self._is_else = is_else
         self.block = block
+
+    def is_else(self):
+        return self._is_else
 
     def compile(self, state):
         for item in self.block:

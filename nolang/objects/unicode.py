@@ -10,3 +10,6 @@ class W_StrObject(W_Root):
 
     def str(self, space):
         return self.utf8_w(space)
+
+    def eq(self, space, w_other):
+        return space.newbool(self.utf8val == space.utf8_w(w_other))

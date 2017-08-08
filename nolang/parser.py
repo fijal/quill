@@ -231,7 +231,12 @@ def get_parser():
     @pg.production('except_finally_clauses : FINALLY LEFT_CURLY_BRACE '
                    'function_body RIGHT_CURLY_BRACE')
     def except_finally_clauses_finally(state, p):
-        return ast.FinallyClause(p[2].get_element_list(), srcpos=sr(p))
+        return ast.FinallyClause(p[2].get_element_list(), False, srcpos=sr(p))
+
+    @pg.production('except_finally_clauses : ELSE LEFT_CURLY_BRACE '
+                   'function_body RIGHT_CURLY_BRACE')
+    def except_finally_clause_else(state, p):
+        return ast.FinallyClause(p[2].get_element_list(), True, srcpos=sr(p))
 
     @pg.production('identifier_list : COMMA IDENTIFIER identifier_list')
     def identifier_list_arglist(state, p):
