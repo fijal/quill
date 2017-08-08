@@ -15,6 +15,9 @@ class W_Root(object):
     def list_w(self, space):
         raise space.apperr(space.w_typeerror, 'expected list')
 
+    def dict_w(self, space):
+        raise space.apperr(space.w_typeerror, 'expected dict')
+
     def hash(self, space):
         raise space.apperr(space.w_typeerror, 'unhashable type')
 

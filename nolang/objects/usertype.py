@@ -12,11 +12,11 @@ class W_UserType(W_Root):
         self.class_elements_w = class_elements_w
         self.default_alloc = default_alloc
         if w_parent is not None:
-            self.dict_w = w_parent.dict_w.copy()
+            self._dict_w = w_parent._dict_w.copy()
         else:
-            self.dict_w = {}
+            self._dict_w = {}
         for item in class_elements_w:
-            self.dict_w[item.name] = item
+            self._dict_w[item.name] = item
         self.w_parent = w_parent
         if force_names is None:
             self.force_names = None
@@ -33,8 +33,8 @@ class W_UserType(W_Root):
         if self.allocate is None:
             raise Exception("cannot be called like that")
         w_obj = space.call(self.allocate, [self] + args_w)
-        if '__init__' in self.dict_w:
-            space.call(self.dict_w['__init__'], [w_obj] + args_w)
+        if '__init__' in self._dict_w:
+            space.call(self._dict_w['__init__'], [w_obj] + args_w)
         elif self.default_alloc:
             if len(args_w) != 0:
                 raise space.apperr(space.w_argerror, "Default constructor"
@@ -42,7 +42,7 @@ class W_UserType(W_Root):
         return w_obj
 
     def getattr(self, space, attrname):
-        return self.dict_w[attrname]
+        return self._dict_w[attrname]
 
     def issubclass(self, w_type):
         cur = self

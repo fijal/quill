@@ -75,7 +75,7 @@ class Space(object):
     def hash(self, w_obj):
         return w_obj.hash(self)
 
-    def hash_eq(self, w_one, w_two):
+    def key_eq(self, w_one, w_two):
         return self.is_true(self.binop_eq(w_one, w_two))
 
     # object stuff, hacks so far
@@ -104,8 +104,8 @@ class Space(object):
     def newlist(self, items_w):
         return W_ListObject(items_w)
 
-    def newdict(self, dict_w):
-        return W_DictObject(self.hash_eq, self.hash, dict_w)
+    def newdict(self, items_w):
+        return W_DictObject(self.key_eq, self.hash, items_w)
 
     # foo_w unwrappers
     def int_w(self, w_obj):

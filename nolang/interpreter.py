@@ -1,7 +1,8 @@
-
 """ This is the main interpreter file that contains bytecode
 dispatch loop.
 """
+
+from rpython.rlib.objectmodel import r_dict
 
 from nolang import opcodes
 from nolang.error import AppError
@@ -183,7 +184,7 @@ class Interpreter(object):
         frame.push(space.newlist(items))
 
     def dict_build(self, space, frame, bytecode, no):
-        items = {}
+        items = r_dict(space.key_eq, space.hash)
         for i in range((no - 1) / 2, -1, -1):
             v = frame.pop()
             k = frame.pop()
