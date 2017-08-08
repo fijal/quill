@@ -18,12 +18,31 @@ def get(space, w_self, w_key, w_default):
     return w_self.get(space, w_key, w_default)
 
 
+@unwrap_spec()
+def pop(space, w_self, w_key):
+    # XXX Do we want to support an optional default here?
+    return w_self.dict_pop(space, w_key)
+
+
+@unwrap_spec()
+def keys(space, w_self):
+    return w_self.keys(space)
+
+
+@unwrap_spec()
+def values(space, w_self):
+    return w_self.values(space)
+
+
 W_DictObject.spec = TypeSpec(
     'Dict',
     constructor=allocate,
     methods={
         'merge': merge,
         'get': get,
+        'pop': pop,
+        'keys': keys,
+        'values': values,
     },
     properties={},
     set_cls_w_type=True

@@ -28,6 +28,11 @@ class W_DictObject(W_Root):
             return w_default
         return self._items_w[w_key]
 
+    def dict_pop(self, space, w_key):
+        if w_key not in self._items_w:
+            raise space.apperr(space.w_keyerror, space.str(w_key))
+        return self._items_w.pop(w_key)
+
     def setitem(self, space, w_key, w_value):
         self._items_w[w_key] = w_value
 
@@ -36,3 +41,9 @@ class W_DictObject(W_Root):
         w_res = space.newdict(self._items_w)
         w_res._items_w.update(other_w)
         return w_res
+
+    def keys(self, space):
+        return space.newlist(self._items_w.keys())
+
+    def values(self, space):
+        return space.newlist(self._items_w.values())

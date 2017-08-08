@@ -121,3 +121,34 @@ class TestDict(BaseTest):
         assert space.utf8_w(space.getitem(w_ab, space.newtext("a"))) == "foo"
         assert space.utf8_w(space.getitem(w_ab, space.newtext("b"))) == "baz"
         assert space.utf8_w(space.getitem(w_ab, space.newint(1))) == "rab"
+
+    def test_pop(self):
+        w_res = self.interpret_expr('''
+            var a;
+            a = {"a": "foo", 1: "bar"};
+            return [a.pop(1), a];
+        ''')
+        space = self.space
+        [w_pval, w_a] = self.space.list_w(w_res)
+        assert space.utf8_w(w_pval) == "bar"
+        assert space.len(w_a) == 1
+        assert space.utf8_w(space.getitem(w_a, space.newtext("a"))) == "foo"
+
+    def test_pop_missing(self):
+        try:
+            self.interpret_expr('{"a": "bar"}.pop("b");')
+        except AppError as ae:
+            assert ae.match(self.space, self.space.w_keyerror)
+            assert ae.w_exception.message == 'b'
+        else:
+            raise Exception("Applevel KeyError not raised.")
+
+    def test_keys(self):
+        w_res = self.interpret_expr('return {"a": "foo", 1: "bar"}.keys();')
+        [w_a, w_1] = self.space.list_w(w_res)
+        assert [self.space.utf8_w(w_a), self.space.int_w(w_1)] == ["a", 1]
+
+    def test_values(self):
+        w_res = self.interpret_expr('return {"a": "foo", 1: "bar"}.values();')
+        values_w = self.space.list_w(w_res)
+        assert [self.space.utf8_w(w) for w in values_w] == ["foo", "bar"]
