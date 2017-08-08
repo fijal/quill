@@ -28,6 +28,16 @@ class TestList(BaseTest):
         self.assert_expr_parse_error('return ["foo", , "bar"];')
         self.assert_expr_parse_error('return [, "foo", "bar"];')
 
+    def test_constructor(self):
+        w_res = self.interpret_expr('return List([]);')
+        assert self.space.type(w_res) is self.space.builtin_dict['List']
+        assert self.space.len(w_res) == 0
+        w_res = self.interpret_expr('return List(["foo", "bar"]);')
+        space = self.space
+        assert space.len(w_res) == 2
+        assert space.utf8_w(space.getitem(w_res, space.newint(0))) == "foo"
+        assert space.utf8_w(space.getitem(w_res, space.newint(1))) == "bar"
+
     def test_len(self):
         w_res = self.interpret_expr('return len([]);')
         assert self.space.int_w(w_res) == 0
