@@ -1,7 +1,6 @@
-
 import re
 
-from nolang.parser import get_parser, ParsingState
+from nolang.parser import get_parser, ParsingState, ParseError
 from nolang.lexer import get_lexer
 from nolang.bytecode import compile_bytecode
 from nolang.interpreter import Interpreter
@@ -65,3 +64,11 @@ class BaseTest(object):
                                imp)
         w_mod.setup(self.space)
         return self.space.call_method(w_mod, 'main', [])
+
+    def assert_expr_parse_error(self, code):
+        try:
+            value = self.interpret_expr(code)
+        except ParseError:
+            pass
+        else:
+            raise Exception("Incorrectly parsed %r as %r." % (code, value))

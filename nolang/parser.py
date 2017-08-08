@@ -412,6 +412,7 @@ def get_parser():
         return ast.ExpressionListPartial([p[0]] + p[1].get_element_list())
 
     @pg.production('expression_sublist : ')
+    @pg.production('expression_sublist : COMMA')
     def expression_sublist_empty(state, p):
         return ast.ExpressionListPartial([])
 
@@ -428,6 +429,7 @@ def get_parser():
         return ast.ExpressionListPartial([p[0], p[2]] + p[3].get_element_list())
 
     @pg.production('dict_pair_sublist : ')
+    @pg.production('dict_pair_sublist : COMMA')
     def dict_pair_sublist_empty(state, p):
         return ast.ExpressionListPartial([])
 

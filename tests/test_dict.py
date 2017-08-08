@@ -15,6 +15,19 @@ class TestDict(BaseTest):
         assert space.utf8_w(space.getitem(w_res, space.newtext('a'))) == "foo"
         assert space.utf8_w(space.getitem(w_res, space.newint(1))) == "bar"
 
+    def test_trailing_comma(self):
+        w_res = self.interpret_expr('return {"a": "foo", 1: "bar",};')
+        space = self.space
+        assert space.len(w_res) == 2
+        assert space.utf8_w(space.getitem(w_res, space.newtext('a'))) == "foo"
+        assert space.utf8_w(space.getitem(w_res, space.newint(1))) == "bar"
+
+    def test_multiple_trailing_commas(self):
+        self.assert_expr_parse_error('return {,};')
+        self.assert_expr_parse_error('return {"a": "foo", 1: "bar",,};')
+        self.assert_expr_parse_error('return {"a": "foo",, 1: "bar"};')
+        self.assert_expr_parse_error('return {, "a": "foo", 1: "bar"};')
+
     def test_getitem(self):
         w_res = self.interpret_expr('''
             return {

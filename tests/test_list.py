@@ -15,6 +15,19 @@ class TestList(BaseTest):
         assert space.utf8_w(space.getitem(w_res, space.newint(0))) == "foo"
         assert space.utf8_w(space.getitem(w_res, space.newint(1))) == "bar"
 
+    def test_trailing_comma(self):
+        w_res = self.interpret_expr('return ["foo", "bar",];')
+        space = self.space
+        assert space.len(w_res) == 2
+        assert space.utf8_w(space.getitem(w_res, space.newint(0))) == "foo"
+        assert space.utf8_w(space.getitem(w_res, space.newint(1))) == "bar"
+
+    def test_extra_commas(self):
+        self.assert_expr_parse_error('return [,];')
+        self.assert_expr_parse_error('return ["foo", "bar",,];')
+        self.assert_expr_parse_error('return ["foo", , "bar"];')
+        self.assert_expr_parse_error('return [, "foo", "bar"];')
+
     def test_getitem(self):
         w_res = self.interpret_expr('return ["foo", "bar"][0];')
         assert self.space.utf8_w(w_res) == "foo"
