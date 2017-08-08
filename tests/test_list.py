@@ -28,6 +28,12 @@ class TestList(BaseTest):
         self.assert_expr_parse_error('return ["foo", , "bar"];')
         self.assert_expr_parse_error('return [, "foo", "bar"];')
 
+    def test_len(self):
+        w_res = self.interpret_expr('return len([]);')
+        assert self.space.int_w(w_res) == 0
+        w_res = self.interpret_expr('return len(["foo", 2]);')
+        assert self.space.int_w(w_res) == 2
+
     def test_getitem(self):
         w_res = self.interpret_expr('return ["foo", "bar"][0];')
         assert self.space.utf8_w(w_res) == "foo"

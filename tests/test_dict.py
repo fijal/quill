@@ -28,6 +28,12 @@ class TestDict(BaseTest):
         self.assert_expr_parse_error('return {"a": "foo",, 1: "bar"};')
         self.assert_expr_parse_error('return {, "a": "foo", 1: "bar"};')
 
+    def test_len(self):
+        w_res = self.interpret_expr('return len({});')
+        assert self.space.int_w(w_res) == 0
+        w_res = self.interpret_expr('return len({"a": "foo", 1: "bar"});')
+        assert self.space.int_w(w_res) == 2
+
     def test_getitem(self):
         w_res = self.interpret_expr('''
             return {
