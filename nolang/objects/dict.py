@@ -25,3 +25,9 @@ class W_DictObject(W_Root):
 
     def setitem(self, space, w_key, w_value):
         self._items_w[w_key] = w_value
+
+    def merge(self, space, w_other):
+        other_w = space.dict_w(w_other)
+        w_res = space.newdict(self._items_w)
+        w_res._items_w.update(other_w)
+        return w_res

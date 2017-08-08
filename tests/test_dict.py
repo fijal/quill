@@ -76,3 +76,26 @@ class TestDict(BaseTest):
         ''')
         w_ls = self.space.list_w(w_res)
         assert [self.space.int_w(w) for w in w_ls] == [0, 1, 2, 3]
+
+    def test_merge(self):
+        w_res = self.interpret_expr('''
+            var a, b, ab;
+            a = {"a": "foo", 1: "bar"};
+            b = {"b": "baz", 1: "rab"};
+            ab = a.merge(b);
+            return [a, b, ab];
+        ''')
+        space = self.space
+        [w_a, w_b, w_ab] = space.list_w(w_res)
+        # a and b are unmodified
+        assert space.len(w_a) == 2
+        assert space.utf8_w(space.getitem(w_a, space.newtext("a"))) == "foo"
+        assert space.utf8_w(space.getitem(w_a, space.newint(1))) == "bar"
+        assert space.len(w_b) == 2
+        assert space.utf8_w(space.getitem(w_b, space.newtext("b"))) == "baz"
+        assert space.utf8_w(space.getitem(w_b, space.newint(1))) == "rab"
+        # ab is the merged output
+        assert space.len(w_ab) == 3
+        assert space.utf8_w(space.getitem(w_ab, space.newtext("a"))) == "foo"
+        assert space.utf8_w(space.getitem(w_ab, space.newtext("b"))) == "baz"
+        assert space.utf8_w(space.getitem(w_ab, space.newint(1))) == "rab"
