@@ -1,3 +1,5 @@
+from rpython.rlib.objectmodel import compute_hash
+
 from nolang.error import AppError
 from nolang.objects.root import W_Root
 
@@ -13,7 +15,7 @@ class W_StrObject(W_Root):
         return self.utf8_w(space)
 
     def hash(self, space):
-        return hash(self.utf8val)
+        return compute_hash(self.utf8val)
 
     def eq(self, space, w_other):
         try:

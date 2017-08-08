@@ -1,6 +1,8 @@
 """ Base implementation of W_Int which is a machine-sized integer
 """
 
+from rpython.rlib.objectmodel import compute_hash
+
 from nolang.error import AppError
 from nolang.objects.root import W_Root
 
@@ -13,7 +15,7 @@ class W_IntObject(W_Root):
         return str(self._intval)
 
     def hash(self, space):
-        return hash(self._intval)
+        return compute_hash(self._intval)
 
     def int_w(self, space):
         return self._intval
