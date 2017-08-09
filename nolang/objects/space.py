@@ -25,18 +25,20 @@ class Space(object):
     def setup(self, interpreter):
         self.interpreter = interpreter
 
-    def setup_builtins(self, builtins, coremod):
+    def setup_builtins(self, builtins, coremod, non_builtins):
         self.builtins_w = []
         self.builtin_dict = {}
         for builtin in builtins:
             self.setup_builtin(wrap_builtin(self, builtin))
+        self.coremod = coremod
+        for non_builtin in non_builtins:
+            wrap_builtin(self, non_builtin)
         self.w_exception = self.builtin_dict['Exception']
         self.w_indexerror = self.make_exception('IndexError')
         self.w_typeerror = self.make_exception('TypeError')
         self.w_argerror = self.make_exception('ArgumentError')
         self.w_attrerror = self.make_exception('AttributeError')
         self.w_keyerror = self.make_exception('KeyError')
-        self.coremod = coremod
 
     def setup_builtin(self, builtin):
         self.builtins_w.append(builtin)
