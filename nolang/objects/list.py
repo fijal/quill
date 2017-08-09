@@ -1,5 +1,6 @@
 from nolang.error import AppError
 from nolang.objects.root import W_Root
+from nolang.builtins.spec import unwrap_spec, TypeSpec
 
 
 class W_ListObject(W_Root):
@@ -34,3 +35,23 @@ class W_ListObject(W_Root):
 
     def append(self, space, w_obj):
         self._items_w.append(w_obj)
+
+
+@unwrap_spec(items_w='list')
+def allocate(space, w_tp, items_w):
+    return space.newlist(items_w)
+
+
+@unwrap_spec()
+def append(space, w_self, w_item):
+    w_self.append(space, w_item)
+
+
+W_ListObject.spec = TypeSpec(
+    'List',
+    constructor=allocate,
+    methods={
+        'append': append,
+    },
+    properties={}
+)

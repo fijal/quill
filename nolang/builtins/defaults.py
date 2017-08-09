@@ -3,7 +3,7 @@ from nolang.builtins.io import magic_print
 from nolang.module import create_module
 from nolang.builtins.buffer import buffer, buffer_from_utf8
 from nolang.builtins.exception import W_Exception
-from nolang.builtins.list import W_ListObject
+from nolang.objects.list import W_ListObject
 from nolang.builtins.spec import wrap_function, wrap_type
 from nolang.builtins.core.reflect import get_current_frame, W_FrameWrapper
 
