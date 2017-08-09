@@ -3,6 +3,7 @@
 """
 
 from nolang.objects.root import W_Root
+from nolang.builtins.spec import TypeSpec, unwrap_spec
 
 
 class W_IntObject(W_Root):
@@ -35,3 +36,9 @@ class W_IntObject(W_Root):
 
     def is_true(self, space):
         return self._intval != 0
+
+@unwrap_spec(value='int')
+def new_int(space, value):
+    return space.newint(value)
+
+W_IntObject.spec = TypeSpec('Int', new_int)

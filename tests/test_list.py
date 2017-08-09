@@ -38,6 +38,18 @@ class TestList(BaseTest):
         assert space.len(w_res) == 2
         assert space.utf8_w(space.getitem(w_res, space.newint(1))) == "bar"
 
+    def test_method_call_on_wrong_obj(self):
+        try:
+            self.interpret_expr('''
+            List.append(1, 2)
+            ''')
+        except AppError as ae:
+            if not ae.match(self.space, self.space.w_typeerror):
+                raise
+            assert ae.w_exception.message == "Expected List object, got Int"
+        else:
+            raise Exception("did not raise")
+
     def test_getitem_out_of_range(self):
         try:
             self.interpret_expr('return ["foo", "bar"][2];')

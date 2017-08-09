@@ -22,21 +22,28 @@ def parameters(**args):
 
 
 class TypeSpec(object):
-    def __init__(self, name, constructor, methods, properties, parent_name=None):
+    def __init__(self, name, constructor, methods=None, properties=None,
+                 parent_name=None):
         self.constructor = constructor
         self.name = name
+        if methods is None:
+            methods = {}
         self.methods = methods
+        if properties is None:
+            properties = {}
         self.properties = properties
         self.parent_name = parent_name
 
 
-def wrap_function(space, f):
+def wrap_function(space, f, exp_name=None):
     name = f.__name__
     argnames = f.__code__.co_varnames[:f.__code__.co_argcount]
     lines = ['def %s(space, args_w):' % name]
     j = 0
     numargs = 0
+    d = {'orig_' + name: f}
     for i, argname in enumerate(argnames):
+        extralines = []
         if argname == 'space':
             argval = 'space'
         elif argname == 'args_w':
@@ -49,6 +56,13 @@ def wrap_function(space, f):
             argval = 'args_w[0]'
             j += 1
             numargs += 1
+            msg = "Expected %s object, got %%s" % exp_name
+            extralines = [
+                '    if not isinstance(arg%d, self_tp):' % i,
+                '        raise space.apperr(space.w_typeerror, "%s" %% '
+                         '(space.type(arg%d).name,))' % (msg, i),
+            ]
+            d['self_tp'] = f.im_class
         elif argname.startswith('w_'):
             argval = 'args_w[%d]' % j
             j += 1
@@ -74,10 +88,10 @@ def wrap_function(space, f):
             else:
                 assert False
         lines.append('    arg%d = %s' % (i, argval))
+        lines += extralines
     args = ", ".join(['arg%d' % i for i in range(len(argnames))])
     lines.append('    return orig_%s(%s)' % (name, args))
     src = py.code.Source("\n".join(lines))
-    d = {'orig_' + name: f}
     exec src.compile() in d
     exported_name = name
     if getattr(f, 'unwrap_parameters', None):
@@ -97,7 +111,7 @@ def wrap_type(space, tp):
             set_prop = set_prop.im_func
         properties.append(W_Property(name, get_prop.im_func, set_prop))
     for name, meth in spec.methods.iteritems():
-        properties.append(wrap_function(space, meth))
+        properties.append(wrap_function(space, meth, exp_name=spec.name))
     if spec.parent_name is None:
         parent = None
     else:
