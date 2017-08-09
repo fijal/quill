@@ -130,6 +130,31 @@ class List(AstNode):
         state.emit(self.getstartidx(), opcodes.LIST_BUILD, len(self.items))
 
 
+class Dict(AstNode):
+    def __init__(self, items, srcpos):
+        AstNode.__init__(self, srcpos)
+        self.items = items
+
+    def compile(self, state):
+        for item in self.items:
+            item.compile(state)
+        state.emit(self.getstartidx(), opcodes.DICT_BUILD, len(self.items))
+
+
+class UnaryOp(AstNode):
+    def __init__(self, op, expr, srcpos=None):
+        AstNode.__init__(self, srcpos)
+        self.op = op
+        self.expr = expr
+
+    def compile(self, state):
+        self.expr.compile(state)
+        if self.op == 'not':
+            state.emit(self.getstartidx(), opcodes.NOT)
+        else:
+            assert False
+
+
 class BinOp(AstNode):
     def __init__(self, op, left, right, oppos, srcpos=None):
         AstNode.__init__(self, srcpos)
@@ -153,6 +178,11 @@ class BinOp(AstNode):
             state.emit(self.oppos[0], opcodes.LT)
         elif self.op == '==':
             state.emit(self.oppos[0], opcodes.EQ)
+        elif self.op == 'in':
+            state.emit(self.oppos[0], opcodes.IN)
+        elif self.op == 'not in':
+            state.emit(self.oppos[0], opcodes.IN)
+            state.emit(self.oppos[0], opcodes.NOT)
         else:
             assert False
 

@@ -23,7 +23,7 @@ def parameters(**args):
 
 class TypeSpec(object):
     def __init__(self, name, constructor, methods=None, properties=None,
-                 parent_name=None):
+                 parent_name=None, set_cls_w_type=False):
         self.constructor = constructor
         self.name = name
         if methods is None:
@@ -33,10 +33,12 @@ class TypeSpec(object):
             properties = {}
         self.properties = properties
         self.parent_name = parent_name
+        self.set_cls_w_type = set_cls_w_type
 
 
-def wrap_function(space, f, exp_name=None):
-    name = f.__name__
+def wrap_function(space, f, name=None, exp_name=None):
+    if name is None:
+        name = f.__name__
     argnames = f.__code__.co_varnames[:f.__code__.co_argcount]
     lines = ['def %s(space, args_w):' % name]
     j = 0
@@ -83,7 +85,10 @@ def wrap_function(space, f, exp_name=None):
                 argval = 'space.int_w(args_w[%d])' % j
                 j += 1
             elif spec == 'list':
-                argval = 'space.list_w(args_w[%d])' % j
+                argval = 'space.listview(args_w[%d])' % j
+                j += 1
+            elif spec == 'dict':
+                argval = 'space.dictview(args_w[%d])' % j
                 j += 1
             else:
                 assert False
@@ -111,12 +116,15 @@ def wrap_type(space, tp):
             set_prop = set_prop.im_func
         properties.append(W_Property(name, get_prop.im_func, set_prop))
     for name, meth in spec.methods.iteritems():
-        properties.append(wrap_function(space, meth, exp_name=spec.name))
+        properties.append(wrap_function(space, meth, name=name, exp_name=spec.name))
     if spec.parent_name is None:
         parent = None
     else:
         parent = space.builtin_dict[spec.parent_name]
-    return W_UserType(allocate, spec.name, properties, parent, default_alloc=False)
+    w_tp = W_UserType(allocate, spec.name, properties, parent, default_alloc=False)
+    if spec.set_cls_w_type:
+        tp.cls_w_type = w_tp
+    return w_tp
 
 
 def wrap_builtin(space, builtin):

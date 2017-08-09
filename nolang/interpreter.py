@@ -1,4 +1,3 @@
-
 """ This is the main interpreter file that contains bytecode
 dispatch loop.
 """
@@ -77,6 +76,10 @@ class Interpreter(object):
                     self.binop_lt(space, frame)
                 elif op == opcodes.EQ:
                     self.binop_eq(space, frame)
+                elif op == opcodes.IN:
+                    self.binop_in(space, frame)
+                elif op == opcodes.NOT:
+                    self.unaryop_not(space, frame)
                 elif op == opcodes.STORE:
                     frame.store_var(arg0)
                 elif op == opcodes.SETATTR:
@@ -127,6 +130,8 @@ class Interpreter(object):
                     return frame.pop()
                 elif op == opcodes.LIST_BUILD:
                     self.list_build(space, frame, bytecode, arg0)
+                elif op == opcodes.DICT_BUILD:
+                    self.dict_build(space, frame, bytecode, arg0)
                 else:
                     raise InvalidOpcode(op)
 
@@ -182,6 +187,15 @@ class Interpreter(object):
             items[i] = frame.pop()
         frame.push(space.newlist(items))
 
+    def dict_build(self, space, frame, bytecode, no):
+        no = no / 2
+        items = [(None, None)] * no
+        for i in range(no - 1, -1, -1):
+            v = frame.pop()
+            k = frame.pop()
+            items[i] = (k, v)
+        frame.push(space.newdict(items))
+
     def setattr(self, space, frame, bytecode, no):
         w_arg = frame.pop()
         w_lhand = frame.pop()
@@ -219,6 +233,11 @@ class Interpreter(object):
         w_left = frame.pop()
         frame.push(space.binop_eq(w_left, w_right))
 
+    def binop_in(self, space, frame):
+        w_right = frame.pop()
+        w_left = frame.pop()
+        frame.push(space.binop_in(w_left, w_right))
+
     def binop_add(self, space, frame):
         w_right = frame.pop()
         w_left = frame.pop()
@@ -238,3 +257,7 @@ class Interpreter(object):
         w_right = frame.pop()
         w_left = frame.pop()
         frame.push(space.binop_truediv(w_left, w_right))
+
+    def unaryop_not(self, space, frame):
+        w_obj = frame.pop()
+        frame.push(space.unaryop_not(w_obj))

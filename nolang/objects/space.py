@@ -7,6 +7,7 @@ from nolang.objects.root import W_None, W_Root
 from nolang.objects.int import W_IntObject
 from nolang.objects.bool import W_BoolObject
 from nolang.objects.buffer import W_BufObject
+from nolang.objects.dict import W_DictObject
 from nolang.objects.list import W_ListObject
 from nolang.objects.unicode import W_StrObject
 from nolang.objects.usertype import W_UserType
@@ -24,21 +25,20 @@ class Space(object):
     def setup(self, interpreter):
         self.interpreter = interpreter
 
-    def setup_builtins(self, builtins, coremod):
+    def setup_builtins(self, builtins, coremod, non_builtins):
         self.builtins_w = []
         self.builtin_dict = {}
         for builtin in builtins:
             self.setup_builtin(wrap_builtin(self, builtin))
-        self.w_exception = self.builtin_dict['Exception']
-        self.w_indexerror = self.setup_builtin(
-            self.make_subclass(self.w_exception, 'IndexError'))
-        self.w_typeerror = self.setup_builtin(
-            self.make_subclass(self.w_exception, 'TypeError'))
-        self.w_argerror = self.setup_builtin(
-            self.make_subclass(self.w_exception, 'ArgumentError'))
-        self.w_attrerror = self.setup_builtin(
-            self.make_subclass(self.w_exception, 'AttributeError'))
         self.coremod = coremod
+        for non_builtin in non_builtins:
+            wrap_builtin(self, non_builtin)
+        self.w_exception = self.builtin_dict['Exception']
+        self.w_indexerror = self.make_exception('IndexError')
+        self.w_typeerror = self.make_exception('TypeError')
+        self.w_argerror = self.make_exception('ArgumentError')
+        self.w_attrerror = self.make_exception('AttributeError')
+        self.w_keyerror = self.make_exception('KeyError')
 
     def setup_builtin(self, builtin):
         self.builtins_w.append(builtin)
@@ -47,6 +47,11 @@ class Space(object):
 
     def make_subclass(self, w_tp, name):
         return W_UserType(w_tp.allocate, name, [], w_tp, w_tp.default_alloc)
+
+    def make_exception(self, name, parent=None):
+        if parent is None:
+            parent = self.w_exception
+        return self.setup_builtin(self.make_subclass(parent, name))
 
     def setattr(self, w_obj, attrname, w_value):
         w_obj.setattr(self, attrname, w_value)
@@ -68,6 +73,12 @@ class Space(object):
 
     def len(self, w_obj):
         return w_obj.len(self)
+
+    def hash(self, w_obj):
+        return w_obj.hash(self)
+
+    def key_eq(self, w_one, w_two):
+        return self.is_true(self.binop_eq(w_one, w_two))
 
     # object stuff, hacks so far
     def issubclass(self, w_left, w_right):
@@ -95,6 +106,9 @@ class Space(object):
     def newlist(self, items_w):
         return W_ListObject(items_w)
 
+    def newdict(self, items_w):
+        return W_DictObject(self.key_eq, self.hash, items_w)
+
     # foo_w unwrappers
     def int_w(self, w_obj):
         return w_obj.int_w(self)
@@ -105,19 +119,34 @@ class Space(object):
     def buffer_w(self, w_obj):
         return w_obj.buffer_w(self)
 
-    def list_w(self, w_obj):
-        return w_obj.list_w(self)
+    def listview(self, w_obj):
+        return w_obj.listview(self)
+
+    def dictview(self, w_obj):
+        return w_obj.dictview(self)
 
     # unary operations
     def is_true(self, w_obj):
         return w_obj.is_true(self)
+
+    def unaryop_not(self, w_obj):
+        return self.newbool(not self.is_true(w_obj))
 
     # binary operations
     def binop_lt(self, w_one, w_two):
         return w_one.lt(self, w_two)
 
     def binop_eq(self, w_one, w_two):
-        return w_one.eq(self, w_two)
+        w_res = w_one.eq(self, w_two)
+        if w_res is not self.w_NotImplemented:
+            return w_res
+        w_res = w_two.eq(self, w_one)
+        if w_res is not self.w_NotImplemented:
+            return w_res
+        return self.w_False
+
+    def binop_in(self, w_one, w_two):
+        return w_two.contains(self, w_one)
 
     def binop_add(self, w_one, w_two):
         return w_one.add(self, w_two)

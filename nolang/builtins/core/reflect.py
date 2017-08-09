@@ -10,12 +10,14 @@ class W_FrameWrapper(W_Root):
         return space.newtext(self.frameref.bytecode.filename)
 
 
-W_FrameWrapper.spec = TypeSpec('Frame',
+W_FrameWrapper.spec = TypeSpec(
+    'Frame',
     constructor=None,
     methods={},
     properties={
         'filename': (W_FrameWrapper.get_filename, None)
     },
+    set_cls_w_type=True
 )
 
 

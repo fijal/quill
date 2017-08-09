@@ -9,8 +9,17 @@ class W_Root(object):
     def int_w(self, space):
         raise space.apperr(space.w_typeerror, 'expected integer')
 
-    def list_w(self, space):
+    def utf8_w(self, space):
+        raise space.apperr(space.w_typeerror, 'expected string')
+
+    def listview(self, space):
         raise space.apperr(space.w_typeerror, 'expected list')
+
+    def dictview(self, space):
+        raise space.apperr(space.w_typeerror, 'expected dict')
+
+    def hash(self, space):
+        raise space.apperr(space.w_typeerror, 'unhashable type')
 
     def getattr(self, space, attrname):
         return space.w_NotImplemented
