@@ -44,7 +44,7 @@ def get_parser():
     pg = rply.ParserGenerator(TOKENS, precedence=[
         ('left', ['AND']),
         ('left', ['OR']),
-        ('left', ['EQ', 'LT']),
+        ('left', ['EQ', 'LT', 'IN']),
         ('left', ['PLUS', 'MINUS']),
         ('left', ['TRUEDIV', 'STAR']),
         ('left', ['DOT']),
@@ -405,8 +405,13 @@ def get_parser():
     @pg.production('expression : expression TRUEDIV expression')
     @pg.production('expression : expression LT expression')
     @pg.production('expression : expression EQ expression')
-    def expression_lt_expression(state, p):
+    @pg.production('expression : expression IN expression')
+    def expression_binop_expression(state, p):
         return ast.BinOp(p[1].getstr(), p[0], p[2], sr([p[1]]), srcpos=sr(p))
+
+    @pg.production('expression : expression NOT IN expression')
+    def expression_not_in_expression(state, p):
+        return ast.BinOp('not in', p[0], p[3], sr([p[1], p[2]]), srcpos=sr(p))
 
     @pg.production('expression_list : ')
     def expression_list_empty(state, p):

@@ -15,6 +15,12 @@ class W_ListObject(W_Root):
     def len(self, space):
         return len(self._items_w)
 
+    def contains(self, space, w_obj):
+        for w_item in self._items_w:
+            if space.is_true(space.binop_eq(w_obj, w_item)):
+                return space.w_True
+        return space.w_False
+
     def unwrap_index(self, space, w_index):
         try:
             i = space.int_w(w_index)

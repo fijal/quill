@@ -127,6 +127,9 @@ class Space(object):
     def is_true(self, w_obj):
         return w_obj.is_true(self)
 
+    def unaryop_not(self, w_obj):
+        return self.newbool(not self.is_true(w_obj))
+
     # binary operations
     def binop_lt(self, w_one, w_two):
         return w_one.lt(self, w_two)
@@ -139,6 +142,9 @@ class Space(object):
         if w_res is not self.w_NotImplemented:
             return w_res
         return self.w_False
+
+    def binop_in(self, w_one, w_two):
+        return w_two.contains(self, w_one)
 
     def binop_add(self, w_one, w_two):
         return w_one.add(self, w_two)

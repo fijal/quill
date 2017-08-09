@@ -19,6 +19,9 @@ class W_DictObject(W_Root):
     def len(self, space):
         return len(self._items_w)
 
+    def contains(self, space, w_obj):
+        return space.newbool(w_obj in self._items_w)
+
     def getitem(self, space, w_key):
         if w_key not in self._items_w:
             raise space.apperr(space.w_keyerror, space.str(w_key))

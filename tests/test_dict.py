@@ -85,6 +85,20 @@ class TestDict(BaseTest):
         assert self.space.len(w_res) == 3
         assert space.utf8_w(space.getitem(w_res, space.newtext("c"))) == "baz"
 
+    def test_in(self):
+        w_res = self.interpret_expr('return "a" in {"a": 0, "b": 1};')
+        assert w_res is self.space.w_True
+        w_res = self.interpret_expr('return "b" in {"a": 0, "b": 1};')
+        assert w_res is self.space.w_True
+        w_res = self.interpret_expr('return "c" in {"a": 0, "b": 1};')
+        assert w_res is self.space.w_False
+
+    def test_not_in(self):
+        w_res = self.interpret_expr('return "c" not in {"a": 0, "b": 1};')
+        assert w_res is self.space.w_True
+        w_res = self.interpret_expr('return "a" not in {"a": 0, "b": 1};')
+        assert w_res is self.space.w_False
+
     def test_getitem_missing(self):
         try:
             self.interpret_expr('return {"foo": "bar"}["baz"];')

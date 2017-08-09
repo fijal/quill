@@ -41,6 +41,9 @@ opcodes = [
     Opcode('RERAISE', 0, 0, 'reraise if exception is set'),
     Opcode('PUSH_CURRENT_EXC', 0, 1, 'push the current exception on the stack'),
     Opcode('CLEAR_CURRENT_EXC', 0, 0, 'set current exception to nothing'),
+    # unary ops
+    Opcode('NOT', 0, 0, 'load one values from the stack and store it boolean'
+                        ' opposite'),
     # binary ops
     Opcode('ADD', 0, -1, 'load two values from the stack and store the result'
                          ' of addition'),
@@ -54,6 +57,8 @@ opcodes = [
                         ' of lower than comparison'),
     Opcode('EQ', 0, -1, 'load two value from the stack and store the result'
                         ' of comparison'),
+    Opcode('IN', 0, -1, 'load two value from the stack and store the result'
+                        ' of checking if one contains the other'),
     # jumps
     Opcode('JUMP_IF_FALSE', 1, -1, 'pop value from the stack and jump if false'
                                    ' to a given position'),

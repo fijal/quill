@@ -67,6 +67,8 @@ KEYWORDS = [
     'if',
     'or',
     'and',
+    'not',
+    'in',
     'true',
     'false',
     'else',

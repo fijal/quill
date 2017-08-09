@@ -69,6 +69,15 @@ class TestList(BaseTest):
         ''')
         assert self.space.utf8_w(w_res) == "bar"
 
+    def test_in(self):
+        assert self.interpret_expr('return "a" in ["a", "b"];') is self.space.w_True
+        assert self.interpret_expr('return "b" in ["a", "b"];') is self.space.w_True
+        assert self.interpret_expr('return "c" in ["a", "b"];') is self.space.w_False
+
+    def test_not_in(self):
+        assert self.interpret_expr('return "c" not in ["a", "b"];') is self.space.w_True
+        assert self.interpret_expr('return "a" not in ["a", "b"];') is self.space.w_False
+
     def test_append(self):
         w_res = self.interpret_expr('''
             var x;
