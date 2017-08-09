@@ -1,5 +1,6 @@
 from rpython.rlib.objectmodel import r_dict
 
+from nolang.builtins.spec import unwrap_spec, TypeSpec
 from nolang.objects.root import W_Root
 
 
@@ -52,3 +53,25 @@ class W_DictObject(W_Root):
 
     def values(self, space):
         return space.newlist(self._items_w.values())
+
+
+@unwrap_spec(items_w='dict')
+def allocate(space, w_tp, items_w):
+    w_res = space.newdict([])
+    w_res._items_w.update(items_w)
+    return w_res
+
+
+W_DictObject.spec = TypeSpec(
+    'Dict',
+    constructor=allocate,
+    methods={
+        'merge': W_DictObject.merge,
+        'get': W_DictObject.get,
+        'pop': W_DictObject.dict_pop,
+        'keys': W_DictObject.keys,
+        'values': W_DictObject.values,
+    },
+    properties={},
+    set_cls_w_type=True
+)

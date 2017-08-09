@@ -36,8 +36,9 @@ class TypeSpec(object):
         self.set_cls_w_type = set_cls_w_type
 
 
-def wrap_function(space, f, exp_name=None):
-    name = f.__name__
+def wrap_function(space, f, name=None, exp_name=None):
+    if name is None:
+        name = f.__name__
     argnames = f.__code__.co_varnames[:f.__code__.co_argcount]
     lines = ['def %s(space, args_w):' % name]
     j = 0
@@ -115,7 +116,7 @@ def wrap_type(space, tp):
             set_prop = set_prop.im_func
         properties.append(W_Property(name, get_prop.im_func, set_prop))
     for name, meth in spec.methods.iteritems():
-        properties.append(wrap_function(space, meth, exp_name=spec.name))
+        properties.append(wrap_function(space, meth, name=name, exp_name=spec.name))
     if spec.parent_name is None:
         parent = None
     else:
