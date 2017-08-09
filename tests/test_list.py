@@ -108,6 +108,18 @@ class TestList(BaseTest):
         else:
             raise Exception("Applevel TypeError not raised.")
 
+    def test_method_call_on_wrong_obj(self):
+        try:
+            self.interpret_expr('''
+            List.append(1, 2)
+            ''')
+        except AppError as ae:
+            if not ae.match(self.space, self.space.w_typeerror):
+                raise
+            assert ae.w_exception.message == "Expected List object, got Int"
+        else:
+            raise Exception("did not raise")
+
     def test_getitem_out_of_range(self):
         try:
             self.interpret_expr('return ["foo", "bar"][2];')

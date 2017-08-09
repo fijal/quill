@@ -162,7 +162,7 @@ class QuillLexerStream(object):
                     if "\n" in self.s[match.start:match.end]:
                         if self._last_token.name not in \
                            ('RIGHT_CURLY_BRACE', 'RIGHT_PAREN', 'IDENTIFIER',
-                           'INTEGER', 'TRUE', 'FALSE'):
+                           'INTEGER', 'TRUE', 'FALSE', 'RIGHT_SQUARE_BRACKET'):
                             continue
                         token = Token(
                             'SEMICOLON', self.s[match.start:match.end], source_range
