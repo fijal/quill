@@ -43,12 +43,21 @@ def wrap_function(space, f):
             argval = 'args_w'
             numargs = -1
             assert i == len(argnames) - 1
+        elif argname == 'self':
+            if not isinstance(f, types.MethodType):
+                raise Exception("self argument, but argument is not a method")
+            argval = 'args_w[0]'
+            j += 1
+            numargs += 1
         elif argname.startswith('w_'):
             argval = 'args_w[%d]' % j
             j += 1
             numargs += 1
         else:
-            spec = f.unwrap_spec.get(argname, None)
+            if hasattr(f, 'unwrap_spec'):
+                spec = f.unwrap_spec.get(argname, None)
+            else:
+                spec = None
             numargs += 1
             if spec is None:
                 raise Exception("No spec found for %s while wrapping %s" %
