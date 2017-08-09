@@ -4,7 +4,7 @@ from nolang.objects.root import W_Root
 
 class W_ListObject(W_Root):
     def __init__(self, items_w):
-        self._items_w = items_w
+        self._items_w = items_w[:]
 
     def str(self, space):
         return '[' + ', '.join([space.str(i) for i in self._items_w]) + ']'

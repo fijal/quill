@@ -38,6 +38,18 @@ class TestDict(BaseTest):
         assert space.utf8_w(space.getitem(w_res, space.newtext('a'))) == "foo"
         assert space.utf8_w(space.getitem(w_res, space.newint(1))) == "bar"
 
+    def test_constructor_copies(self):
+        w_res = self.interpret_expr('''
+            var x, y;
+            x = {0: "a", 1: "b"};
+            y = Dict(x);
+            y[2] = "c";
+            return [len(x), len(y)];
+        ''')
+        [w_xl, w_yl] = self.space.list_w(w_res)
+        assert self.space.int_w(w_xl) == 2
+        assert self.space.int_w(w_yl) == 3
+
     def test_len(self):
         w_res = self.interpret_expr('return len({});')
         assert self.space.int_w(w_res) == 0

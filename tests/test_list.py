@@ -38,6 +38,18 @@ class TestList(BaseTest):
         assert space.utf8_w(space.getitem(w_res, space.newint(0))) == "foo"
         assert space.utf8_w(space.getitem(w_res, space.newint(1))) == "bar"
 
+    def test_constructor_copies(self):
+        w_res = self.interpret_expr('''
+            var x, y;
+            x = [0, 1, 2];
+            y = List(x);
+            y.append(3)
+            return [len(x), len(y)];
+        ''')
+        [w_xl, w_yl] = self.space.list_w(w_res)
+        assert self.space.int_w(w_xl) == 3
+        assert self.space.int_w(w_yl) == 4
+
     def test_len(self):
         w_res = self.interpret_expr('return len([]);')
         assert self.space.int_w(w_res) == 0
