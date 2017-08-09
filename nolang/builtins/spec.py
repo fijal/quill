@@ -62,10 +62,10 @@ def wrap_function(space, f):
                 argval = 'space.int_w(args_w[%d])' % j
                 j += 1
             elif spec == 'list':
-                argval = 'space.list_w(args_w[%d])' % j
+                argval = 'space.listview(args_w[%d])' % j
                 j += 1
             elif spec == 'dict':
-                argval = 'space.dict_w(args_w[%d])' % j
+                argval = 'space.dictview(args_w[%d])' % j
                 j += 1
             else:
                 assert False

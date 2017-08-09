@@ -117,11 +117,11 @@ class Space(object):
     def buffer_w(self, w_obj):
         return w_obj.buffer_w(self)
 
-    def list_w(self, w_obj):
-        return w_obj.list_w(self)
+    def listview(self, w_obj):
+        return w_obj.listview(self)
 
-    def dict_w(self, w_obj):
-        return w_obj.dict_w(self)
+    def dictview(self, w_obj):
+        return w_obj.dictview(self)
 
     # unary operations
     def is_true(self, w_obj):

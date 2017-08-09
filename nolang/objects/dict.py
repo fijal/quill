@@ -12,7 +12,7 @@ class W_DictObject(W_Root):
         return '{' + ', '.join([space.str(k) + ': ' + space.str(v)
                                 for k, v in self._items_w.items()]) + '}'
 
-    def dict_w(self, space):
+    def dictview(self, space):
         return self._items_w
 
     def len(self, space):
@@ -37,7 +37,7 @@ class W_DictObject(W_Root):
         self._items_w[w_key] = w_value
 
     def merge(self, space, w_other):
-        other_w = space.dict_w(w_other)
+        other_w = space.dictview(w_other)
         w_res = space.newdict(self._items_w)
         w_res._items_w.update(other_w)
         return w_res

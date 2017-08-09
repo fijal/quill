@@ -12,10 +12,10 @@ class W_Root(object):
     def utf8_w(self, space):
         raise space.apperr(space.w_typeerror, 'expected string')
 
-    def list_w(self, space):
+    def listview(self, space):
         raise space.apperr(space.w_typeerror, 'expected list')
 
-    def dict_w(self, space):
+    def dictview(self, space):
         raise space.apperr(space.w_typeerror, 'expected dict')
 
     def hash(self, space):

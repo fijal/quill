@@ -46,7 +46,7 @@ class TestDict(BaseTest):
             y[2] = "c";
             return [len(x), len(y)];
         ''')
-        [w_xl, w_yl] = self.space.list_w(w_res)
+        [w_xl, w_yl] = self.space.listview(w_res)
         assert self.space.int_w(w_xl) == 2
         assert self.space.int_w(w_yl) == 3
 
@@ -108,7 +108,7 @@ class TestDict(BaseTest):
                 return l;
             }
         ''')
-        w_ls = self.space.list_w(w_res)
+        w_ls = self.space.listview(w_res)
         assert [self.space.int_w(w) for w in w_ls] == [0, 1, 2, 3]
 
     def test_merge(self):
@@ -120,7 +120,7 @@ class TestDict(BaseTest):
             return [a, b, ab];
         ''')
         space = self.space
-        [w_a, w_b, w_ab] = space.list_w(w_res)
+        [w_a, w_b, w_ab] = space.listview(w_res)
         # a and b are unmodified
         assert space.len(w_a) == 2
         assert space.utf8_w(space.getitem(w_a, space.newtext("a"))) == "foo"
@@ -141,7 +141,7 @@ class TestDict(BaseTest):
             return [a.pop(1), a];
         ''')
         space = self.space
-        [w_pval, w_a] = self.space.list_w(w_res)
+        [w_pval, w_a] = self.space.listview(w_res)
         assert space.utf8_w(w_pval) == "bar"
         assert space.len(w_a) == 1
         assert space.utf8_w(space.getitem(w_a, space.newtext("a"))) == "foo"
@@ -157,10 +157,10 @@ class TestDict(BaseTest):
 
     def test_keys(self):
         w_res = self.interpret_expr('return {"a": "foo", 1: "bar"}.keys();')
-        [w_a, w_1] = self.space.list_w(w_res)
+        [w_a, w_1] = self.space.listview(w_res)
         assert [self.space.utf8_w(w_a), self.space.int_w(w_1)] == ["a", 1]
 
     def test_values(self):
         w_res = self.interpret_expr('return {"a": "foo", 1: "bar"}.values();')
-        values_w = self.space.list_w(w_res)
+        values_w = self.space.listview(w_res)
         assert [self.space.utf8_w(w) for w in values_w] == ["foo", "bar"]

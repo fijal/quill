@@ -9,7 +9,7 @@ class W_ListObject(W_Root):
     def str(self, space):
         return '[' + ', '.join([space.str(i) for i in self._items_w]) + ']'
 
-    def list_w(self, space):
+    def listview(self, space):
         return self._items_w
 
     def len(self, space):
@@ -36,4 +36,4 @@ class W_ListObject(W_Root):
         self._items_w.append(w_obj)
 
     def extend(self, space, w_other):
-        self._items_w.extend(space.list_w(w_other))
+        self._items_w.extend(space.listview(w_other))

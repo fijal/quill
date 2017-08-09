@@ -46,7 +46,7 @@ class TestList(BaseTest):
             y.append(3)
             return [len(x), len(y)];
         ''')
-        [w_xl, w_yl] = self.space.list_w(w_res)
+        [w_xl, w_yl] = self.space.listview(w_res)
         assert self.space.int_w(w_xl) == 3
         assert self.space.int_w(w_yl) == 4
 
@@ -87,7 +87,7 @@ class TestList(BaseTest):
             x.extend(["c", "d"]);
             return x;
         ''')
-        list_w = self.space.list_w(w_res)
+        list_w = self.space.listview(w_res)
         assert [self.space.utf8_w(w) for w in list_w] == ["a", "b", "c", "d"]
 
     def test_extend_nonlist(self):
@@ -131,5 +131,5 @@ class TestList(BaseTest):
                 return l;
             }
         ''')
-        [w_0, w_1] = self.space.list_w(w_res)
+        [w_0, w_1] = self.space.listview(w_res)
         assert [self.space.int_w(w_0), self.space.int_w(w_1)] == [0, 1]
