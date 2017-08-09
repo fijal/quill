@@ -185,7 +185,7 @@ class Interpreter(object):
 
     def dict_build(self, space, frame, bytecode, no):
         no = no / 2
-        items = [(space.w_None, space.w_None)] * no
+        items = [(None, None)] * no
         for i in range(no - 1, -1, -1):
             v = frame.pop()
             k = frame.pop()
