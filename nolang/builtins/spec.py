@@ -60,7 +60,7 @@ def wrap_function(space, f, exp_name=None):
             extralines = [
                 '    if not isinstance(arg%d, self_tp):' % i,
                 '        raise space.apperr(space.w_typeerror, "%s" %% '
-                         '(space.type(arg%d).name,))' % (msg, i),
+                '(space.type(arg%d).name,))' % (msg, i),
             ]
             d['self_tp'] = f.im_class
         elif argname.startswith('w_'):
