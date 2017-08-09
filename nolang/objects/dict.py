@@ -6,7 +6,8 @@ from nolang.objects.root import W_Root
 class W_DictObject(W_Root):
     def __init__(self, key_eq, key_hash, items_w):
         self._items_w = r_dict(key_eq, key_hash)
-        self._items_w.update(items_w)
+        for k, v in items_w:
+            self._items_w[k] = v
 
     def str(self, space):
         return '{' + ', '.join([space.str(k) + ': ' + space.str(v)
@@ -38,7 +39,8 @@ class W_DictObject(W_Root):
 
     def merge(self, space, w_other):
         other_w = space.dictview(w_other)
-        w_res = space.newdict(self._items_w)
+        w_res = space.newdict([])
+        w_res._items_w.update(self._items_w)
         w_res._items_w.update(other_w)
         return w_res
 

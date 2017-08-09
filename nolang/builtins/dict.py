@@ -4,7 +4,9 @@ from nolang.objects.dict import W_DictObject
 
 @unwrap_spec(items_w='dict')
 def allocate(space, w_tp, items_w):
-    return space.newdict(items_w)
+    w_res = space.newdict([])
+    w_res._items_w.update(items_w)
+    return w_res
 
 
 @unwrap_spec()

@@ -2,8 +2,6 @@
 dispatch loop.
 """
 
-from rpython.rlib.objectmodel import r_dict
-
 from nolang import opcodes
 from nolang.error import AppError
 from nolang.builtins.exception import W_Exception
@@ -186,11 +184,12 @@ class Interpreter(object):
         frame.push(space.newlist(items))
 
     def dict_build(self, space, frame, bytecode, no):
-        items = r_dict(space.key_eq, space.hash)
-        for i in range((no - 1) / 2, -1, -1):
+        no = no / 2
+        items = [(space.w_None, space.w_None)] * no
+        for i in range(no - 1, -1, -1):
             v = frame.pop()
             k = frame.pop()
-            items[k] = v
+            items[i] = (k, v)
         frame.push(space.newdict(items))
 
     def setattr(self, space, frame, bytecode, no):
