@@ -1,6 +1,7 @@
 """ This is the main interpreter file that contains bytecode
 dispatch loop.
 """
+from rpython.rlib.rstring import StringBuilder
 
 from nolang import opcodes
 from nolang.error import AppError
@@ -202,7 +203,10 @@ class Interpreter(object):
         items = [None] * no
         for i in range(no - 1, -1, -1):
             items[i] = space.str(frame.pop())
-        frame.push(space.newtext(''.join(items)))
+        sb = StringBuilder()
+        for item in items:
+            sb.append(item)
+        frame.push(space.newtext(sb.build()))
 
     def setattr(self, space, frame, bytecode, no):
         w_arg = frame.pop()
