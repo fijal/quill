@@ -33,18 +33,27 @@ class TestStringParser(BaseTest):
     def parse(self, expr):
         return self.parse_expr(expr).value
 
-    def test_simple(self):
+    def test_doublequote_simple(self):
         assert self.parse('"foo"') == 'foo'
 
-    def test_quote(self):
-        assert self.parse(r'"foo\"bar"') == 'foo"bar'
+    def test_doublequote_quotes(self):
+        assert self.parse(r'''"foo'\"bar"''') == '''foo'"bar'''
+
+    def test_singlequote_simple(self):
+        assert self.parse("'foo'") == 'foo'
+
+    def test_singlequote_quotes(self):
+        assert self.parse(r"""'foo\'"bar'""") == """foo'"bar"""
 
     def test_quote_only(self):
         assert self.parse(r'"\""') == '"'
+        assert self.parse(r"'\''") == "'"
 
     def test_non_strings(self):
         self.parse_bad(r'"\"')
         self.parse_bad(r'"\\\"')
+        self.parse_bad(r"'\'")
+        self.parse_bad(r"'\\\'")
 
     def test_escaped_escapes(self):
         assert self.parse(r'"\\"') == '\\'
@@ -120,17 +129,22 @@ class TestStringParser(BaseTest):
     def test_raw_escapes(self):
         assert self.parse(r"r'\\'") == r"\\"
         assert self.parse(r"r'\''") == r"\'"
+        assert self.parse(r"r'\"'") == r"\""
+        assert self.parse(r'r"\\"') == r"\\"
+        assert self.parse(r'r"\'"') == r"\'"
+        assert self.parse(r'r"\""') == r"\""
         assert self.parse(r"r'\\\'\\'") == r"\\\'\\"
         assert self.parse(r"r'\n'") == r"\n"
         assert self.parse(r"r'\xq'") == r"\xq"
         assert self.parse(r"r'\uq'") == r"\uq"
 
     def test_interp(self):
-        assert self.parse_expr(r'"${1}"') == ast.InterpString(
+        assert self.parse_expr(r'``') == ast.InterpString([''], [])
+        assert self.parse_expr(r'`${1}`') == ast.InterpString(
             ['', ''], [ast.Number(1)])
-        assert self.parse_expr(r'"foo${1}bar"') == ast.InterpString(
+        assert self.parse_expr(r'`foo${1}bar`') == ast.InterpString(
             ['foo', 'bar'], [ast.Number(1)])
-        assert self.parse_expr(r'"${1 + 2}"') == ast.InterpString(
+        assert self.parse_expr(r'`${1 + 2}`') == ast.InterpString(
             ['', ''], [ast.BinOp('+', ast.Number(1), ast.Number(2), oppos=(18, 19))])
 
 
