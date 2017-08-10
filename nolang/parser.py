@@ -44,7 +44,7 @@ def get_parser():
     pg = rply.ParserGenerator(TOKENS, precedence=[
         ('left', ['AND']),
         ('left', ['OR']),
-        ('left', ['EQ', 'LT', 'IN', 'NE']),
+        ('left', ['EQ', 'LT', 'GT', 'IN', 'NE']),
         ('left', ['PLUS', 'MINUS']),
         ('left', ['TRUEDIV', 'STAR']),
         ('left', ['DOT']),
@@ -405,6 +405,7 @@ def get_parser():
     @pg.production('expression : expression STAR expression')
     @pg.production('expression : expression TRUEDIV expression')
     @pg.production('expression : expression LT expression')
+    @pg.production('expression : expression GT expression')
     @pg.production('expression : expression EQ expression')
     @pg.production('expression : expression IN expression')
     @pg.production('expression : expression NE expression')
