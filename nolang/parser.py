@@ -269,7 +269,8 @@ def get_parser():
 
     @pg.production('expression : ST_DQ_STRING stringcontent ST_ENDSTRING')
     @pg.production('expression : ST_SQ_STRING stringcontent ST_ENDSTRING')
-    @pg.production('expression : ST_RAW_STRING rawstringcontent ST_ENDRAW')
+    @pg.production('expression : ST_RAW_DQ_STRING rawstringcontent ST_ENDRAW')
+    @pg.production('expression : ST_RAW_SQ_STRING rawstringcontent ST_ENDRAW')
     def expression_string(state, p):
         val = ''.join(p[1].get_strparts())
         str_decode_utf_8(val, len(val), 'strict', final=True)

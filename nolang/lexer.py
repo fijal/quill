@@ -48,7 +48,8 @@ QUILL_RULES = [
     ('ST_DQ_STRING', r'"'),
     ('ST_SQ_STRING', r"'"),
     ('ST_INTERP_STRING', r'`'),
-    ('ST_RAW_STRING', r"r'"),
+    ('ST_RAW_DQ_STRING', r'r"'),
+    ('ST_RAW_SQ_STRING', r"r'"),
     ('IDENTIFIER', r'[a-zA-Z_][a-zA-Z0-9_]*'),
     ('LEFT_CURLY_BRACE', r'\{'),
     ('LEFT_PAREN', r'\('),
@@ -114,14 +115,21 @@ SQ_STRING_RULES = make_string_rules(r"'", False)
 INTERP_STRING_RULES = make_string_rules(r'`', True)
 
 
-RAW_STRING_RULES = [
+RAW_DQ_STRING_RULES = [
+    ('RAW_ESC', r'\\.'),
+    ('RAW_CHAR', r'[^"\\]'),
+    ('ST_ENDRAW', r'"'),
+]
+
+
+RAW_SQ_STRING_RULES = [
     ('RAW_ESC', r"\\."),
     ('RAW_CHAR', r"[^'\\]"),
     ('ST_ENDRAW', r"'"),
 ]
 
 
-TOKENS = [x[0] for x in QUILL_RULES + INTERP_STRING_RULES + RAW_STRING_RULES] + [x.upper() for x in KEYWORDS]
+TOKENS = [x[0] for x in QUILL_RULES + INTERP_STRING_RULES + RAW_DQ_STRING_RULES] + [x.upper() for x in KEYWORDS]
 
 KEYWORD_DICT = dict.fromkeys(KEYWORDS)
 
@@ -284,7 +292,8 @@ def get_lexer():
     initial.push_state('ST_DQ_STRING', 'DQ_STRING')
     initial.push_state('ST_SQ_STRING', 'SQ_STRING')
     initial.push_state('ST_INTERP_STRING', 'INTERP_STRING')
-    initial.push_state('ST_RAW_STRING', 'RAW_STRING')
+    initial.push_state('ST_RAW_DQ_STRING', 'RAW_DQ_STRING')
+    initial.push_state('ST_RAW_SQ_STRING', 'RAW_SQ_STRING')
 
     dq_string = lg.state('DQ_STRING', end_allowed=False)
     for name, rule in DQ_STRING_RULES:
@@ -302,10 +311,15 @@ def get_lexer():
     interp_string.push_state('ST_INTERP', 'INTERP')
     interp_string.pop_state('ST_ENDSTRING')
 
-    raw = lg.state('RAW_STRING', end_allowed=False)
-    for name, rule in RAW_STRING_RULES:
-        raw.add(name, rule)
-    raw.pop_state('ST_ENDRAW')
+    dq_raw = lg.state('RAW_DQ_STRING', end_allowed=False)
+    for name, rule in RAW_DQ_STRING_RULES:
+        dq_raw.add(name, rule)
+    dq_raw.pop_state('ST_ENDRAW')
+
+    sq_raw = lg.state('RAW_SQ_STRING', end_allowed=False)
+    for name, rule in RAW_SQ_STRING_RULES:
+        sq_raw.add(name, rule)
+    sq_raw.pop_state('ST_ENDRAW')
 
     # This is the same as the main state, except some rules are unused and we
     # pop the lexer state when we see a RIGHT_CURLY_BRACE.

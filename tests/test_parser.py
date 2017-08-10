@@ -129,6 +129,10 @@ class TestStringParser(BaseTest):
     def test_raw_escapes(self):
         assert self.parse(r"r'\\'") == r"\\"
         assert self.parse(r"r'\''") == r"\'"
+        assert self.parse(r"r'\"'") == r"\""
+        assert self.parse(r'r"\\"') == r"\\"
+        assert self.parse(r'r"\'"') == r"\'"
+        assert self.parse(r'r"\""') == r"\""
         assert self.parse(r"r'\\\'\\'") == r"\\\'\\"
         assert self.parse(r"r'\n'") == r"\n"
         assert self.parse(r"r'\xq'") == r"\xq"
