@@ -44,6 +44,7 @@ QUILL_RULES = [
     ('TRUEDIV', r'\/\/'),
     ('COLON', r':'),
     ('EQ', r'=='),
+    ('NE', r'!='),
     ('ASSIGN', r'='),
     ('ST_DQ_STRING', r'"'),
     ('ST_SQ_STRING', r"'"),
@@ -121,6 +122,18 @@ RAW_DQ_STRING_RULES = [
     ('ST_ENDRAW', r'"'),
 ]
 
+SINGLE_STRING_RULES = [
+    ('ESC_QUOTE', r"\\'"),
+    ('ESC_ESC', r'\\\\'),
+    ('ST_INTERP', r'\$\{'),
+    ('CHAR', r'[^"\\]'),
+    ('ESC_SIMPLE', r'\\[abfnrtv0\$]'),
+    ('ESC_HEX_8', r'\\x[0-9a-fA-F]{2}'),
+    ('ESC_HEX_16', r'\\u[0-9a-fA-F]{4}'),
+    ('ESC_HEX_ANY', r'\\u\{[0-9a-fA-F]+\}'),
+    ('ESC_UNRECOGNISED', r'\\[^abfnrtv0xu"\\\$]'),
+    ('ST_ENDSTRING', r"'"),
+]
 
 RAW_SQ_STRING_RULES = [
     ('RAW_ESC', r"\\."),
