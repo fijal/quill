@@ -45,8 +45,10 @@ QUILL_RULES = [
     ('COLON', r':'),
     ('EQ', r'=='),
     ('ASSIGN', r'='),
-    ('ST_STRING', r'"'),
-    ('ST_RAW', r"r'"),
+    ('ST_DQ_STRING', r'"'),
+    ('ST_SQ_STRING', r"'"),
+    ('ST_INTERP_STRING', r'`'),
+    ('ST_RAW_STRING', r"r'"),
     ('IDENTIFIER', r'[a-zA-Z_][a-zA-Z0-9_]*'),
     ('LEFT_CURLY_BRACE', r'\{'),
     ('LEFT_PAREN', r'\('),
@@ -81,28 +83,45 @@ KEYWORDS = [
 ]
 
 
-STRING_RULES = [
-    ('ESC_QUOTE', r'\\"'),
-    ('ESC_ESC', r'\\\\'),
-    ('ST_INTERP', r'\$\{'),
-    ('CHAR', r'[^"\\]'),
-    ('ESC_SIMPLE', r'\\[abfnrtv0\$]'),
-    ('ESC_HEX_8', r'\\x[0-9a-fA-F]{2}'),
-    ('ESC_HEX_16', r'\\u[0-9a-fA-F]{4}'),
-    ('ESC_HEX_ANY', r'\\u\{[0-9a-fA-F]+\}'),
-    ('ESC_UNRECOGNISED', r'\\[^abfnrtv0xu"\\\$]'),
-    ('ST_ENDSTRING', r'"'),
-]
+def make_string_rules(quote, interp=False):
+    interp_rules = []
+    esc_quote = r'\\' + quote
+    char = r'[^' + quote + r'\\]'
+    esc_simple_chars = r'abfnrtv0'
+    if interp:
+        esc_simple_chars += r'\$'
+        interp_rules = [('ST_INTERP', r'\$\{')]
+    esc_simple = r'\\[' + esc_simple_chars + r']'
+    esc_unrecognised = r'\\[^' + esc_simple_chars + quote + r'xu\\]'
+
+    rules = [
+        ('ESC_QUOTE', esc_quote),
+        ('ESC_ESC', r'\\\\'),
+    ] + interp_rules + [
+        ('CHAR', char),
+        ('ESC_SIMPLE', esc_simple),
+        ('ESC_HEX_8', r'\\x[0-9a-fA-F]{2}'),
+        ('ESC_HEX_16', r'\\u[0-9a-fA-F]{4}'),
+        ('ESC_HEX_ANY', r'\\u\{[0-9a-fA-F]+\}'),
+        ('ESC_UNRECOGNISED', esc_unrecognised),
+        ('ST_ENDSTRING', quote),
+    ]
+    return rules
 
 
-RAWSTRING_RULES = [
+DQ_STRING_RULES = make_string_rules(r'"', False)
+SQ_STRING_RULES = make_string_rules(r"'", False)
+INTERP_STRING_RULES = make_string_rules(r'`', True)
+
+
+RAW_STRING_RULES = [
     ('RAW_ESC', r"\\."),
     ('RAW_CHAR', r"[^'\\]"),
     ('ST_ENDRAW', r"'"),
 ]
 
 
-TOKENS = [x[0] for x in QUILL_RULES + STRING_RULES + RAWSTRING_RULES] + [x.upper() for x in KEYWORDS]
+TOKENS = [x[0] for x in QUILL_RULES + INTERP_STRING_RULES + RAW_STRING_RULES] + [x.upper() for x in KEYWORDS]
 
 KEYWORD_DICT = dict.fromkeys(KEYWORDS)
 
@@ -262,17 +281,29 @@ def get_lexer():
     for name, rule in QUILL_RULES:
         initial.add(name, rule)
     initial.ignore('\s+')
-    initial.push_state('ST_STRING', 'STRING')
-    initial.push_state('ST_RAW', 'RAWSTRING')
+    initial.push_state('ST_DQ_STRING', 'DQ_STRING')
+    initial.push_state('ST_SQ_STRING', 'SQ_STRING')
+    initial.push_state('ST_INTERP_STRING', 'INTERP_STRING')
+    initial.push_state('ST_RAW_STRING', 'RAW_STRING')
 
-    string = lg.state('STRING', end_allowed=False)
-    for name, rule in STRING_RULES:
-        string.add(name, rule)
-    string.push_state('ST_INTERP', 'INTERP')
-    string.pop_state('ST_ENDSTRING')
+    dq_string = lg.state('DQ_STRING', end_allowed=False)
+    for name, rule in DQ_STRING_RULES:
+        dq_string.add(name, rule)
+    dq_string.pop_state('ST_ENDSTRING')
 
-    raw = lg.state('RAWSTRING', end_allowed=False)
-    for name, rule in RAWSTRING_RULES:
+    sq_string = lg.state('SQ_STRING', end_allowed=False)
+    for name, rule in SQ_STRING_RULES:
+        sq_string.add(name, rule)
+    sq_string.pop_state('ST_ENDSTRING')
+
+    interp_string = lg.state('INTERP_STRING', end_allowed=False)
+    for name, rule in INTERP_STRING_RULES:
+        interp_string.add(name, rule)
+    interp_string.push_state('ST_INTERP', 'INTERP')
+    interp_string.pop_state('ST_ENDSTRING')
+
+    raw = lg.state('RAW_STRING', end_allowed=False)
+    for name, rule in RAW_STRING_RULES:
         raw.add(name, rule)
     raw.pop_state('ST_ENDRAW')
 
