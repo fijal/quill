@@ -327,6 +327,11 @@ def get_lexer():
     for name, rule in QUILL_RULES:
         interp.add(name, rule)
     interp.ignore('\s+')
+    interp.push_state('ST_DQ_STRING', 'DQ_STRING')
+    interp.push_state('ST_SQ_STRING', 'SQ_STRING')
+    interp.push_state('ST_INTERP_STRING', 'INTERP_STRING')
+    interp.push_state('ST_RAW_DQ_STRING', 'RAW_DQ_STRING')
+    interp.push_state('ST_RAW_SQ_STRING', 'RAW_SQ_STRING')
     interp.pop_state('RIGHT_CURLY_BRACE')
 
     return lg.build()

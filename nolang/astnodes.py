@@ -104,7 +104,13 @@ class InterpString(AstNode):
         return self.exprs
 
     def compile(self, state):
-        raise NotImplementedError('XXX')
+        for i in range(len(self.exprs)):
+            no = state.add_str_constant(self.strings[i])
+            state.emit(self.getstartidx(), opcodes.LOAD_CONSTANT, no)
+            self.exprs[i].compile(state)
+        no = state.add_str_constant(self.strings[-1])
+        state.emit(self.getstartidx(), opcodes.LOAD_CONSTANT, no)
+        state.emit(self.getstartidx(), opcodes.TEXT_BUILD, len(self.exprs) * 2 + 1)
 
 
 class InterpStringContents(AstNode):

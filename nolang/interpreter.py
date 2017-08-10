@@ -132,6 +132,8 @@ class Interpreter(object):
                     self.list_build(space, frame, bytecode, arg0)
                 elif op == opcodes.DICT_BUILD:
                     self.dict_build(space, frame, bytecode, arg0)
+                elif op == opcodes.TEXT_BUILD:
+                    self.text_build(space, frame, bytecode, arg0)
                 else:
                     raise InvalidOpcode(op)
 
@@ -195,6 +197,12 @@ class Interpreter(object):
             k = frame.pop()
             items[i] = (k, v)
         frame.push(space.newdict(items))
+
+    def text_build(self, space, frame, bytecode, no):
+        items = [None] * no
+        for i in range(no - 1, -1, -1):
+            items[i] = space.str(frame.pop())
+        frame.push(space.newtext(''.join(items)))
 
     def setattr(self, space, frame, bytecode, no):
         w_arg = frame.pop()
