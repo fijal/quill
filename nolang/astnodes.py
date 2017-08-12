@@ -182,8 +182,16 @@ class BinOp(AstNode):
             state.emit(self.oppos[0], opcodes.MUL)
         elif self.op == '<':
             state.emit(self.oppos[0], opcodes.LT)
+        elif self.op == '>':
+            state.emit(self.oppos[0], opcodes.GT)
+        elif self.op == '>=':
+            state.emit(self.oppos[0], opcodes.GE)
+        elif self.op == '<=':
+            state.emit(self.oppos[0], opcodes.LE)
         elif self.op == '==':
             state.emit(self.oppos[0], opcodes.EQ)
+        elif self.op == '!=':
+            state.emit(self.oppos[0], opcodes.NE)
         elif self.op == 'in':
             state.emit(self.oppos[0], opcodes.IN)
         elif self.op == 'not in':

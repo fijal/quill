@@ -57,8 +57,16 @@ opcodes = [
                              ' of integer division'),
     Opcode('LT', 0, -1, 'load two value from the stack and store the result'
                         ' of lower than comparison'),
+    Opcode('GT', 0, -1, 'load two value from the stack and store the result'
+                        ' of greater than comparison'),
+    Opcode('LE', 0, -1, 'load two value from the stack and store the result'
+                        ' of equal or lower than comparison'),
+    Opcode('GE', 0, -1, 'load two value from the stack and store the result'
+                        ' of equal or greater than comparison'),
     Opcode('EQ', 0, -1, 'load two value from the stack and store the result'
                         ' of comparison'),
+    Opcode('NE', 0, -1, 'load two value from the stack and store the result'
+                        ' of negated comparison'),
     Opcode('IN', 0, -1, 'load two value from the stack and store the result'
                         ' of checking if one contains the other'),
     # jumps

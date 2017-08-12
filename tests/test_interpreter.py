@@ -67,6 +67,31 @@ class TestInterpreterBasic(BaseTest):
         assert self.space.int_w(self.interpret_expr('return 13 // 2;')) == 6
         assert self.space.int_w(self.interpret_expr('return 2 * 6;')) == 12
 
+    def test_comparisons(self):
+        assert self.interpret_expr('return 1 == 1;') is self.space.w_True
+        assert self.interpret_expr('return 1 == 2;') is self.space.w_False
+        assert self.interpret_expr('return 2 == 1;') is self.space.w_False
+
+        assert self.interpret_expr('return 1 != 1;') is self.space.w_False
+        assert self.interpret_expr('return 1 != 2;') is self.space.w_True
+        assert self.interpret_expr('return 2 != 1;') is self.space.w_True
+
+        assert self.interpret_expr('return 1 < 1;') is self.space.w_False
+        assert self.interpret_expr('return 1 < 2;') is self.space.w_True
+        assert self.interpret_expr('return 2 < 1;') is self.space.w_False
+
+        assert self.interpret_expr('return 1 > 1;') is self.space.w_False
+        assert self.interpret_expr('return 1 > 2;') is self.space.w_False
+        assert self.interpret_expr('return 2 > 1;') is self.space.w_True
+
+        assert self.interpret_expr('return 1 <= 1;') is self.space.w_True
+        assert self.interpret_expr('return 1 <= 2;') is self.space.w_True
+        assert self.interpret_expr('return 2 <= 1;') is self.space.w_False
+
+        assert self.interpret_expr('return 1 >= 1;') is self.space.w_True
+        assert self.interpret_expr('return 1 >= 2;') is self.space.w_False
+        assert self.interpret_expr('return 2 >= 1;') is self.space.w_True
+
     def test_operator_precedence(self):
         assert self.space.int_w(self.interpret_expr('return 2 + 2 * 2;')) == 6
         assert self.space.int_w(self.interpret_expr('return 2 * 2 + 2;')) == 6

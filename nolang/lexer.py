@@ -38,6 +38,8 @@ QUILL_RULES = [
     ('INTEGER', r'\d+'),
     ('PLUS', r'\+'),
     ('MINUS', r'\-'),
+    ('LE', r'\<='),
+    ('GE', r'\>='),
     ('LT', r'\<'),
     ('GT', r'\>'),
     ('STAR', r'\*'),
