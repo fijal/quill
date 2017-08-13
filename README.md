@@ -36,7 +36,7 @@ issues with the entry point file being different like in Python
 
 ### Bindings
 
-Imports and globals are impemented as bindings.  A binding is a completely
+Imports and globals are implemented as bindings.  A binding is a completely
 transparent "proxy" that gives access to the underlying value.  A binding can
 be of one of the following types:
 
