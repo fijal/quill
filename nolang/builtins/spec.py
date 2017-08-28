@@ -57,7 +57,7 @@ def wrap_function(space, f, name=None, exp_name=None):
                 raise NotImplementedError(
                     "Default handling not supported for %s" % (defs[i],))
 
-    d = {'orig_' + name: f, 'argdefaults' : argdefaults}
+    d = {'orig_' + name: f, 'argdefaults': argdefaults}
     for i, argname in enumerate(argnames):
         extralines = []
         if argname == 'space':

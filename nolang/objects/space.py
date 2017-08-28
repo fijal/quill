@@ -194,4 +194,3 @@ class Space(object):
     # exceptions
     def apperr(self, w_type_error, msg):
         return AppError(W_Exception(w_type_error, msg))
-
