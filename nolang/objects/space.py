@@ -80,6 +80,9 @@ class Space(object):
     def key_eq(self, w_one, w_two):
         return self.is_true(self.binop_eq(w_one, w_two))
 
+    def is_none(self, w_obj):
+        return w_obj is None or w_obj is self.w_None
+
     # object stuff, hacks so far
     def issubclass(self, w_left, w_right):
         return w_left.issubclass(w_right)
@@ -191,3 +194,4 @@ class Space(object):
     # exceptions
     def apperr(self, w_type_error, msg):
         return AppError(W_Exception(w_type_error, msg))
+

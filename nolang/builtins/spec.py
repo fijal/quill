@@ -43,7 +43,21 @@ def wrap_function(space, f, name=None, exp_name=None):
     lines = ['def %s(space, args_w):' % name]
     j = 0
     numargs = 0
-    d = {'orig_' + name: f}
+    argdefaults = [None] * len(argnames)
+    defs = []
+    if f.__defaults__ is not None:
+        defs = f.__defaults__
+        firstdefault = len(argnames) - len(defs)
+        for i in range(len(defs)):
+            if defs[i] is None:
+                argdefaults[i + firstdefault] = space.w_None
+            elif isinstance(defs[i], int):
+                argdefaults[i + firstdefault] = space.newint(defs[i])
+            else:
+                raise NotImplementedError(
+                    "Default handling not supported for %s" % (defs[i],))
+
+    d = {'orig_' + name: f, 'argdefaults' : argdefaults}
     for i, argname in enumerate(argnames):
         extralines = []
         if argname == 'space':
@@ -92,7 +106,13 @@ def wrap_function(space, f, name=None, exp_name=None):
                 j += 1
             else:
                 assert False
-        lines.append('    arg%d = %s' % (i, argval))
+        if argdefaults[i] is not None:
+            lines.append('    if len(args_w) <= %d:' % (numargs - 1))
+            lines.append('        arg%d = argdefaults[%d]' % (i, i))
+            lines.append('    else:')
+            lines.append('        arg%d = %s' % (i, argval))
+        else:
+            lines.append('    arg%d = %s' % (i, argval))
         lines += extralines
     args = ", ".join(['arg%d' % i for i in range(len(argnames))])
     lines.append('    return orig_%s(%s)' % (name, args))
@@ -101,7 +121,9 @@ def wrap_function(space, f, name=None, exp_name=None):
     exported_name = name
     if getattr(f, 'unwrap_parameters', None):
         exported_name = f.unwrap_parameters.get('name', exported_name)
-    return W_BuiltinFunction(exported_name, d[name], numargs)
+    return W_BuiltinFunction(exported_name, d[name],
+        min_args=numargs - len(defs),
+        max_args=numargs)
 
 
 def wrap_type(space, tp):

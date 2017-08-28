@@ -61,6 +61,8 @@ class TestDict(BaseTest):
         assert self.space.utf8_w(w_res) == "foo"
         w_res = self.interpret_expr('return {"a": "foo"}.get("b", "dflt");')
         assert self.space.utf8_w(w_res) == "dflt"
+        w_res = self.interpret_expr('return {"a": "foo"}.get("b");')
+        assert self.space.is_none(w_res)
 
     def test_getitem(self):
         w_res = self.interpret_expr('''

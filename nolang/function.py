@@ -80,9 +80,10 @@ class W_Function(W_Root):
 
 
 class W_BuiltinFunction(W_Root):
-    def __init__(self, name, callable, num_args):
+    def __init__(self, name, callable, min_args, max_args):
         self.name = name
-        self.num_args = num_args
+        self.min_args = min_args
+        self.max_args = max_args
         self.callable = callable
 
     def setup(self, space):
@@ -91,9 +92,13 @@ class W_BuiltinFunction(W_Root):
     def call(self, space, interpreter, args_w, kwargs):
         if kwargs is not None:
             raise Exception('unimplemented')
-        if self.num_args != -1 and self.num_args != len(args_w):
-            msg = "Function %s got %d arguments, expected %d" % (self.name,
-                len(args_w), self.num_args)
+        if self.min_args != -1 and not self.min_args <= len(args_w) <= self.max_args:
+            if self.min_args == self.max_args:
+                msg = "Function %s got %d arguments, expected %d" % (self.name,
+                    len(args_w), self.min_args)
+            else:
+                msg = "Function %s got %d arguments, expected %d-%d" % (
+                    self.name, len(args_w), self.min_args, self.max_args)
             raise space.apperr(space.w_argerror, msg)
         return self.callable(space, args_w)
 
@@ -101,7 +106,8 @@ class W_BuiltinFunction(W_Root):
         return W_BoundMethod(w_obj, self)
 
     def __repr__(self):
-        return "<BuiltinFunction %s/%d>" % (self.name, self.num_args)
+        return "<BuiltinFunction %s/%d-%d>" % (self.name, self.min_args,
+            self.max_args)
 
 
 class W_Property(W_Root):
