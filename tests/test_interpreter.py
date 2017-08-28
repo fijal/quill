@@ -166,3 +166,12 @@ class TestInterpreter(BaseTest):
             }
             ''')
         assert self.space.int_w(w_res) == 8
+
+    def test_initializers(self):
+        w_res = self.interpret('''
+            def main() {
+                var a = 3, b, c = 12
+                return a + c * 10
+            }
+            ''')
+        assert self.space.int_w(w_res) == 123

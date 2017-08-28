@@ -5,14 +5,22 @@ from nolang.objects.root import W_Root
 
 
 class W_StrObject(W_Root):
-    def __init__(self, utf8val):
+    def __init__(self, utf8val, lgt=-1):
+        assert isinstance(utf8val, str)
         self.utf8val = utf8val
+        self.lgt = lgt
 
     def utf8_w(self, space):
         return self.utf8val
 
     def str(self, space):
         return self.utf8_w(space)
+
+    def len(self, space):
+        if self.lgt == -1:
+            # XXX compute it better once utf8 lands
+            self.lgt = len(self.utf8val.decode('utf-8'))
+        return self.lgt
 
     def hash(self, space):
         return compute_hash(self.utf8val)

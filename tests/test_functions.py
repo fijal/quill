@@ -1,5 +1,4 @@
 
-import py
 from nolang.error import AppError
 
 from support import BaseTest
@@ -128,17 +127,16 @@ class TestFunctions(BaseTest):
         ''', "Function foo got multiple values for argument 'b'")
 
     def test_default_args(self):
-        py.test.skip("implement me")
         w_res = self.interpret('''
-            def foo(a, b=1) {
-                return a * 10 + b
+            def foo(a, b=1, c="foo") {
+                return a * 10 + b + len(c)
             }
 
             def main() {
-                return foo(2, 3)
+                return foo(2, 3, c="x") * 1000 + foo(2)
             }
         ''')
-        assert self.space.int_w(w_res) == 23
+        assert self.space.int_w(w_res) == 24000 + 24
 
         w_res = self.interpret('''
             def foo(a, b=1) {
@@ -150,3 +148,14 @@ class TestFunctions(BaseTest):
             }
         ''')
         assert self.space.int_w(w_res) == 21
+
+        w_res = self.interpret('''
+            def foo(a=1, b=2) {
+                return a * 100 + b
+            }
+
+            def main() {
+                return foo() * 100 + foo(3, 4)
+            }
+            ''')
+        assert self.space.int_w(w_res) == 10504

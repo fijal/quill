@@ -23,9 +23,13 @@ def prepare_args(space, name, bytecode, args_w, namedargs_w):
     num_args = len(bytecode.arglist)
     if namedargs_w is None:
         # fastpath for just args
-        if bytecode.minargs <= len(args_w) <= bytecode.maxargs:
-            return args_w
-        raise argerr_number(space, bytecode, name, len(args_w))
+        if not bytecode.minargs <= len(args_w) <= bytecode.maxargs:
+            raise argerr_number(space, bytecode, name, len(args_w))
+        if bytecode.first_default >= 0:
+            args_w = args_w + [bytecode.constants[bytecode.defaults[i]]
+                for i in range(len(args_w), bytecode.maxargs)]
+        return args_w
+
     if (not bytecode.minargs <= len(args_w) + len(namedargs_w)
                              <= bytecode.maxargs):
         raise argerr_number(
@@ -43,7 +47,13 @@ def prepare_args(space, name, bytecode, args_w, namedargs_w):
                 "argument '%s'" % (name, k))
         vals_w[index] = w_v
 
-    for item in args_w:
+    if bytecode.first_default >= 0:
+        for i in range(bytecode.first_default, len(bytecode.defaults)):
+            def_no = bytecode.defaults[i]
+            if def_no != -1 and vals_w[i] is not None:
+                vals_w[i] = bytecode.constants[def_no]
+
+    for item in vals_w:
         if item is None:
             raise argerr(space, "Function %s didn't receive enough positional "
                 "arguments" % (name,))

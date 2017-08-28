@@ -72,6 +72,9 @@ class Number(AstNode):
         no = state.add_int_constant(self.value)
         state.emit(self.getstartidx(), opcodes.LOAD_CONSTANT, no)
 
+    def add_constant_to_state(self, state):
+        return state.add_int_constant(self.value)
+
 
 class String(AstNode):
     def __init__(self, value, srcpos):
@@ -81,6 +84,9 @@ class String(AstNode):
     def compile(self, state):
         no = state.add_str_constant(self.value)
         state.emit(self.getstartidx(), opcodes.LOAD_CONSTANT, no)
+
+    def add_constant_to_state(self, state):
+        return state.add_str_constant(self.value)
 
 
 class StringContent(AstNode):
@@ -551,7 +557,11 @@ class VarDeclaration(AstNode):
 
     def compile(self, state):
         for var in self.vars:
-            state.register_variable(var.name, var.tp)
+            varno = state.register_variable(var.name, var.tp)
+            if var.default is not None:
+                no = var.default.add_constant_to_state(state)
+                state.emit(var.getstartidx(), opcodes.LOAD_CONSTANT, no)
+                state.emit(var.getstartidx(), opcodes.STORE, varno)
 
     def add_global_symbols(self, space, class_elements_w, source, w_mod):
         pass  # handled somewhere else
@@ -635,9 +645,10 @@ class ExpressionListPartial(AstNode):
 
 
 class VarDeclPartial(AstNode):
-    def __init__(self, name, tp, next, srcpos=(0, 0)):
+    def __init__(self, name, tp, default, next, srcpos=(0, 0)):
         AstNode.__init__(self, srcpos)
         self.name = name
+        self.default = default
         self.tp = tp
         self.next = next
 
@@ -652,7 +663,7 @@ class VarDeclPartial(AstNode):
         i = 0
         cur = self
         while cur.next:
-            vars[i] = Var(cur.name, cur.tp, srcpos=cur.getsrcpos())
+            vars[i] = Var(cur.name, cur.tp, cur.default, srcpos=cur.getsrcpos())
             i += 1
             cur = cur.next
             assert isinstance(cur, VarDeclPartial)
@@ -660,9 +671,11 @@ class VarDeclPartial(AstNode):
 
 
 class Var(AstNode):
-    def __init__(self, name, tp, srcpos=None):
+    def __init__(self, name, tp, default, srcpos=None):
         AstNode.__init__(self, srcpos)
+        assert not isinstance(default, tuple)
         self.name = name
+        self.default = default
         self.tp = tp
 
 

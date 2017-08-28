@@ -190,7 +190,7 @@ class TestParseFunctionBody(BaseTest):
             x = x + 1;
             ''')
         assert r == [
-            ast.VarDeclaration([ast.Var('x', ast.NoTypeDecl())]),
+            ast.VarDeclaration([ast.Var('x', ast.NoTypeDecl(), None)]),
             ast.Assignment('x', ast.Number(3)),
             ast.Assignment('x', ast.BinOp('+', ast.Identifier('x'),
                                           ast.Number(1), oppos=(46, 47)))]
@@ -206,8 +206,8 @@ class TestParseFunctionBody(BaseTest):
             return s;
             ''')
         assert r == [
-            ast.VarDeclaration([ast.Var('i', ast.NoTypeDecl()),
-                                ast.Var('s', ast.NoTypeDecl())]),
+            ast.VarDeclaration([ast.Var('i', ast.NoTypeDecl(), None),
+                                ast.Var('s', ast.NoTypeDecl(), None)]),
             ast.Assignment('i', ast.Number(0)),
             ast.While(
                 ast.BinOp('<', ast.Identifier('i'), ast.Number(10), oppos=(51, 52)), [
@@ -236,7 +236,7 @@ class TestFullProgram(BaseTest):
             ''')
         expected = ast.Program([
             ast.Function('foo', [], [
-                ast.VarDeclaration([ast.Var('x', ast.NoTypeDecl())])
+                ast.VarDeclaration([ast.Var('x', ast.NoTypeDecl(), None)])
             ], lineno=1),
             ast.Function('main', [], [], lineno=4)
         ])
@@ -248,8 +248,8 @@ class TestFullProgram(BaseTest):
             }
             ''')
         expected = ast.Program([
-            ast.Function('foo', [ast.Var('a0', ast.NoTypeDecl()),
-                                 ast.Var('a1', ast.NoTypeDecl())], [
+            ast.Function('foo', [ast.Var('a0', ast.NoTypeDecl(), None),
+                                 ast.Var('a1', ast.NoTypeDecl(), None)], [
             ], lineno=1)
         ])
         assert r == expected

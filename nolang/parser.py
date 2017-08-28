@@ -151,18 +151,31 @@ def get_parser():
         return p[0]
 
     @pg.production('var_declaration : VAR IDENTIFIER type_decl var_decl SEMICOLON')
+    @pg.production('var_declaration : VAR IDENTIFIER ASSIGN constant_val '
+        'type_decl var_decl SEMICOLON')
     def var_declaration_basic(state, p):
-        vars = [ast.Var(p[1].getstr(), p[2], srcpos=sr([p[1], p[2]]))] + \
-            p[3].get_vars()
+        if len(p) == 5:
+            vars = [ast.Var(p[1].getstr(), p[2], None, srcpos=sr([p[1], p[2]]))] + \
+                p[3].get_vars()
+        else:
+            vars = [ast.Var(p[1].getstr(), p[4], p[3], srcpos=sr([p[1], p[2], p[3]]))] + \
+                p[5].get_vars()
         return ast.VarDeclaration(vars, srcpos=sr(p))
 
     @pg.production('var_decl : ')
     def var_decl_empty(state, p):
-        return ast.VarDeclPartial(None, None, None, srcpos=(0, 0))
+        return ast.VarDeclPartial(None, None, None, None, srcpos=(0, 0))
 
     @pg.production('var_decl : COMMA IDENTIFIER type_decl var_decl')
+    @pg.production('var_decl : COMMA IDENTIFIER ASSIGN constant_val type_decl '
+        'var_decl')
     def var_decl_identifier(state, p):
-        return ast.VarDeclPartial(p[1].getstr(), p[2], p[3], srcpos=sr(p))
+        if len(p) == 4:
+            return ast.VarDeclPartial(p[1].getstr(), p[2], None, p[3],
+                srcpos=sr(p))
+        else:
+            return ast.VarDeclPartial(p[1].getstr(), p[4], p[3],
+                p[5], srcpos=sr(p))
 
     @pg.production('type_decl : ')
     def type_decl_empty(state, p):
@@ -262,20 +275,40 @@ def get_parser():
     def arglist(state, p):
         return ast.ArgList([], srcpos=sr(p))
 
-    @pg.production('arglist : LEFT_PAREN IDENTIFIER type_decl var_decl RIGHT_PAREN')
+    @pg.production('arglist : LEFT_PAREN IDENTIFIER type_decl var_decl'
+        ' RIGHT_PAREN')
+    @pg.production('arglist : LEFT_PAREN IDENTIFIER ASSIGN constant_val '
+        'type_decl var_decl RIGHT_PAREN')
     def arglist_non_empty(state, p):
-        vars = [ast.Var(p[1].getstr(), p[2], p[1].getsrcpos())] + p[3].get_vars()
+        if len(p) == 5:
+            vars = ([ast.Var(p[1].getstr(), p[2], None, p[1].getsrcpos())] +
+                    p[3].get_vars())
+        else:
+            vars = ([ast.Var(p[1].getstr(), p[4], p[3], p[1].getsrcpos())] +
+                    p[5].get_vars())
         return ast.ArgList(vars, srcpos=sr(p))
+
+    @pg.production('constant_val : INTEGER')
+    def constant_val_int(state, p):
+        return ast.Number(int(p[0].getstr()), srcpos=sr(p))
+
+    @pg.production('constant_val : string')
+    def constant_val_str(state, p):
+        return p[0]
 
     @pg.production('expression : INTEGER')
     def expression_number(state, p):
         return ast.Number(int(p[0].getstr()), srcpos=sr(p))
 
-    @pg.production('expression : ST_DQ_STRING stringcontent ST_ENDSTRING')
-    @pg.production('expression : ST_SQ_STRING stringcontent ST_ENDSTRING')
-    @pg.production('expression : ST_RAW_DQ_STRING rawstringcontent ST_ENDRAW')
-    @pg.production('expression : ST_RAW_SQ_STRING rawstringcontent ST_ENDRAW')
+    @pg.production('expression : string')
     def expression_string(state, p):
+        return p[0]
+
+    @pg.production('string : ST_DQ_STRING stringcontent ST_ENDSTRING')
+    @pg.production('string : ST_SQ_STRING stringcontent ST_ENDSTRING')
+    @pg.production('string : ST_RAW_DQ_STRING rawstringcontent ST_ENDRAW')
+    @pg.production('string : ST_RAW_SQ_STRING rawstringcontent ST_ENDRAW')
+    def expression_string_expand(state, p):
         val = ''.join(p[1].get_strparts())
         try:
             str_decode_utf_8(val, len(val), 'strict', final=True)

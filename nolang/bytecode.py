@@ -41,7 +41,7 @@ class UnknownGlobalName(Exception):
 
 class Bytecode(object):
     def __init__(self, filename, source, varnames, module, constants, bytecode,
-                 arglist, exception_blocks, lnotab):
+                 arglist, defaults, exception_blocks, lnotab):
         self.filename = filename
         self.source = source
         self.varnames = varnames
@@ -56,9 +56,18 @@ class Bytecode(object):
         for i, item in enumerate(self.arglist):
             self.argmapping[item] = i
         self.argtypes = [x.tp for x in arglist]
-        self.minargs = len(self.arglist)
+        self.defaults = defaults
+        for i, default in enumerate(self.defaults):
+            if default != -1:
+                self.first_default = i
+                break
+        else:
+            self.first_default = -1
+        if self.first_default == -1:
+            self.minargs = len(self.arglist)
+        else:
+            self.minargs = self.first_default
         self.maxargs = len(self.arglist)
-        self.defaults = [None for i in range(len(arglist))]
         self.exception_blocks = exception_blocks
         self.lnotab = lnotab
 
@@ -174,6 +183,7 @@ class _BytecodeBuilder(object):
         return self.add_constant(IntegerConstant(v))
 
     def add_str_constant(self, v):
+        assert isinstance(v, str)
         return self.add_constant(StringConstant(v))
 
     def get_variable(self, name):
@@ -244,9 +254,14 @@ class _BytecodeBuilder(object):
         return lnotab
 
     def build(self, filename, source):
+        defaults = [-1 for i in range(len(self.arglist))]
+        for i in range(len(self.arglist)):
+            default = self.arglist[i].default
+            if default is not None:
+                defaults[i] = default.add_constant_to_state(self)
         return Bytecode(filename, source, self.varnames, self.w_mod,
                         self.constants,
-                        "".join(self.builder), self.arglist,
+                        "".join(self.builder), self.arglist, defaults,
                         self.exception_blocks, self._packlnotab(self.lnotab))
 
 
