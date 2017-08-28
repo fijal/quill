@@ -75,8 +75,16 @@ class Interpreter(object):
                     self.binop_truediv(space, frame)
                 elif op == opcodes.LT:
                     self.binop_lt(space, frame)
+                elif op == opcodes.GT:
+                    self.binop_gt(space, frame)
+                elif op == opcodes.LE:
+                    self.binop_le(space, frame)
+                elif op == opcodes.GE:
+                    self.binop_ge(space, frame)
                 elif op == opcodes.EQ:
                     self.binop_eq(space, frame)
+                elif op == opcodes.NE:
+                    self.binop_ne(space, frame)
                 elif op == opcodes.IN:
                     self.binop_in(space, frame)
                 elif op == opcodes.NOT:
@@ -240,10 +248,30 @@ class Interpreter(object):
         w_left = frame.pop()
         frame.push(space.binop_lt(w_left, w_right))
 
+    def binop_gt(self, space, frame):
+        w_right = frame.pop()
+        w_left = frame.pop()
+        frame.push(space.binop_gt(w_left, w_right))
+
+    def binop_le(self, space, frame):
+        w_right = frame.pop()
+        w_left = frame.pop()
+        frame.push(space.binop_le(w_left, w_right))
+
+    def binop_ge(self, space, frame):
+        w_right = frame.pop()
+        w_left = frame.pop()
+        frame.push(space.binop_ge(w_left, w_right))
+
     def binop_eq(self, space, frame):
         w_right = frame.pop()
         w_left = frame.pop()
         frame.push(space.binop_eq(w_left, w_right))
+
+    def binop_ne(self, space, frame):
+        w_right = frame.pop()
+        w_left = frame.pop()
+        frame.push(space.binop_ne(w_left, w_right))
 
     def binop_in(self, space, frame):
         w_right = frame.pop()

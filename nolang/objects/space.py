@@ -136,6 +136,22 @@ class Space(object):
     def binop_lt(self, w_one, w_two):
         return w_one.lt(self, w_two)
 
+    def binop_gt(self, w_one, w_two):
+        # Implemented in terms of lt and eq.
+        return self.newbool(not (
+            self.is_true(self.binop_lt(w_one, w_two)) or
+            self.is_true(self.binop_eq(w_one, w_two))))
+
+    def binop_le(self, w_one, w_two):
+        # Implemented in terms of lt and eq.
+        return self.newbool(
+            self.is_true(self.binop_lt(w_one, w_two)) or
+            self.is_true(self.binop_eq(w_one, w_two)))
+
+    def binop_ge(self, w_one, w_two):
+        # Implemented in terms of lt and eq.
+        return self.newbool(not self.is_true(self.binop_lt(w_one, w_two)))
+
     def binop_eq(self, w_one, w_two):
         w_res = w_one.eq(self, w_two)
         if w_res is not self.w_NotImplemented:
@@ -144,6 +160,10 @@ class Space(object):
         if w_res is not self.w_NotImplemented:
             return w_res
         return self.w_False
+
+    def binop_ne(self, w_one, w_two):
+        # Implemented in terms of lt and eq.
+        return self.unaryop_not(self.binop_eq(w_one, w_two))
 
     def binop_in(self, w_one, w_two):
         return w_two.contains(self, w_one)
