@@ -35,9 +35,13 @@ def errorhandler(state, lookahead, msg="Parsing error"):
                      (sourcepos[1] - sourcepos[0]) + colno - 1)
 
 
-def hex_to_utf8(s):
-    uchr = UNICHR(int(s, 16))
-    return unicode_encode_utf_8(uchr, len(uchr), 'strict')
+def hex_to_utf8(state, token, s):
+    try:
+        uchr = UNICHR(int(s, 16))
+        return unicode_encode_utf_8(uchr, len(uchr), 'strict')
+    except (ValueError, UnicodeDecodeError):
+        # XXX better error message
+        raise errorhandler(state, token, msg="Error encoding %s" % s)
 
 
 def get_parser():
@@ -273,7 +277,10 @@ def get_parser():
     @pg.production('expression : ST_RAW_SQ_STRING rawstringcontent ST_ENDRAW')
     def expression_string(state, p):
         val = ''.join(p[1].get_strparts())
-        str_decode_utf_8(val, len(val), 'strict', final=True)
+        try:
+            str_decode_utf_8(val, len(val), 'strict', final=True)
+        except UnicodeDecodeError:
+            raise errorhandler(state, p[1], msg="Unicode error")
         return ast.String(val, srcpos=sr(p))
 
     @pg.production('expression : ST_INTERP_STRING interpstr ST_ENDSTRING')
@@ -308,15 +315,17 @@ def get_parser():
 
     @pg.production('stringcontent : ')
     def string_empty(state, p):
-        return ast.StringContent([])
+        return ast.StringContent([], srcpos=(0, 0))
 
     @pg.production('stringcontent : stringcontent ESC_QUOTE')
     def string_esc_quote(state, p):
-        return ast.StringContent(p[0].get_strparts() + [p[1].getstr()[1]])
+        return ast.StringContent(p[0].get_strparts() + [p[1].getstr()[1]],
+            srcpos=sr(p))
 
     @pg.production('stringcontent : stringcontent ESC_ESC')
     def string_esc_esc(state, p):
-        return ast.StringContent(p[0].get_strparts() + ['\\'])
+        return ast.StringContent(p[0].get_strparts() + ['\\'],
+            srcpos=sr(p))
 
     @pg.production('stringcontent : stringcontent ESC_SIMPLE')
     def string_esc_simple(state, p):
@@ -331,37 +340,42 @@ def get_parser():
             '0': '\0',
             '$': '$',
         }[p[1].getstr()[1]]
-        return ast.StringContent(p[0].get_strparts() + [part])
+        return ast.StringContent(p[0].get_strparts() + [part], srcpos=sr(p))
 
     @pg.production('stringcontent : stringcontent ESC_HEX_8')
     @pg.production('stringcontent : stringcontent ESC_HEX_16')
     def string_esc_hex_fixed(state, p):
         s = p[1].getstr()
-        return ast.StringContent(p[0].get_strparts() + [hex_to_utf8(s[2:])])
+        return ast.StringContent(p[0].get_strparts() + [hex_to_utf8(state, p[0],
+            s[2:])], srcpos=sr(p))
 
     @pg.production('stringcontent : stringcontent ESC_HEX_ANY')
     def string_esc_hex_any(state, p):
         s = p[1].getstr()
         end = len(s) - 1
         assert end >= 0
-        return ast.StringContent(p[0].get_strparts() + [hex_to_utf8(s[3:end])])
+        return ast.StringContent(p[0].get_strparts() + [hex_to_utf8(state, p[0],
+            s[3:end])], srcpos=sr(p))
 
     @pg.production('stringcontent : stringcontent ESC_UNRECOGNISED')
     def string_esc_unrecognised(state, p):
-        return ast.StringContent(p[0].get_strparts() + [p[1].getstr()])
+        return ast.StringContent(p[0].get_strparts() + [p[1].getstr()],
+            srcpos=sr(p))
 
     @pg.production('stringcontent : stringcontent CHAR')
     def string_char(state, p):
-        return ast.StringContent(p[0].get_strparts() + [p[1].getstr()])
+        return ast.StringContent(p[0].get_strparts() + [p[1].getstr()],
+            srcpos=sr(p))
 
     @pg.production('rawstringcontent : ')
     def rawstring_empty(state, p):
-        return ast.StringContent([])
+        return ast.StringContent([], srcpos=(0, 0))
 
     @pg.production('rawstringcontent : rawstringcontent RAW_ESC')
     @pg.production('rawstringcontent : rawstringcontent RAW_CHAR')
     def rawstring_char(state, p):
-        return ast.StringContent(p[0].get_strparts() + [p[1].getstr()])
+        return ast.StringContent(p[0].get_strparts() + [p[1].getstr()],
+            srcpos=sr(p))
 
     @pg.production('atom : TRUE')
     def atom_true(state, p):
@@ -375,10 +389,59 @@ def get_parser():
     def atom_false(state, p):
         return ast.FalseNode(srcpos=sr(p))
 
-    @pg.production('atom : atom LEFT_PAREN expression_list '
+    @pg.production('atom : atom LEFT_PAREN call_args_list '
                    'RIGHT_PAREN')
     def atom_call(state, p):
-        return ast.Call(p[0], p[2].get_element_list(), srcpos=sr(p))
+        arglist = p[2].get_element_list()
+        rawargs = []
+        namedargs = []
+        now_named = False
+        for arg in arglist:
+            if isinstance(arg, ast.NamedArg):
+                now_named = True
+                namedargs.append(arg)
+            else:
+                if now_named:
+                    errorhandler(state, p[2],
+                        msg="Named args before regular args")
+                rawargs.append(arg)
+        return ast.Call(p[0], rawargs[:], namedargs[:],
+                        srcpos=sr(p))
+
+    @pg.production('call_args_list :')
+    def call_args_list_empty(state, p):
+        return ast.ExpressionListPartial(None, None)
+
+    @pg.production('call_args_list : expression ASSIGN expression rest_of_args')
+    def call_args_list_named_rest(state, p):
+        id = p[0]
+        if not isinstance(id, ast.Identifier):
+            raise errorhandler(state, p[0],
+                msg="Named argument is not an identifier")
+        return ast.ExpressionListPartial(ast.NamedArg(id.name, p[2]), p[3])
+
+    @pg.production('call_args_list : expression rest_of_args')
+    def call_args_list_rest(state, p):
+        return ast.ExpressionListPartial(p[0], p[1])
+
+    @pg.production('rest_of_args : COMMA expression ASSIGN expression'
+                   ' rest_of_args')
+    def rest_of_args_named_arg(state, p):
+        id = p[1]
+        if not isinstance(id, ast.Identifier):
+            raise errorhandler(state, p[1],
+                msg="Named argument is not an identifier")
+        return ast.ExpressionListPartial(ast.NamedArg(id.name, p[3],
+            srcpos=sr([p[1], p[2], p[3]])),
+            p[4])
+
+    @pg.production('rest_of_args : COMMA expression rest_of_args')
+    def rest_of_args_arg(state, p):
+        return ast.ExpressionListPartial(p[1], p[2])
+
+    @pg.production('rest_of_args :')
+    def rest_of_args_empty(state, p):
+        return ast.ExpressionListPartial(None, None)
 
     @pg.production('atom : LEFT_PAREN expression RIGHT_PAREN')
     def atom_paren_expression_paren(state, p):
@@ -420,37 +483,39 @@ def get_parser():
 
     @pg.production('expression_list : ')
     def expression_list_empty(state, p):
-        return ast.ExpressionListPartial([])
+        return ast.ExpressionListPartial(None, None)
 
     @pg.production('expression_list : expression expression_sublist')
     def expression_list_expression(state, p):
-        return ast.ExpressionListPartial([p[0]] + p[1].get_element_list())
+        return ast.ExpressionListPartial(p[0], p[1])
 
     @pg.production('expression_sublist : ')
     @pg.production('expression_sublist : COMMA')
     def expression_sublist_empty(state, p):
-        return ast.ExpressionListPartial([])
+        return ast.ExpressionListPartial(None, None)
 
     @pg.production('expression_sublist : COMMA expression expression_sublist')
     def expression_sublist_expression(state, p):
-        return ast.ExpressionListPartial([p[1]] + p[2].get_element_list())
+        return ast.ExpressionListPartial(p[1], p[2])
 
     @pg.production('dict_pair_list : ')
     def dict_pair_list_empty(state, p):
-        return ast.ExpressionListPartial([])
+        return ast.ExpressionListPartial(None, None)
 
     @pg.production('dict_pair_list : expression COLON expression dict_pair_sublist')
     def dict_pair_list_expression(state, p):
-        return ast.ExpressionListPartial([p[0], p[2]] + p[3].get_element_list())
+        return ast.ExpressionListPartial(p[0],
+            ast.ExpressionListPartial(p[2], p[3]))
 
     @pg.production('dict_pair_sublist : ')
     @pg.production('dict_pair_sublist : COMMA')
     def dict_pair_sublist_empty(state, p):
-        return ast.ExpressionListPartial([])
+        return ast.ExpressionListPartial(None, None)
 
     @pg.production('dict_pair_sublist : COMMA expression COLON expression dict_pair_sublist')
     def dict_pair_sublist_expression(state, p):
-        return ast.ExpressionListPartial([p[1], p[3]] + p[4].get_element_list())
+        return ast.ExpressionListPartial(p[1],
+            ast.ExpressionListPartial(p[3], p[4]))
 
     res = pg.build()
     if res.lr_table.sr_conflicts:

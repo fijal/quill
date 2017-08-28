@@ -15,10 +15,6 @@ class BaseTest(object):
             value = self.parse(expr)
         except ParseError:
             pass
-        except UnicodeDecodeError:
-            pass
-        except ValueError:
-            pass
         else:
             raise Exception("Incorrectly parsed %r as %r." % (expr, value))
 
@@ -98,7 +94,7 @@ class TestStringParser(BaseTest):
         self.parse_bad(r'"\u{110000}"')
 
     def test_bad_utf8(self):
-        self.parse_bad('"\xff"')
+        self.parse_bad('"\xff"',)
         self.parse_bad('"\xc0q"')
         self.parse_bad('"\xc0c0"')
         self.parse_bad('"\xdfq"')
@@ -162,9 +158,22 @@ class TestExpressionParser(BaseTest):
     def test_various_kinds_of_calls(self):
         r = self.parse('x(1, 2, 3)')
         assert r == ast.Call(ast.Identifier('x'), [ast.Number(1), ast.Number(2),
-            ast.Number(3)])
+            ast.Number(3)], [])
         r = self.parse('(1)(2)')
-        assert r == ast.Call(ast.Number(1), [ast.Number(2)])
+        assert r == ast.Call(ast.Number(1), [ast.Number(2)], [])
+
+    def test_call_with_named_args(self):
+        r = self.parse('x(a=1, b=2)')
+        assert r == ast.Call(ast.Identifier('x'), [], [
+            ast.NamedArg('a', ast.Number(1)),
+            ast.NamedArg('b', ast.Number(2)),
+        ])
+        r = self.parse('x(1, b=2)')
+        assert r == ast.Call(ast.Identifier('x'), [ast.Number(1)], [
+            ast.NamedArg('b', ast.Number(2)),
+        ])
+        self.parse_bad('x(1=b)')
+        self.parse_bad('x(1, a=2, 3')
 
 
 class TestParseFunctionBody(BaseTest):

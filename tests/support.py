@@ -67,7 +67,7 @@ class BaseTest(object):
             args_w = [self.space.newlist([self.space.newtext(x) for x in args])]
         else:
             args_w = []
-        return self.space.call_method(w_mod, 'main', args_w)
+        return self.space.call_method(w_mod, 'main', args_w, None)
 
     def assert_expr_parse_error(self, code):
         try:

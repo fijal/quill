@@ -51,7 +51,14 @@ class Bytecode(object):
         self.bytecode = bytecode
         r = self.compute_stack_depth(bytecode)
         self.stack_depth, self.resume_stack_depth = r
-        self.arglist = arglist
+        self.arglist = [x.name for x in arglist]
+        self.argmapping = {}
+        for i, item in enumerate(self.arglist):
+            self.argmapping[item] = i
+        self.argtypes = [x.tp for x in arglist]
+        self.minargs = len(self.arglist)
+        self.maxargs = len(self.arglist)
+        self.defaults = [None for i in range(len(arglist))]
         self.exception_blocks = exception_blocks
         self.lnotab = lnotab
 
@@ -98,7 +105,8 @@ class Bytecode(object):
             opcode = opcodes.opcodes[ord(bc[i])]
             if opcode.stack_effect == 255:
                 var = (ord(bc[i + 1]) << 8) + ord(bc[i + 2])
-                stack_depth -= var
+                var2 = (ord(bc[i + 3]) << 8) + ord(bc[i + 4])
+                stack_depth -= var + var2 * 2
             elif opcode.stack_effect == 254:
                 var = (ord(bc[i + 1]) << 8) + ord(bc[i + 2])
                 stack_depth -= var - 1

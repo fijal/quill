@@ -181,12 +181,12 @@ class Space(object):
         return w_one.truediv(self, w_two)
 
     # various calls
-    def call_method(self, w_object, method_name, args):
+    def call_method(self, w_object, method_name, args, kwargs):
         w_obj = w_object.getattr(self, method_name)
-        return w_obj.call(self, self.interpreter, args)
+        return w_obj.call(self, self.interpreter, args, kwargs)
 
-    def call(self, w_object, args):
-        return w_object.call(self, self.interpreter, args)
+    def call(self, w_object, args, kwargs):
+        return w_object.call(self, self.interpreter, args, kwargs)
 
     # exceptions
     def apperr(self, w_type_error, msg):

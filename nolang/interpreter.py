@@ -134,7 +134,7 @@ class Interpreter(object):
                     index = arg0
                     continue
                 elif op == opcodes.CALL:
-                    self.call(space, frame, index, arg0)
+                    self.call(space, frame, index, arg0, arg1)
                 elif op == opcodes.RETURN:
                     return frame.pop()
                 elif op == opcodes.LIST_BUILD:
@@ -185,12 +185,20 @@ class Interpreter(object):
     def load_global(self, space, frame, bytecode_index, no):
         frame.push(frame.globals_w[no])
 
-    def call(self, space, frame, bytecode_index, no):
+    def call(self, space, frame, bytecode_index, no, named_no):
+        if named_no > 0:
+            kwargs = [(None, None)] * named_no
+            for i in range(named_no - 1, -1, -1):
+                w_obj = frame.pop()
+                name = space.utf8_w(frame.pop())
+                kwargs[i] = (name, w_obj)
+        else:
+            kwargs = None
         args = [None] * no
         for i in range(no - 1, -1, -1):
             args[i] = frame.pop()
         w_callable = frame.pop()
-        frame.push(space.call(w_callable, args))
+        frame.push(space.call(w_callable, args, kwargs))
 
     def list_build(self, space, frame, bytecode, no):
         items = [None] * no

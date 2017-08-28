@@ -84,7 +84,8 @@ class String(AstNode):
 
 
 class StringContent(AstNode):
-    def __init__(self, strparts):
+    def __init__(self, strparts, srcpos=None):
+        AstNode.__init__(self, srcpos)
         self.strparts = strparts
 
     def get_strparts(self):
@@ -502,6 +503,18 @@ class ArgList(AstNode):
         return self.arglist
 
 
+class NamedArg(AstNode):
+    def __init__(self, name, expr, srcpos=(0, 0)):
+        AstNode.__init__(self, srcpos)
+        self.name = name
+        self.expr = expr
+
+    def compile(self, state):
+        no = state.add_str_constant(self.name)
+        state.emit(self.getstartidx(), opcodes.LOAD_CONSTANT, no)
+        self.expr.compile(state)
+
+
 class FunctionBody(AstNode):
     def __init__(self, elem, next):
         self.elem = elem
@@ -569,16 +582,20 @@ class Assignment(AstNode):
 
 
 class Call(AstNode):
-    def __init__(self, expr, arglist, srcpos=None):
+    def __init__(self, expr, arglist, namedarglist, srcpos=None):
         AstNode.__init__(self, srcpos)
         self.left_hand = expr
+        self.namedarglist = namedarglist
         self.arglist = arglist
 
     def compile(self, state):
         self.left_hand.compile(state)
         for arg in self.arglist:
             arg.compile(state)
-        state.emit(self.left_hand.getendidx(), opcodes.CALL, len(self.arglist))
+        for arg in self.namedarglist:
+            arg.compile(state)
+        state.emit(self.left_hand.getendidx(), opcodes.CALL, len(self.arglist),
+            len(self.namedarglist))
 
 
 class Return(AstNode):
@@ -592,15 +609,33 @@ class Return(AstNode):
 
 
 class ExpressionListPartial(AstNode):
-    def __init__(self, elements):
-        self.elements = elements
+    def __init__(self, element, next):
+        AstNode.__init__(self, (0, 0))
+        self.elem = element
+        self.next = next
 
     def get_element_list(self):
-        return self.elements
+        i = 0
+        cur = self
+        while cur.next:
+            if cur.elem is not None:
+                i += 1
+            cur = cur.next
+            assert isinstance(cur, ExpressionListPartial)
+        elements = [None] * i
+        i = 0
+        cur = self
+        while cur.next:
+            if cur.elem is not None:
+                elements[i] = cur.elem
+                i += 1
+            cur = cur.next
+            assert isinstance(cur, ExpressionListPartial)
+        return elements
 
 
 class VarDeclPartial(AstNode):
-    def __init__(self, name, tp, next, srcpos):
+    def __init__(self, name, tp, next, srcpos=(0, 0)):
         AstNode.__init__(self, srcpos)
         self.name = name
         self.tp = tp
