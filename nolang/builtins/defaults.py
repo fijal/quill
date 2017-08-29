@@ -8,6 +8,7 @@ from nolang.builtins.core.reflect import get_current_frame, W_FrameWrapper
 from nolang.objects.dict import W_DictObject
 from nolang.objects.int import W_IntObject
 from nolang.objects.list import W_ListObject
+from nolang.objects.unicode import W_StrObject
 
 
 def wrap_module(name, functions):
@@ -23,8 +24,8 @@ def default_builtins(space):
     return [
         # builtins
         magic_print, len, buffer, buffer_from_utf8, W_Exception, W_ListObject,
-        W_DictObject,
+        W_DictObject, W_StrObject, W_IntObject
     ], core_module, [
         # non-builtins that need to be wrapped
-        W_FrameWrapper, W_IntObject,
+        W_FrameWrapper,
     ]

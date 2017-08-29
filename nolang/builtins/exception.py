@@ -11,7 +11,7 @@ class W_Exception(W_UserObject):
         return space.newtext(self.message)
 
 
-@unwrap_spec(msg='str')
+@unwrap_spec(msg='utf8')
 def allocate(space, w_tp, msg):
     return W_Exception(w_tp, msg)
 

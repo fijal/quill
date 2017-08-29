@@ -92,7 +92,7 @@ def wrap_function(space, f, name=None, exp_name=None):
             if spec is None:
                 raise Exception("No spec found for %s while wrapping %s" %
                                 (argname, name))
-            if spec == 'str':
+            if spec == 'utf8':
                 argval = 'space.utf8_w(args_w[%d])' % j
                 j += 1
             elif spec == 'int':

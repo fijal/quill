@@ -2,6 +2,7 @@ from rpython.rlib.objectmodel import compute_hash
 
 from nolang.error import AppError
 from nolang.objects.root import W_Root
+from nolang.builtins.spec import TypeSpec, unwrap_spec
 
 
 class W_StrObject(W_Root):
@@ -33,3 +34,11 @@ class W_StrObject(W_Root):
                 return space.w_NotImplemented
             raise
         return space.newbool(self.utf8val == other)
+
+
+@unwrap_spec(value='utf8')
+def new_str(space, value):
+    return space.newtext(value)
+
+
+W_StrObject.spec = TypeSpec('Str', new_str, set_cls_w_type=True)

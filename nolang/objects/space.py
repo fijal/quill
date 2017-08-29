@@ -34,6 +34,9 @@ class Space(object):
         for non_builtin in non_builtins:
             wrap_builtin(self, non_builtin)
         self.w_exception = self.builtin_dict['Exception']
+        self.w_list = self.builtin_dict['List']
+        self.w_dict = self.builtin_dict['Dict']
+        self.w_str = self.builtin_dict['Str']
         self.w_indexerror = self.make_exception('IndexError')
         self.w_typeerror = self.make_exception('TypeError')
         self.w_argerror = self.make_exception('ArgumentError')

@@ -8,6 +8,7 @@ from nolang.compiler import compile_module
 from nolang.importer import Importer
 from nolang.objects.space import Space
 from nolang.builtins.defaults import default_builtins
+from nolang.builtins.spec import parameters
 
 
 def reformat_code(body):
@@ -32,14 +33,25 @@ def reformat_expr(code):
     return "def main () {\n" + reformat_code(code) + "\n}"
 
 
+@parameters(name="log")
+def magic_log(space, w_obj):
+    space.log.append(w_obj)
+
+
 class BaseTest(object):
     def setup_class(self):
         self.parser = get_parser()
         self.lexer = get_lexer()
         self.space = Space()
-        self.space.setup_builtins(*default_builtins(self.space))
+        builtins, core_mods, not_builtins = default_builtins(self.space)
+        builtins.append(magic_log)
+        self.space.setup_builtins(builtins, core_mods, not_builtins)
+        self.space.log = []
         self.interpreter = Interpreter()
         self.space.setup(self.interpreter)
+
+    def setup_method(self, meth):
+        self.space.log = []
 
     def compile(self, body):
         program = reformat_expr(body)

@@ -175,3 +175,15 @@ class TestInterpreter(BaseTest):
             }
             ''')
         assert self.space.int_w(w_res) == 123
+
+    def test_magic_log(self):
+        self.interpret_expr('''
+            log(1)
+            log("foo")
+            log([1, 2])
+            ''')
+        space = self.space
+        assert len(space.log) == 3
+        assert space.int_w(space.log[0]) == 1
+        assert space.utf8_w(space.log[1]) == "foo"
+        assert space.type(space.log[2]) is space.w_list
