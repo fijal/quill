@@ -134,3 +134,22 @@ class TestBytecodeCompiler(BaseTest):
             LOAD_NONE
             RETURN
         """)
+
+    def test_for_loop(self):
+        bc = self.compile('''
+            for i in 1 { 1; }
+            ''')
+        self.assert_equals(bc, """
+            LOAD_CONSTANT 0
+            CREATE_ITER
+            ITER_NEXT
+            JUMP_IF_EMPTY 18
+            STORE 0
+            LOAD_CONSTANT 1
+            DISCARD
+            JUMP_ABSOLUTE 4
+            DISCARD
+            DISCARD
+            LOAD_NONE
+            RETURN
+            """)

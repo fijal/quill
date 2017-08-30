@@ -10,6 +10,9 @@ class W_Exception(W_UserObject):
     def get_message(self, space):
         return space.newtext(self.message)
 
+    def __repr__(self):
+        return '<%s %s>' % (self.w_type.name, self.message)
+
 
 @unwrap_spec(msg='utf8')
 def allocate(space, w_tp, msg):

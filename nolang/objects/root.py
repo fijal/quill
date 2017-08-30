@@ -2,6 +2,8 @@
 objects of everything wrapped and presented to the user
 """
 
+# XXX add formatting of types, e.g. "expected integer, got %s"
+
 
 class W_Root(object):
     cls_w_type = None
@@ -20,6 +22,12 @@ class W_Root(object):
 
     def hash(self, space):
         raise space.apperr(space.w_typeerror, 'unhashable type')
+
+    def iter(self, space):
+        raise space.apperr(space.w_typeerror, 'uniterable type')
+
+    def iter_next(self, space):
+        raise space.apperr(space.w_typeerror, 'object not an iterator')
 
     def getattr(self, space, attrname):
         return space.w_NotImplemented

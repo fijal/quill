@@ -207,6 +207,11 @@ def get_parser():
     def statement_while_loop(state, p):
         return ast.While(p[1], p[3].get_element_list(), srcpos=sr(p))
 
+    @pg.production('statement : FOR IDENTIFIER IN expression LEFT_CURLY_BRACE '
+                   'function_body RIGHT_CURLY_BRACE')
+    def statement_for_loop(state, p):
+        return ast.For(p[1].getstr(), p[3], p[5].get_element_list(), srcpos=sr(p))
+
     @pg.production('statement : IF expression LEFT_CURLY_BRACE function_body'
                    ' RIGHT_CURLY_BRACE')
     def statement_if_block(state, p):

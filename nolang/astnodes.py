@@ -332,6 +332,30 @@ class While(AstNode):
         state.patch_position(patch_pos, state.get_position())
 
 
+class For(AstNode):
+    def __init__(self, lhand, expr, block, srcpos=(0, 0)):
+        AstNode.__init__(self, srcpos)
+        self.lhand = lhand
+        self.expr = expr
+        self.block = block
+
+    def compile(self, state):
+        varno = state.register_variable(self.lhand, None)
+        self.expr.compile(state)
+        state.emit(self.getstartidx(), opcodes.CREATE_ITER)
+        jump_pos = state.get_position()
+        state.emit(self.expr.getstartidx(), opcodes.ITER_NEXT)
+        state.emit(self.getstartidx(), opcodes.JUMP_IF_EMPTY, 0)
+        patch_pos = state.get_patch_position()
+        state.emit(self.getstartidx(), opcodes.STORE, varno)
+        for item in self.block:
+            item.compile(state)
+        state.emit(self.getendidx(), opcodes.JUMP_ABSOLUTE, jump_pos)
+        state.patch_position(patch_pos, state.get_position())
+        state.emit(self.getstartidx(), opcodes.DISCARD)
+        state.emit(self.getstartidx(), opcodes.DISCARD)
+
+
 class If(AstNode):
     def __init__(self, expr, block, srcpos):
         AstNode.__init__(self, srcpos)

@@ -35,6 +35,10 @@ opcodes = [
                                  'into a dict, and push the dict'),
     Opcode('TEXT_BUILD', 1, 254, 'take N arguments from the stack, build them '
                                  'into a string, and push the dict'),
+    Opcode('CREATE_ITER', 0, 0, 'pop top of the stack, call iter() and put '
+                                'it back'),
+    Opcode('ITER_NEXT', 0, 1, 'call next() on top of the stack iterator and put'
+                              ' it on the top of the stack'),
     # exception handling
     Opcode('PUSH_RESUME_STACK', 1, 0, 'add a new resume point to the stack'),
     Opcode('POP_RESUME_STACK', 0, 0, 'pop one from resume stack'),
@@ -77,6 +81,8 @@ opcodes = [
     Opcode('JUMP_IF_FALSE_NOPOP', 1, 0, 'peek value from the stack and jump if '
                                         'false to a given position'),
     Opcode('JUMP_ABSOLUTE', 1, 0, 'jump to an absolute position'),
+    Opcode('JUMP_IF_EMPTY', 1, 0, 'jump to a position if top of the stack is'
+                                  ' empty'),
     Opcode('CALL', 2, 255, 'take N arguments and M named arguments '
                            'from the stack, pack them into '
                            'args and call the next element'),

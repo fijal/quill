@@ -133,8 +133,16 @@ class Interpreter(object):
                 elif op == opcodes.JUMP_ABSOLUTE:
                     index = arg0
                     continue
+                elif op == opcodes.JUMP_IF_EMPTY:
+                    if frame.peek() is None:
+                        index = arg0
+                        continue
                 elif op == opcodes.CALL:
                     self.call(space, frame, index, arg0, arg1)
+                elif op == opcodes.CREATE_ITER:
+                    self.create_iter(space, frame)
+                elif op == opcodes.ITER_NEXT:
+                    frame.push(space.iter_next(frame.peek()))
                 elif op == opcodes.RETURN:
                     return frame.pop()
                 elif op == opcodes.LIST_BUILD:
@@ -199,6 +207,10 @@ class Interpreter(object):
             args[i] = frame.pop()
         w_callable = frame.pop()
         frame.push(space.call(w_callable, args, kwargs))
+
+    def create_iter(self, space, frame):
+        w_obj = frame.pop()
+        frame.push(space.iter(w_obj))
 
     def list_build(self, space, frame, bytecode, no):
         items = [None] * no

@@ -39,6 +39,9 @@ class W_ListObject(W_Root):
     def setitem(self, space, w_index, w_value):
         self._items_w[self.unwrap_index(space, w_index)] = w_value
 
+    def iter(self, space):
+        return W_ListIterator(self)
+
     def append(self, space, w_obj):
         self._items_w.append(w_obj)
 
@@ -60,4 +63,23 @@ W_ListObject.spec = TypeSpec(
     },
     properties={},
     set_cls_w_type=True
+)
+
+
+class W_ListIterator(W_Root):
+    def __init__(self, w_list):
+        self.w_list = w_list
+        self.index = 0
+
+    def iter_next(self, space):
+        if self.index >= len(self.w_list._items_w):
+            return None
+        ind = self.index
+        self.index = ind + 1
+        return self.w_list._items_w[ind]
+
+
+W_ListIterator.spec = TypeSpec(
+    'ListIterator',
+    constructor=None,
 )

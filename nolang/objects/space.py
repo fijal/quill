@@ -132,6 +132,12 @@ class Space(object):
         return w_obj.dictview(self)
 
     # unary operations
+    def iter(self, w_obj):
+        return w_obj.iter(self)
+
+    def iter_next(self, w_obj):
+        return w_obj.iter_next(self)
+
     def is_true(self, w_obj):
         return w_obj.is_true(self)
 

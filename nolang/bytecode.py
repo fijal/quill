@@ -120,6 +120,8 @@ class Bytecode(object):
                 var = (ord(bc[i + 1]) << 8) + ord(bc[i + 2])
                 stack_depth -= var - 1
             else:
+                if ord(bc[i]) == opcodes.JUMP_IF_EMPTY:
+                    stack_depth += 1  # HACK for assert below
                 stack_depth += opcode.stack_effect
             if ord(bc[i]) == opcodes.PUSH_RESUME_STACK:
                 resume_stack_depth += 1

@@ -85,6 +85,7 @@ KEYWORDS = [
     'as',
     'raise',
     'import',
+    'for',
 ]
 
 
