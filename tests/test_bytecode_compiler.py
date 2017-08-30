@@ -86,10 +86,11 @@ class TestBytecodeCompiler(BaseTest):
         self.assert_equals(bc, """
             PUSH_RESUME_STACK 7
             POP_RESUME_STACK
-            JUMP_ABSOLUTE 16
-            COMPARE_EXCEPTION 0 16
+            JUMP_ABSOLUTE 17
+            LOAD_GLOBAL 4
+            COMPARE_EXCEPTION 17
             CLEAR_CURRENT_EXC
-            JUMP_ABSOLUTE 16
+            JUMP_ABSOLUTE 17
             RERAISE
             LOAD_NONE
             RETURN
@@ -106,10 +107,11 @@ class TestBytecodeCompiler(BaseTest):
         self.assert_equals(bc, """
             PUSH_RESUME_STACK 7
             POP_RESUME_STACK
-            JUMP_ABSOLUTE 16
-            COMPARE_EXCEPTION 0 16
+            JUMP_ABSOLUTE 17
+            LOAD_GLOBAL 4
+            COMPARE_EXCEPTION 17
             CLEAR_CURRENT_EXC
-            JUMP_ABSOLUTE 16
+            JUMP_ABSOLUTE 17
             LOAD_CONSTANT 0
             RETURN
             RERAISE

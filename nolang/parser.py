@@ -233,20 +233,20 @@ def get_parser():
     def except_finally_clases_empty(state, p):
         return None
 
-    @pg.production('except_finally_clauses : EXCEPT IDENTIFIER LEFT_CURLY_BRACE'
+    @pg.production('except_finally_clauses : EXCEPT expression LEFT_CURLY_BRACE'
                    ' function_body RIGHT_CURLY_BRACE except_finally_clauses')
     def except_finally_clauses_except(state, p):
         # We want the position information for the clause, not the list.
-        return ast.ExceptClauseList([p[1].getstr()], None,
+        return ast.ExceptClauseList([p[1]], None,
                                     p[3].get_element_list(), p[5],
                                     srcpos=sr(p[:-1]))
 
-    @pg.production('except_finally_clauses : EXCEPT IDENTIFIER AS IDENTIFIER '
+    @pg.production('except_finally_clauses : EXCEPT expression AS IDENTIFIER '
                    'LEFT_CURLY_BRACE function_body RIGHT_CURLY_BRACE '
                    'except_finally_clauses')
     def except_finally_clauses_except_as_identifier(state, p):
         # We want the position information for the clause, not the list.
-        return ast.ExceptClauseList([p[1].getstr()], p[3].getstr(),
+        return ast.ExceptClauseList([p[1]], p[3].getstr(),
                                     p[5].get_element_list(), p[7],
                                     srcpos=sr(p[:-1]))
 
@@ -418,6 +418,10 @@ def get_parser():
     @pg.production('atom : TRUE')
     def atom_true(state, p):
         return ast.TrueNode(srcpos=sr(p))
+
+    @pg.production('atom : NONE')
+    def atom_none(state, p):
+        return ast.NoneNode(srcpos=sr(p))
 
     @pg.production('atom : IDENTIFIER')
     def atom_identifier(state, p):

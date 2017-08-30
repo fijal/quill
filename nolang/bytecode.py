@@ -41,7 +41,7 @@ class UnknownGlobalName(Exception):
 
 class Bytecode(object):
     def __init__(self, filename, source, varnames, module, constants, bytecode,
-                 arglist, defaults, exception_blocks, lnotab):
+                 arglist, defaults, lnotab):
         self.filename = filename
         self.source = source
         self.varnames = varnames
@@ -68,7 +68,6 @@ class Bytecode(object):
         else:
             self.minargs = self.first_default
         self.maxargs = len(self.arglist)
-        self.exception_blocks = exception_blocks
         self.lnotab = lnotab
 
     def setup(self, space):
@@ -150,25 +149,12 @@ class UndeclaredVariable(Exception):
         return '<UndeclaredVariable %s>' % self.name
 
 
-class ExceptionBlock(object):
-    def __init__(self, types_w):
-        self.types_w = types_w
-        self.position = 0
-
-    def match(self, space, w_exception):
-        for w_type in self.types_w:
-            if space.issubclass(space.type(w_exception), w_type):
-                return True
-        return False
-
-
 class _BytecodeBuilder(object):
     def __init__(self, w_mod, arglist):
         self.vars = {}
         self.varnames = []
         self.builder = []
         self.constants = []  # XXX implement interning of integers, strings etc.
-        self.exception_blocks = []
         self.w_mod = w_mod
         for var in arglist:
             self.register_variable(var.name, var.tp)
@@ -205,17 +191,6 @@ class _BytecodeBuilder(object):
         self.vars[v] = no
         assert len(self.vars) == len(self.varnames)
         return no
-
-    def register_exception_setup(self, exc_names):
-        types_w = []
-        for name in exc_names:
-            try:
-                no = self.w_mod.name2index[name]
-            except KeyError:
-                raise UnknownGlobalName(name)
-            types_w.append(self.w_mod.functions[no])
-        self.exception_blocks.append(ExceptionBlock(types_w))
-        return len(self.exception_blocks) - 1
 
     def emit(self, lineno, opcode, arg0=-1, arg1=-1):
         self.lnotab.append(lineno)
@@ -264,7 +239,7 @@ class _BytecodeBuilder(object):
         return Bytecode(filename, source, self.varnames, self.w_mod,
                         self.constants,
                         "".join(self.builder), self.arglist, defaults,
-                        self.exception_blocks, self._packlnotab(self.lnotab))
+                        self._packlnotab(self.lnotab))
 
 
 def compile_bytecode(ast, source, w_mod, arglist=[], startlineno=0):

@@ -42,7 +42,8 @@ opcodes = [
     # exception handling
     Opcode('PUSH_RESUME_STACK', 1, 0, 'add a new resume point to the stack'),
     Opcode('POP_RESUME_STACK', 0, 0, 'pop one from resume stack'),
-    Opcode('COMPARE_EXCEPTION', 2, 0, 'compare current exception with an arg'),
+    Opcode('COMPARE_EXCEPTION', 1, -1, 'compare current exception with top of '
+                                       'the stack'),
     Opcode('RAISE', 0, -1, 'raise the top of the stack'),
     Opcode('RERAISE', 0, 0, 'reraise if exception is set'),
     Opcode('PUSH_CURRENT_EXC', 0, 1, 'push the current exception on the stack'),

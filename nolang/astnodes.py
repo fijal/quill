@@ -248,6 +248,11 @@ class FalseNode(AstNode):
         state.emit(self.getstartidx(), opcodes.LOAD_FALSE)
 
 
+class NoneNode(AstNode):
+    def compile(self, state):
+        state.emit(self.getstartidx(), opcodes.LOAD_NONE)
+
+
 class Program(AstNode):
     def __init__(self, elements, srcpos=None):
         AstNode.__init__(self, srcpos)
@@ -714,15 +719,18 @@ class NoTypeDecl(AstNode):
 
 
 class ExceptClause(AstNode):
-    def __init__(self, exception_names, varname, block, srcpos):
+    def __init__(self, exception_exprs, varname, block, srcpos):
         AstNode.__init__(self, srcpos)
-        self.exception_names = exception_names
+        self.exception_exprs = exception_exprs
         self.varname = varname
         self.block = block
 
     def compile(self, state):
-        no = state.register_exception_setup(self.exception_names)
-        state.emit(self.getstartidx(), opcodes.COMPARE_EXCEPTION, no, 0)
+        if len(self.exception_exprs) == 1:
+            self.exception_exprs[0].compile(state)
+        else:
+            raise Exception("implement except (a, b, c)")
+        state.emit(self.getstartidx(), opcodes.COMPARE_EXCEPTION, 0)
         pos = state.get_patch_position()
         if self.varname is not None:
             state.emit(self.getstartidx(), opcodes.PUSH_CURRENT_EXC)

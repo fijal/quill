@@ -111,7 +111,7 @@ class Interpreter(object):
                     raise AppError(w_exception)
                 elif op == opcodes.COMPARE_EXCEPTION:
                     index = self.compare_exception(space, frame,
-                               bytecode, arg0, arg1, cur_exc, index)
+                               bytecode, arg0, cur_exc, index)
                     continue
                 elif op == opcodes.RERAISE:
                     if cur_exc:
@@ -177,12 +177,12 @@ class Interpreter(object):
             return r
         return 0
 
-    def compare_exception(self, space, frame, bytecode, arg0, arg1, cur_exc,
+    def compare_exception(self, space, frame, bytecode, arg0, cur_exc,
                           cur_pos):
-        block = bytecode.exception_blocks[arg0]
-        if block.match(space, cur_exc):
-            return cur_pos + 5
-        return arg1
+        comp_exc = frame.pop()
+        if space.issubclass(space.type(cur_exc), comp_exc):
+            return cur_pos + 3
+        return arg0
 
     def load_variable(self, space, frame, bytecode_index, no):
         w_res = frame.locals_w[no]
