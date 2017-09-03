@@ -14,6 +14,9 @@ class W_Root(object):
     def utf8_w(self, space):
         raise space.apperr(space.w_typeerror, 'expected string')
 
+    def buffer_w(self, space):
+        raise space.apperr(space.w_typeerror, 'expected buffer')
+
     def listview(self, space):
         raise space.apperr(space.w_typeerror, 'expected list')
 
@@ -38,6 +41,39 @@ class W_Root(object):
     def gettype(self, space):
         return self.cls_w_type
 
+    def str(self, space):
+        raise space.apperr(space.w_typeerror,
+            'object cannot be converted to str')
+
+    def len(self, space):
+        raise space.apperr(space.w_typeerror, 'unsized type')
+
+    def is_true(self, space):
+        return True
+
+    def lt(self, space, w_obj):
+        raise space.apperr(space.w_typeerror, 'object not comparable')
+
+    def eq(self, space, w_other):
+        return space.w_NotImplemented
+
+    def add(self, space, w_other):
+        raise space.apperr(space.w_typeerror, 'no implementation for `+`')
+
+    def sub(self, space, w_other):
+        raise space.apperr(space.w_typeerror, 'no implementation for `-`')
+
+    def mul(self, space, w_other):
+        raise space.apperr(space.w_typeerror, 'no implementation for `*`')
+
+    def truediv(self, space, w_other):
+        raise space.apperr(space.w_typeerror, 'no implementation for `/`')
+
+    def call(self, space, interpreter, args, kwargs):
+        raise space.apperr(space.w_typeerror, 'object is not callable')
+
 
 class W_None(W_Root):
-    pass
+
+    def is_true(self, space):
+        return False
