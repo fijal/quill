@@ -187,3 +187,10 @@ class TestInterpreter(BaseTest):
         assert space.int_w(space.log[0]) == 1
         assert space.utf8_w(space.log[1]) == "foo"
         assert space.type(space.log[2]) is space.w_list
+
+    def test_var_declaration_not_constant(self):
+        self.interpret_expr('''
+            var foo = 1 + 3
+            log(foo)
+            ''')
+        assert self.space.int_w(self.space.log[0]) == 4

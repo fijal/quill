@@ -6,6 +6,7 @@ import os
 from nolang.module import create_module
 from nolang.parser import ParsingState
 from nolang.compiler import compile_module
+from nolang.module import W_Module
 
 
 # XXX wrap up in AppErr
@@ -20,7 +21,15 @@ class Importer(object):
         self.selfmod = create_module('self', [])
         self.parser = parser
         self.lexer = lexer
-        self.cache = {'core': space.coremod, 'self': self.selfmod}
+        self.cache = {'self': self.selfmod}
+        self.register_core_module('core', space.coremod)
+
+    def register_core_module(self, name, w_mod):
+        self.cache[name] = w_mod
+        for w_element in w_mod.functions:
+            if isinstance(w_element, W_Module):
+                self.register_core_module(name + '.' + w_element.name,
+                                          w_element)
 
     def add_missing_imports(self, space, ast, w_mod, globals_w):
         for item in ast.get_element_list():
@@ -45,7 +54,7 @@ class Importer(object):
         assert dotted_name not in self.cache
         self.cache[dotted_name] = w_mod
         cur_elem = w_mod
-        for i in range(len(parts) - 1, -1, -1):
+        for i in range(len(parts) - 1, 0, -1):
             cur_name = ".".join(parts[:i])
             if cur_name in self.cache:
                 self.cache[cur_name].add_element(cur_elem)

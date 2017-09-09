@@ -60,7 +60,8 @@ def get_parser():
     def program_body(state, p):
         element_list = p[0].get_element_list()
         for elem in element_list:
-            if isinstance(elem, ast.VarDeclaration):
+            if (isinstance(elem, ast.VarDeclaration) or
+               isinstance(elem, ast.VarDeclarationConstant)):
                 raise errorhandler(state, elem,
                                    'var declarations in body disallowed')
         return ast.Program(element_list, srcpos=sr(element_list))
@@ -85,7 +86,7 @@ def get_parser():
     def body_element_semicolon(state, p):
         return None
 
-    @pg.production('body_element : var_declaration')
+    @pg.production('body_element : global_var_declaration')
     def body_element_var_decl(state, p):
         return p[0]
 
@@ -150,10 +151,24 @@ def get_parser():
     def statement_var_decl(state, p):
         return p[0]
 
-    @pg.production('var_declaration : VAR IDENTIFIER type_decl var_decl SEMICOLON')
-    @pg.production('var_declaration : VAR IDENTIFIER ASSIGN constant_val '
-        'type_decl var_decl SEMICOLON')
-    def var_declaration_basic(state, p):
+    @pg.production('global_var_declaration : VAR IDENTIFIER type_decl '
+        'arg_decl SEMICOLON')
+    @pg.production('global_var_declaration : VAR IDENTIFIER ASSIGN constant_val '
+        'type_decl arg_decl SEMICOLON')
+    def global_var_declaration(state, p):
+        if len(p) == 5:
+            vars = [ast.Var(p[1].getstr(), p[2], None, srcpos=sr([p[1], p[2]]))] + \
+                p[3].get_vars()
+        else:
+            vars = [ast.Var(p[1].getstr(), p[4], p[3], srcpos=sr([p[1], p[2], p[3]]))] + \
+                p[5].get_vars()
+        return ast.VarDeclarationConstant(vars, srcpos=sr(p))
+
+    @pg.production('var_declaration : VAR IDENTIFIER type_decl var_decl '
+                   'SEMICOLON')
+    @pg.production('var_declaration : VAR IDENTIFIER ASSIGN expression '
+                   'type_decl var_decl SEMICOLON')
+    def var_declaration(state, p):
         if len(p) == 5:
             vars = [ast.Var(p[1].getstr(), p[2], None, srcpos=sr([p[1], p[2]]))] + \
                 p[3].get_vars()
@@ -162,14 +177,18 @@ def get_parser():
                 p[5].get_vars()
         return ast.VarDeclaration(vars, srcpos=sr(p))
 
+    @pg.production('arg_decl : ')
     @pg.production('var_decl : ')
-    def var_decl_empty(state, p):
+    def arg_decl_empty(state, p):
         return ast.VarDeclPartial(None, None, None, None, srcpos=(0, 0))
 
+    @pg.production('arg_decl : COMMA IDENTIFIER type_decl arg_decl')
+    @pg.production('arg_decl : COMMA IDENTIFIER ASSIGN constant_val type_decl '
+        'arg_decl')
     @pg.production('var_decl : COMMA IDENTIFIER type_decl var_decl')
-    @pg.production('var_decl : COMMA IDENTIFIER ASSIGN constant_val type_decl '
+    @pg.production('var_decl : COMMA IDENTIFIER ASSIGN expression type_decl '
         'var_decl')
-    def var_decl_identifier(state, p):
+    def arg_decl_identifier(state, p):
         if len(p) == 4:
             return ast.VarDeclPartial(p[1].getstr(), p[2], None, p[3],
                 srcpos=sr(p))
@@ -280,10 +299,10 @@ def get_parser():
     def arglist(state, p):
         return ast.ArgList([], srcpos=sr(p))
 
-    @pg.production('arglist : LEFT_PAREN IDENTIFIER type_decl var_decl'
+    @pg.production('arglist : LEFT_PAREN IDENTIFIER type_decl arg_decl'
         ' RIGHT_PAREN')
     @pg.production('arglist : LEFT_PAREN IDENTIFIER ASSIGN constant_val '
-        'type_decl var_decl RIGHT_PAREN')
+        'type_decl arg_decl RIGHT_PAREN')
     def arglist_non_empty(state, p):
         if len(p) == 5:
             vars = ([ast.Var(p[1].getstr(), p[2], None, p[1].getsrcpos())] +

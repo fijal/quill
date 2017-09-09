@@ -16,8 +16,7 @@ W_FrameWrapper.spec = TypeSpec(
     methods={},
     properties={
         'filename': (W_FrameWrapper.get_filename, None)
-    },
-    set_cls_w_type=True
+    }
 )
 
 

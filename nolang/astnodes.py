@@ -309,7 +309,7 @@ class ClassDefinition(AstNode):
     def add_global_symbols(self, space, globals_w, source, w_mod):
         force_names = None
         for item in self.body.get_element_list():
-            if isinstance(item, VarDeclaration):
+            if isinstance(item, VarDeclarationConstant):
                 if force_names is None:
                     force_names = []
                 force_names.extend([x.name for x in item.vars])
@@ -579,7 +579,7 @@ class FunctionBody(AstNode):
         return lst
 
 
-class VarDeclaration(AstNode):
+class VarDeclarationConstant(AstNode):
     def __init__(self, vars, srcpos=None):
         AstNode.__init__(self, srcpos)
         self.vars = vars
@@ -594,6 +594,19 @@ class VarDeclaration(AstNode):
 
     def add_global_symbols(self, space, class_elements_w, source, w_mod):
         pass  # handled somewhere else
+
+
+class VarDeclaration(AstNode):
+    def __init__(self, vars, srcpos=None):
+        AstNode.__init__(self, srcpos)
+        self.vars = vars
+
+    def compile(self, state):
+        for var in self.vars:
+            varno = state.register_variable(var.name, var.tp)
+            if var.default is not None:
+                var.default.compile(state)
+                state.emit(var.getstartidx(), opcodes.STORE, varno)
 
 
 class Identifier(AstNode):

@@ -62,7 +62,6 @@ W_ListObject.spec = TypeSpec(
         'extend': W_ListObject.extend,
     },
     properties={},
-    set_cls_w_type=True
 )
 
 

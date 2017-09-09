@@ -23,7 +23,7 @@ def parameters(**args):
 
 class TypeSpec(object):
     def __init__(self, name, constructor, methods=None, properties=None,
-                 parent_name=None, set_cls_w_type=False):
+                 parent_name=None, is_subclassable=False):
         self.constructor = constructor
         self.name = name
         if methods is None:
@@ -33,7 +33,7 @@ class TypeSpec(object):
             properties = {}
         self.properties = properties
         self.parent_name = parent_name
-        self.set_cls_w_type = set_cls_w_type
+        self.is_subclassable = is_subclassable
 
 
 def wrap_function(space, f, name=None, exp_name=None):
@@ -108,7 +108,10 @@ def wrap_function(space, f, name=None, exp_name=None):
                 assert False
         if argdefaults[i] is not None:
             lines.append('    if len(args_w) <= %d:' % (numargs - 1))
-            lines.append('        arg%d = argdefaults[%d]' % (i, i))
+            if argname.startswith('w_'):
+                lines.append('        arg%d = argdefaults[%d]' % (i, i))
+            else:
+                lines.append('        arg%d = %r' % (i, f.__defaults__[i - firstdefault]))
             lines.append('    else:')
             lines.append('        arg%d = %s' % (i, argval))
         else:
@@ -144,7 +147,7 @@ def wrap_type(space, tp):
     else:
         parent = space.builtin_dict[spec.parent_name]
     w_tp = W_UserType(allocate, spec.name, properties, parent, default_alloc=False)
-    if spec.set_cls_w_type:
+    if not spec.is_subclassable:
         tp.cls_w_type = w_tp
     return w_tp
 

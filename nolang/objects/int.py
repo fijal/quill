@@ -54,4 +54,4 @@ def new_int(space, value):
     return space.newint(value)
 
 
-W_IntObject.spec = TypeSpec('Int', new_int, set_cls_w_type=True)
+W_IntObject.spec = TypeSpec('Int', new_int)

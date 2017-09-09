@@ -41,4 +41,4 @@ def new_str(space, value):
     return space.newtext(value)
 
 
-W_StrObject.spec = TypeSpec('Str', new_str, set_cls_w_type=True)
+W_StrObject.spec = TypeSpec('Str', new_str)

@@ -73,5 +73,4 @@ W_DictObject.spec = TypeSpec(
         'values': W_DictObject.values,
     },
     properties={},
-    set_cls_w_type=True
 )

@@ -25,5 +25,6 @@ W_Exception.spec = TypeSpec('Exception',
     },
     properties={
         'message': (W_Exception.get_message, None)
-    }
+    },
+    is_subclassable=True
 )
