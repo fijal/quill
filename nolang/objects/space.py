@@ -218,4 +218,3 @@ class Space(object):
 
     def is_frozen(self, w_obj):
         return w_obj.is_frozen(self)
-
