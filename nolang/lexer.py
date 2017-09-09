@@ -205,7 +205,7 @@ class QuillLexerStream(object):
                 if match is not None:
                     source_range = self._update_pos(match.start, match.end)
                     if "\n" in self.s[match.start:match.end]:
-                        if self._last_token.name not in QUILL_NO_ALI:
+                        if self._last_token and self._last_token.name not in QUILL_NO_ALI:
                             continue
                         token = Token(
                             'SEMICOLON', self.s[match.start:match.end], source_range

@@ -29,8 +29,10 @@ def reformat_code(body):
     return "\n".join(newlines)
 
 
-def reformat_expr(code):
-    return "def main () {\n" + reformat_code(code) + "\n}"
+def reformat_expr(code, extra_import=''):
+    if extra_import:
+        extra_import = extra_import + "\n\n"
+    return extra_import + "def main () {\n" + reformat_code(code) + "\n}"
 
 
 @parameters(name="log")
@@ -65,8 +67,8 @@ class BaseTest(object):
         return self.parser.parse(self.lexer.lex('<test>', program),
                                  ParsingState('<test>', program))
 
-    def interpret_expr(self, code):
-        return self.interpret(reformat_expr(code))
+    def interpret_expr(self, code, extra_import=''):
+        return self.interpret(reformat_expr(code, extra_import))
 
     def interpret(self, code, args=None):
         source = reformat_code(code)

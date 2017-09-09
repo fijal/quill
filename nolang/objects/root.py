@@ -72,8 +72,22 @@ class W_Root(object):
     def call(self, space, interpreter, args, kwargs):
         raise space.apperr(space.w_typeerror, 'object is not callable')
 
+    def freeze(self, space):
+        if self.is_frozen(space):
+            return
+        raise space.apperr(space.w_freezeerror, 'object not freezable')
+
+    def thaw(self, space):
+        raise space.apperr(space.w_freezeerror, 'object does not know '
+            'how to thaw, this should be an internal error')
+
+    def is_frozen(self, space):
+        return space.w_False
 
 class W_None(W_Root):
 
     def is_true(self, space):
         return False
+
+    def is_frozen(self, space):
+        return space.w_True

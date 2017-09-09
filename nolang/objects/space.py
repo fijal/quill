@@ -214,6 +214,8 @@ class Space(object):
         w_obj.freeze(self)
 
     def thaw(self, w_obj):
+        if not self.is_frozen(w_obj):
+            return w_obj
         return w_obj.thaw(self)
 
     def is_frozen(self, w_obj):

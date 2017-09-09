@@ -6,6 +6,7 @@ from nolang.builtins.exception import W_Exception
 from nolang.builtins.spec import wrap_function, wrap_type
 from nolang.builtins.core.reflect import get_current_frame, W_FrameWrapper
 from nolang.builtins.core.text import W_StringBuilder
+from nolang.builtins.core import freezing
 from nolang.objects.dict import W_DictObject
 from nolang.objects.int import W_IntObject
 from nolang.objects.list import W_ListObject
@@ -22,7 +23,10 @@ def default_builtins(space):
                                    [wrap_function(space, get_current_frame)])
     text_module = create_module('text',
         [wrap_type(space, W_StringBuilder)])
-    core_module = create_module('core', [reflect_module, text_module])
+    freezing_module = create_module('freezing',
+        [wrap_function(space, func) for func in freezing.functions])
+    core_module = create_module('core', [reflect_module, text_module,
+        freezing_module])
 
     return [
         # builtins
