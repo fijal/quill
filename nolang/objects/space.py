@@ -208,3 +208,14 @@ class Space(object):
     # exceptions
     def apperr(self, w_type_error, msg):
         return AppError(W_Exception(w_type_error, msg))
+
+    # freezing interface
+    def freeze(self, w_obj):
+        w_obj.freeze(self)
+
+    def thaw(self, w_obj):
+        return w_obj.thaw(self)
+
+    def is_frozen(self, w_obj):
+        return w_obj.is_frozen(self)
+
