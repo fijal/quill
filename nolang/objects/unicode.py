@@ -35,6 +35,9 @@ class W_StrObject(W_Root):
             raise
         return space.newbool(self.utf8val == other)
 
+    def is_frozen(self, space):
+        return space.w_True
+
 
 @unwrap_spec(value='utf8')
 def new_str(space, value):

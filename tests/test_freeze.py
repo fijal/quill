@@ -8,3 +8,4 @@ class TestFreeze(BaseTest):
 
     def test_freeze_already_frozen(self):
         assert self.space.is_true(self.interpret_expr('return is_frozen(none)'))
+        assert self.space.is_true(self.interpret_expr('return is_frozen("foo")'))

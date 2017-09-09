@@ -84,6 +84,7 @@ class W_Root(object):
     def is_frozen(self, space):
         return space.w_False
 
+
 class W_None(W_Root):
 
     def is_true(self, space):
