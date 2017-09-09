@@ -13,7 +13,7 @@ class TestClasses(BaseTest):
             }
 
             def main() {
-                var x
+                let x
                 x = X()
                 return x.x
             }
@@ -29,7 +29,7 @@ class TestClasses(BaseTest):
             }
 
             def main() {
-                var x
+                let x
                 x = X()
                 return x.method() + x.method()
             }
@@ -46,7 +46,7 @@ class TestClasses(BaseTest):
             class Y(X) {
             }
             def main() {
-                var x
+                let x
                 x = Y()
                 return x.method()
             }
@@ -68,7 +68,7 @@ class TestClasses(BaseTest):
             }
 
             def main() {
-                var x, y
+                let x, y
                 x = X()
                 y = Y()
                 return x.method() * 10 + y.method()
@@ -79,7 +79,7 @@ class TestClasses(BaseTest):
     def test_class_attributes(self):
         w_res = self.interpret("""
             class X {
-                var attr;
+                let attr;
 
                 def __init__(self, x) {
                     self.attr = x;
@@ -87,7 +87,7 @@ class TestClasses(BaseTest):
             }
 
             def main() {
-                var x;
+                let x;
                 x = X(13);
                 return x.attr;
             }
@@ -98,7 +98,7 @@ class TestClasses(BaseTest):
         try:
             self.interpret("""
             class X {
-                var attr;
+                let attr;
 
                 def __init__(self, x) {
                     self.attr2 = x;
@@ -106,7 +106,7 @@ class TestClasses(BaseTest):
             }
 
             def main() {
-                var x;
+                let x;
                 x = X(13);
                 return x.attr2;
             }

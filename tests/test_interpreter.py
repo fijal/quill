@@ -4,14 +4,14 @@ from support import BaseTest
 class TestInterpreterBasic(BaseTest):
     def test_interpret(self):
         w_res = self.interpret_expr('''
-            var x;
+            let x;
             x = 1;
             ''')
         assert w_res is self.space.w_None
 
     def test_var_assign(self):
         w_res = self.interpret_expr('''
-            var x;
+            let x;
             x = 3;
             return x;
         ''')
@@ -19,7 +19,7 @@ class TestInterpreterBasic(BaseTest):
 
     def test_while_loop(self):
         w_r = self.interpret_expr('''
-            var i, s;
+            let i, s;
             i = 0;
             s = 0;
             while i < 10 {
@@ -44,7 +44,7 @@ class TestInterpreterBasic(BaseTest):
             ''')
         assert self.space.int_w(w_r) == 1
         w_r = self.interpret_expr('''
-            var x;
+            let x;
             return 15 or x;
             ''')
         # unitialized x ignored (for now)
@@ -54,7 +54,7 @@ class TestInterpreterBasic(BaseTest):
             ''')
         assert self.space.int_w(w_r) == 2
         w_r = self.interpret_expr('''
-            var x;
+            let x;
             return 0 and x;
             ''')
         assert self.space.int_w(w_r) == 0
@@ -170,7 +170,7 @@ class TestInterpreter(BaseTest):
     def test_initializers(self):
         w_res = self.interpret('''
             def main() {
-                var a = 3, b, c = 12
+                let a = 3, b, c = 12
                 return a + c * 10
             }
             ''')
@@ -190,7 +190,7 @@ class TestInterpreter(BaseTest):
 
     def test_var_declaration_not_constant(self):
         self.interpret_expr('''
-            var foo = 1 + 3
+            let foo = 1 + 3
             log(foo)
             ''')
         assert self.space.int_w(self.space.log[0]) == 4
