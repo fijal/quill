@@ -42,6 +42,7 @@ class Space(object):
         self.w_argerror = self.make_exception('ArgumentError')
         self.w_attrerror = self.make_exception('AttributeError')
         self.w_keyerror = self.make_exception('KeyError')
+        self.w_freezeerror = self.make_exception('FreezeError')
 
     def setup_builtin(self, builtin):
         self.builtins_w.append(builtin)
