@@ -42,7 +42,10 @@ class W_UserType(W_Root):
         return w_obj
 
     def getattr(self, space, attrname):
-        return self._dict_w[attrname]
+        try:
+            return self._dict_w[attrname]
+        except KeyError:
+            return space.w_NotImplemented
 
     def issubclass(self, w_type):
         cur = self

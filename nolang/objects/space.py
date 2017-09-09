@@ -62,7 +62,12 @@ class Space(object):
     def getattr(self, w_obj, attrname):
         w_res = w_obj.getattr(self, attrname)
         if w_res is self.w_NotImplemented:
-            return self.getattr(self.type(w_obj), attrname).bind(self, w_obj)
+            ty = self.type(w_obj)
+            if ty is not None:
+                # XXX: temporary workaround
+                w_res = self.getattr(ty, attrname).bind(self, w_obj)
+        if w_res is self.w_NotImplemented:
+            raise self.apperr(self.w_attrerror, 'no such attribute "%s"' % (attrname,))
         return w_res
 
     def setitem(self, w_obj, w_index, w_value):

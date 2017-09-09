@@ -66,20 +66,14 @@ class TestDict(BaseTest):
 
     def test_getitem(self):
         w_res = self.interpret_expr('''
-            return {
-                "a": "foo",
-                1: "bar"
-            }[1];
+            return {"a": "foo", 1: "bar"}[1];
         ''')
         assert self.space.utf8_w(w_res) == "bar"
 
     def test_setitem(self):
         w_res = self.interpret_expr('''
             var x;
-            x = {
-                "a": "foo",
-                1: "bar"
-            };
+            x = {"a": "foo", 1: "bar"};
             x["c"] = "baz";
             return x;
         ''')

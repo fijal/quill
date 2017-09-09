@@ -16,6 +16,17 @@ class TestStrings(BaseTest):
         assert self.interpret_expr('return "foo" == "foo";') is self.space.w_True
         assert self.interpret_expr('return "foo" == "bar";') is self.space.w_False
 
+    def test_automatic_semicolon_insertion(self):
+        w_res = self.interpret('''
+            def main() {
+                var x, y
+                x = "hello"
+                y = 42
+                return `[${x}, ${y}]`
+            }
+        ''')
+        assert self.space.utf8_w(w_res) == "[hello, 42]"
+
 
 class TestInterpolatedStrings(BaseTest):
     def test_simple_expressions(self):
