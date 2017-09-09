@@ -40,7 +40,7 @@ class TestList(BaseTest):
 
     def test_constructor_copies(self):
         w_res = self.interpret_expr('''
-            var x, y;
+            let x, y;
             x = [0, 1, 2];
             y = List(x);
             y.append(3)
@@ -62,7 +62,7 @@ class TestList(BaseTest):
 
     def test_setitem(self):
         w_res = self.interpret_expr('''
-            var x;
+            let x;
             x = ["foo"];
             x[0] = "bar";
             return x[0];
@@ -80,7 +80,7 @@ class TestList(BaseTest):
 
     def test_append(self):
         w_res = self.interpret_expr('''
-            var x;
+            let x;
             x = ["foo"];
             x.append("bar");
             return x;
@@ -91,7 +91,7 @@ class TestList(BaseTest):
 
     def test_extend(self):
         w_res = self.interpret_expr('''
-            var x;
+            let x;
             x = ["a", "b"];
             x.extend(["c", "d"]);
             return x;
@@ -146,7 +146,7 @@ class TestList(BaseTest):
             }
 
             def main() {
-                var l;
+                let l;
                 l = [];
                 [check(l, 0), check(l, 1)];
                 return l;

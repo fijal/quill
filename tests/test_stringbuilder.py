@@ -8,7 +8,7 @@ class TestStringBuilder(BaseTest):
             import core.text.StringBuilder
 
             def main() {
-                var s = StringBuilder()
+                let s = StringBuilder()
                 log(s.build())
                 s = StringBuilder(11)
                 s.append("foo")

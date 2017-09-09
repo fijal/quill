@@ -40,7 +40,7 @@ class TestDict(BaseTest):
 
     def test_constructor_copies(self):
         w_res = self.interpret_expr('''
-            var x, y;
+            let x, y;
             x = {0: "a", 1: "b"};
             y = Dict(x);
             y[2] = "c";
@@ -72,7 +72,7 @@ class TestDict(BaseTest):
 
     def test_setitem(self):
         w_res = self.interpret_expr('''
-            var x;
+            let x;
             x = {"a": "foo", 1: "bar"};
             x["c"] = "baz";
             return x;
@@ -112,7 +112,7 @@ class TestDict(BaseTest):
             }
 
             def main() {
-                var l;
+                let l;
                 l = [];
                 {check(l, 0): check(l, 1), check(l, 2): check(l, 3)};
                 return l;
@@ -123,7 +123,7 @@ class TestDict(BaseTest):
 
     def test_merge(self):
         w_res = self.interpret_expr('''
-            var a, b, ab;
+            let a, b, ab;
             a = {"a": "foo", 1: "bar"};
             b = {"b": "baz", 1: "rab"};
             ab = a.merge(b);
@@ -146,7 +146,7 @@ class TestDict(BaseTest):
 
     def test_pop(self):
         w_res = self.interpret_expr('''
-            var a;
+            let a;
             a = {"a": "foo", 1: "bar"};
             return [a.pop(1), a];
         ''')

@@ -185,7 +185,7 @@ class TestParseFunctionBody(BaseTest):
 
     def test_var(self):
         r = self.parse('''
-            var x;
+            let x;
             x = 3;
             x = x + 1;
             ''')
@@ -197,7 +197,7 @@ class TestParseFunctionBody(BaseTest):
 
     def test_while_loop(self):
         r = self.parse('''
-            var i, s;
+            let i, s;
             i = 0;
             while i < 10 {
                 i = i + 1;
@@ -228,7 +228,7 @@ class TestFullProgram(BaseTest):
     def test_function_declaration(self):
         r = self.parse('''
             def foo() {
-                var x;
+                let x;
             }
 
             def main() {
@@ -323,7 +323,7 @@ class TestFullProgram(BaseTest):
 
     def test_var_in_body_decl(self):
         self.parse_bad('''
-            var foo;
+            let foo;
 
             def main() {
             }

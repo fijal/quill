@@ -6,7 +6,7 @@ class TestTypes(BaseTest):
     def test_str_enforcement(self):
         self.interpret("""
             def main() {
-                var x: Str
+                let x: Str
                 x = 13
             }
             """)

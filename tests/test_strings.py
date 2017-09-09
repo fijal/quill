@@ -19,7 +19,7 @@ class TestStrings(BaseTest):
     def test_automatic_semicolon_insertion(self):
         w_res = self.interpret('''
             def main() {
-                var x, y
+                let x, y
                 x = "hello"
                 y = 42
                 return `[${x}, ${y}]`
@@ -44,7 +44,7 @@ class TestInterpolatedStrings(BaseTest):
             }
 
             def main() {
-                var x, y;
+                let x, y;
                 x = "hello";
                 y = 7;
                 return `[${x} ${y} ${foo(1, 2)}]`;

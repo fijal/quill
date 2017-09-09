@@ -8,7 +8,7 @@ class TestCore(BaseTest):
             import core.reflect
 
             def main() {
-                var frame
+                let frame
                 frame = reflect.get_current_frame()
                 return frame.filename
             }

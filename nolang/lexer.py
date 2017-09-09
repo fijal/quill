@@ -69,7 +69,7 @@ KEYWORDS = [
     'def',
     'class',
     'return',
-    'var',
+    'let',
     'while',
     'if',
     'or',

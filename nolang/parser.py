@@ -151,9 +151,9 @@ def get_parser():
     def statement_var_decl(state, p):
         return p[0]
 
-    @pg.production('global_var_declaration : VAR IDENTIFIER type_decl '
+    @pg.production('global_var_declaration : LET IDENTIFIER type_decl '
         'arg_decl SEMICOLON')
-    @pg.production('global_var_declaration : VAR IDENTIFIER ASSIGN constant_val '
+    @pg.production('global_var_declaration : LET IDENTIFIER ASSIGN constant_val '
         'type_decl arg_decl SEMICOLON')
     def global_var_declaration(state, p):
         if len(p) == 5:
@@ -164,9 +164,9 @@ def get_parser():
                 p[5].get_vars()
         return ast.VarDeclarationConstant(vars, srcpos=sr(p))
 
-    @pg.production('var_declaration : VAR IDENTIFIER type_decl var_decl '
+    @pg.production('var_declaration : LET IDENTIFIER type_decl var_decl '
                    'SEMICOLON')
-    @pg.production('var_declaration : VAR IDENTIFIER ASSIGN expression '
+    @pg.production('var_declaration : LET IDENTIFIER ASSIGN expression '
                    'type_decl var_decl SEMICOLON')
     def var_declaration(state, p):
         if len(p) == 5:

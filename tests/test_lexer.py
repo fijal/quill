@@ -14,5 +14,5 @@ class TestLexing(object):
     def test_keyword_varname(self):
         tokens = [x.name for x in get_lexer().lex('', '1 + varfoo')]
         assert tokens == ['INTEGER', 'PLUS', 'IDENTIFIER']
-        tokens = [x.name for x in get_lexer().lex('', '1 + var')]
-        assert tokens == ['INTEGER', 'PLUS', 'VAR']
+        tokens = [x.name for x in get_lexer().lex('', '1 + let')]
+        assert tokens == ['INTEGER', 'PLUS', 'LET']
