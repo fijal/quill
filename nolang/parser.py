@@ -232,9 +232,23 @@ def get_parser():
         return ast.For(p[1].getstr(), p[3], p[5].get_element_list(), srcpos=sr(p))
 
     @pg.production('statement : IF expression LEFT_CURLY_BRACE function_body'
-                   ' RIGHT_CURLY_BRACE')
+                   ' RIGHT_CURLY_BRACE optional_else_block')
     def statement_if_block(state, p):
-        return ast.If(p[1], p[3].get_element_list(), srcpos=sr(p))
+        if p[5] is None:
+            else_block = None
+        else:
+            else_block = p[5].get_element_list()
+        return ast.If(p[1], p[3].get_element_list(), else_block, srcpos=sr([
+            p[0], p[1]]))
+
+    @pg.production('optional_else_block : ')
+    def optional_else_block_empty(state, p):
+        return None
+
+    @pg.production('optional_else_block : ELSE LEFT_CURLY_BRACE function_body '
+                   'RIGHT_CURLY_BRACE')
+    def optional_else_block(state, p):
+        return p[2]
 
     @pg.production('statement : RAISE expression SEMICOLON')
     def statement_raise(state, p):

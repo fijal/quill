@@ -362,18 +362,27 @@ class For(AstNode):
 
 
 class If(AstNode):
-    def __init__(self, expr, block, srcpos):
+    def __init__(self, expr, block, elseblock, srcpos):
         AstNode.__init__(self, srcpos)
         self.expr = expr
         self.block = block
+        self.elseblock = elseblock
 
     def compile(self, state):
         self.expr.compile(state)
         state.emit(self.expr.getendidx(), opcodes.JUMP_IF_FALSE, 0)
         patch_pos = state.get_patch_position()
+        jump_patch_pos = 0
+        if self.elseblock is not None:
+            state.emit(0, opcodes.JUMP_ABSOLUTE, 0)
+            jump_patch_pos = state.get_patch_position()
         for item in self.block:
             item.compile(state)
         state.patch_position(patch_pos, state.get_position())
+        if self.elseblock is not None:
+            for item in self.elseblock:
+                item.compile(state)
+            state.patch_position(jump_patch_pos, state.get_position())
 
 
 class TryExcept(AstNode):

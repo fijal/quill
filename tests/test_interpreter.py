@@ -203,3 +203,13 @@ class TestInterpreter(BaseTest):
             ''')
         exp = [True, False, True]
         assert [self.space.is_true(w_e) for w_e in self.space.log] == exp
+
+    def test_if_else(self):
+        w_res = self.interpret_expr('''
+            if (0) {
+                return 1
+            } else {
+                return 2
+            }
+            ''')
+        assert self.space.int_w(w_res) == 2
