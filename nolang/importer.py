@@ -15,12 +15,12 @@ class ImportError(Exception):
 
 
 class Importer(object):
-    def __init__(self, space, basepath=None, parser=None, lexer=None):
+    def __init__(self, space, basepath=None):
         # XXX basepath is a hack
         self.basepath = basepath
-        self.selfmod = create_module('self', [])
-        self.parser = parser
-        self.lexer = lexer
+        self.selfmod = create_module('self', 'self', [])
+        self.parser = space.parser
+        self.lexer = space.parser.lexer
         self.cache = {'self': self.selfmod}
         self.register_core_module('core', space.coremod)
 

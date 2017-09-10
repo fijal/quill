@@ -42,9 +42,9 @@ def magic_log(space, w_obj):
 
 class BaseTest(object):
     def setup_class(self):
-        self.parser = get_parser()
         self.lexer = get_lexer()
-        self.space = Space()
+        self.parser = get_parser(self.lexer)
+        self.space = Space(self.parser)
         builtins, core_mods, not_builtins = default_builtins(self.space)
         builtins.append(magic_log)
         self.space.setup_builtins(builtins, core_mods, not_builtins)
@@ -59,6 +59,7 @@ class BaseTest(object):
         program = reformat_expr(body)
         ast = self.parse(program)
         imp = Importer(self.space)
+        self.importer = imp
         w_mod = compile_module(self.space, '<test>', 'self.test', program, ast,
                                imp)
         return compile_bytecode(ast.elements[0], program, w_mod)
@@ -70,13 +71,17 @@ class BaseTest(object):
     def interpret_expr(self, code, extra_import=''):
         return self.interpret(reformat_expr(code, extra_import))
 
-    def interpret(self, code, args=None):
+    def compile_module(self, code):
         source = reformat_code(code)
         ast = self.parse(source)
         imp = Importer(self.space)
         w_mod = compile_module(self.space, 'test', 'self.test', source, ast,
                                imp)
         w_mod.setup(self.space)
+        return w_mod
+
+    def interpret(self, code, args=None):
+        w_mod = self.compile_module(code)
         if args is not None:
             args_w = [self.space.newlist([self.space.newtext(x) for x in args])]
         else:

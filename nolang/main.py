@@ -12,6 +12,7 @@ from nolang.parser import get_parser, ParsingState, ParseError
 from nolang.compiler import compile_module
 from nolang.builtins.defaults import default_builtins
 from nolang.lexer import get_lexer
+from nolang import assembly
 from nolang.frameobject import format_traceback
 from nolang.importer import Importer
 from nolang.objects.space import Space
@@ -40,15 +41,20 @@ def path_split(p):
 
 
 def main(argv):
-    if len(argv) != 2:
-        print __doc__
-        return 1
-    return run_code(argv[1])
+    if len(argv) == 2:
+        return run_code(argv[1])
+    if len(argv) == 1:
+        # run repl here
+        return 0
+    if len(argv) == 3 and argv[1] == '-c':
+        return assembly.compile_assembly(space, argv[2])
+    print __doc__
+    return 1
 
 
-parser = get_parser()
 lexer = get_lexer()
-space = Space()
+parser = get_parser(lexer)
+space = Space(parser)
 space.setup_builtins(*default_builtins(space))
 
 
@@ -83,7 +89,7 @@ def run_code(fname):
     except ParseError as pe:
         format_parser_error(pe)
         return 1
-    importer = Importer(space, dirname(os.path.abspath(fname)), parser, lexer)
+    importer = Importer(space, dirname(os.path.abspath(fname)))
     dotted_name = parse_name(fname)
     w_mod = compile_module(space, fname, dotted_name, source, ast, importer)
     w_mod.setup(space)

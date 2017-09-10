@@ -62,12 +62,20 @@ def prepare_args(space, name, bytecode, args_w, namedargs_w):
 
 
 class W_Function(W_Root):
-    def __init__(self, name, bytecode):
+    def __init__(self, name, bytecode, w_mod):
         self.name = name
         self.bytecode = bytecode
+        self.w_mod = w_mod
 
     def setup(self, space):
         self.bytecode.setup(space)
+
+    def serialize(self, serializer, w_mod):
+        if w_mod is not self.w_mod:
+            xxx
+        serializer.write("uf")
+        serializer.write_str(self.name)
+        self.bytecode.serialize(serializer, w_mod)
 
     def call(self, space, interpreter, args_w, kwargs):
         frame = Frame(self.bytecode, self.name)
@@ -104,6 +112,10 @@ class W_BuiltinFunction(W_Root):
 
     def bind(self, space, w_obj):
         return W_BoundMethod(w_obj, self)
+
+    def serialize(self, serializer, w_mod):
+        serializer.write("bf")
+        serializer.write_str(self.name)
 
     def __repr__(self):
         return "<BuiltinFunction %s/%d-%d>" % (self.name, self.min_args,

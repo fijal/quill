@@ -5,12 +5,13 @@ from nolang.objects.root import W_Root
 
 
 class W_UserType(W_Root):
-    def __init__(self, allocate, name, class_elements_w, w_parent,
+    def __init__(self, allocate, name, class_elements_w, w_parent, w_mod,
                  default_alloc=True, force_names=None):
         self.name = name
         self.allocate = allocate
         self.class_elements_w = class_elements_w
         self.default_alloc = default_alloc
+        self.w_mod = w_mod
         if w_parent is not None:
             self._dict_w = w_parent._dict_w.copy()
         else:
@@ -28,6 +29,27 @@ class W_UserType(W_Root):
     def setup(self, space):
         for item in self.class_elements_w:
             item.setup(space)
+
+    def serialize(self, serializer, w_mod):
+        if self.w_mod is None:
+            # builtin type
+            serializer.write("bt")
+            serializer.write_str(self.name)
+            return
+        if self.w_mod is w_mod:
+            serializer.write("ut")
+            serializer.write_str(self.name)
+            # XXX w_parent
+            # XXX w_mod
+            # XXX force_names
+            assert self.default_alloc
+            assert self.w_parent is None
+            # assert self.force_names is None
+            serializer.write_int(len(self.class_elements_w))
+            for item in self.class_elements_w:
+                item.serialize(serializer, w_mod)
+        else:
+            assert False, "implement that"
 
     def call(self, space, interpreter, args_w, kwargs):
         if self.allocate is None:

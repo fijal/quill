@@ -51,6 +51,10 @@ class W_IntObject(W_Root):
     def __repr__(self):
         return '<Int %d>' % self._intval
 
+    def serialize(self, serializer):
+        serializer.write("ci")
+        serializer.write_int(self._intval)
+
 
 @unwrap_spec(value='int')
 def new_int(space, value):

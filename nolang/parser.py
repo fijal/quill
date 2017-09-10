@@ -44,7 +44,7 @@ def hex_to_utf8(state, token, s):
         raise errorhandler(state, token, msg="Error encoding %s" % s)
 
 
-def get_parser():
+def get_parser(lexer):
     pg = rply.ParserGenerator(TOKENS, precedence=[
         ('left', ['AND']),
         ('left', ['OR']),
@@ -595,4 +595,5 @@ def get_parser():
     res = pg.build()
     if res.lr_table.sr_conflicts:
         raise Exception("shift reduce conflicts")
+    res.lexer = lexer
     return res

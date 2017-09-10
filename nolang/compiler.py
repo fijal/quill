@@ -24,9 +24,9 @@ def compile_module(space, filename, dotted_name, source, ast, importer):
         globals_w = space.builtins_w[:]
     else:
         globals_w = []
-    w_mod = W_Module(filename, name_mapping, globals_w)
+    w_mod = W_Module(filename, dotted_name, name_mapping, globals_w)
     for item in ast.get_element_list():
-        item.add_global_symbols(space, globals_w, source, w_mod)
+        item.add_global_symbols(space, globals_w, source, w_mod, True)
     importer.register_module(space, dotted_name, w_mod)
     importer.add_missing_imports(space, ast, w_mod, globals_w)
     return w_mod
@@ -54,5 +54,5 @@ def compile_class(space, source, ast, w_mod, parent=None):
         default_alloc = True
     class_elements_w = []
     for item in ast.get_element_list():
-        item.add_global_symbols(space, class_elements_w, source, w_mod)
+        item.add_global_symbols(space, class_elements_w, source, w_mod, False)
     return alloc, class_elements_w, w_parent, default_alloc

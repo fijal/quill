@@ -282,9 +282,11 @@ class Function(AstNode):
         for item in self.body:
             item.compile(state)
 
-    def add_global_symbols(self, space, globals_w, source, w_mod):
+    def add_global_symbols(self, space, globals_w, source, w_mod, global_scope):
         w_g = W_Function(self.name, compile_bytecode(self, source,
-                         w_mod, self.arglist, self.lineno))
+                         w_mod, self.arglist, self.lineno), w_mod)
+        if global_scope:
+            w_mod.exports.append(w_g)
         globals_w.append(w_g)
 
 
@@ -306,7 +308,7 @@ class ClassDefinition(AstNode):
     def get_element_list(self):
         return self.body.get_element_list()
 
-    def add_global_symbols(self, space, globals_w, source, w_mod):
+    def add_global_symbols(self, space, globals_w, source, w_mod, global_scope):
         force_names = None
         for item in self.body.get_element_list():
             if isinstance(item, VarDeclarationConstant):
@@ -315,8 +317,10 @@ class ClassDefinition(AstNode):
                 force_names.extend([x.name for x in item.vars])
         t = compile_class(space, source, self, w_mod, self.parent)
         alloc, class_elements_w, w_parent, default_alloc = t
-        w_g = W_UserType(alloc, self.name, class_elements_w, w_parent,
+        w_g = W_UserType(alloc, self.name, class_elements_w, w_parent, w_mod,
                          default_alloc, force_names)
+        if global_scope:
+            w_mod.exports.append(w_g)
         globals_w.append(w_g)
 
 
@@ -601,7 +605,8 @@ class VarDeclarationConstant(AstNode):
                 state.emit(var.getstartidx(), opcodes.LOAD_CONSTANT, no)
                 state.emit(var.getstartidx(), opcodes.STORE, varno)
 
-    def add_global_symbols(self, space, class_elements_w, source, w_mod):
+    def add_global_symbols(self, space, class_elements_w, source, w_mod,
+                           global_scope):
         pass  # handled somewhere else
 
 
@@ -841,7 +846,7 @@ class Import(AstNode):
         importer.import_names(space, self.import_part, self.names,
                               globals_w, idx)
 
-    def add_global_symbols(self, space, globals_w, source, w_mod):
+    def add_global_symbols(self, space, globals_w, source, w_mod, global_scope):
         if self.names is None:
             globals_w.append(None)
         else:

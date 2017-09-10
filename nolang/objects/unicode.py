@@ -38,6 +38,15 @@ class W_StrObject(W_Root):
     def is_frozen(self, space):
         return True
 
+    def add(self, space, w_other):
+        if not isinstance(w_other, W_StrObject):
+            return space.w_NotImplemented
+        return space.newtext(self.utf8val + w_other.utf8val)
+
+    def serialize(self, serializer):
+        serializer.write("cs")
+        serializer.write_str(self.utf8val)
+
 
 @unwrap_spec(value='utf8')
 def new_str(space, value):

@@ -146,7 +146,8 @@ def wrap_type(space, tp):
         parent = None
     else:
         parent = space.builtin_dict[spec.parent_name]
-    w_tp = W_UserType(allocate, spec.name, properties, parent, default_alloc=False)
+    w_tp = W_UserType(allocate, spec.name, properties, parent, None,
+        default_alloc=False)
     if not spec.is_subclassable:
         tp.cls_w_type = w_tp
     return w_tp

@@ -7,8 +7,8 @@ from tests.support import reformat_expr, reformat_code
 
 class BaseTest(object):
     def setup_class(self):
-        self.parser = get_parser()
         self.lexer = get_lexer()
+        self.parser = get_parser(self.lexer)
 
     def parse_bad(self, expr):
         try:

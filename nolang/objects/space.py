@@ -16,13 +16,15 @@ from nolang.builtins.exception import W_Exception
 
 
 class Space(object):
-    def __init__(self):
+    def __init__(self, parser):
         self.w_None = W_None()  # singleton
         self.w_True = W_BoolObject(True)
         self.w_False = W_BoolObject(False)
         self.w_NotImplemented = W_Root()
+        self.parser = parser
 
     def setup(self, interpreter):
+        # XXX move to execution context (otherwise space is not frozen)
         self.interpreter = interpreter
 
     def setup_builtins(self, builtins, coremod, non_builtins):
@@ -50,7 +52,8 @@ class Space(object):
         return builtin
 
     def make_subclass(self, w_tp, name):
-        return W_UserType(w_tp.allocate, name, [], w_tp, w_tp.default_alloc)
+        return W_UserType(w_tp.allocate, name, [], w_tp, None,
+            w_tp.default_alloc)
 
     def make_exception(self, name, parent=None):
         if parent is None:
@@ -113,8 +116,8 @@ class Space(object):
             return self.w_True
         return self.w_False
 
-    def newtext(self, utf8val):
-        return W_StrObject(utf8val)
+    def newtext(self, utf8val, lgt=-1):
+        return W_StrObject(utf8val, lgt)
 
     def newbuf(self, charsval):
         return W_BufObject(charsval)

@@ -41,7 +41,7 @@ class UnknownGlobalName(Exception):
 
 class Bytecode(object):
     def __init__(self, filename, source, varnames, module, constants, bytecode,
-                 arglist, defaults, lnotab):
+                 argnames, argtypes, defaults, lnotab):
         self.filename = filename
         self.source = source
         self.varnames = varnames
@@ -51,11 +51,11 @@ class Bytecode(object):
         self.bytecode = bytecode
         r = self.compute_stack_depth(bytecode)
         self.stack_depth, self.resume_stack_depth = r
-        self.arglist = [x.name for x in arglist]
+        self.arglist = argnames
         self.argmapping = {}
         for i, item in enumerate(self.arglist):
             self.argmapping[item] = i
-        self.argtypes = [x.tp for x in arglist]
+        self.argtypes = argtypes
         self.defaults = defaults
         for i, default in enumerate(self.defaults):
             if default != -1:
@@ -74,6 +74,14 @@ class Bytecode(object):
         self.constants = [None] * len(self._constants)
         for i, constant in enumerate(self._constants):
             self.constants[i] = constant.wrap(space)
+
+    def serialize(self, serializer, w_mod):
+        serializer.write_str(self.filename)
+        serializer.write_list_int(self.varnames)
+        serializer.write_list_str(self.arglist)
+        serializer.write_list_int(self.defaults)
+        serializer.write_list_obj(self.constants)
+        serializer.write_str(self.bytecode)
 
     def repr(self, numbers=True):
         i = 0
@@ -238,7 +246,9 @@ class _BytecodeBuilder(object):
                 defaults[i] = default.add_constant_to_state(self)
         return Bytecode(filename, source, self.varnames, self.w_mod,
                         self.constants,
-                        "".join(self.builder), self.arglist, defaults,
+                        "".join(self.builder),
+                        [x.name for x in self.arglist],
+                        [x.tp for x in self.arglist], defaults,
                         self._packlnotab(self.lnotab))
 
 

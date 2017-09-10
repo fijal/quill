@@ -19,13 +19,13 @@ def wrap_module(name, functions):
 
 def default_builtins(space):
     # XXX all of this should be more streamlined
-    reflect_module = create_module('reflect',
+    reflect_module = create_module('reflect', 'core.reflect',
                                    [wrap_function(space, get_current_frame)])
-    text_module = create_module('text',
+    text_module = create_module('text', 'core.text',
         [wrap_type(space, W_StringBuilder)])
-    freezing_module = create_module('freezing',
+    freezing_module = create_module('freezing', 'core.freezing',
         [wrap_function(space, func) for func in freezing.functions])
-    core_module = create_module('core', [reflect_module, text_module,
+    core_module = create_module('core', 'core', [reflect_module, text_module,
         freezing_module])
 
     return [
