@@ -373,11 +373,11 @@ class If(AstNode):
         state.emit(self.expr.getendidx(), opcodes.JUMP_IF_FALSE, 0)
         patch_pos = state.get_patch_position()
         jump_patch_pos = 0
+        for item in self.block:
+            item.compile(state)
         if self.elseblock is not None:
             state.emit(0, opcodes.JUMP_ABSOLUTE, 0)
             jump_patch_pos = state.get_patch_position()
-        for item in self.block:
-            item.compile(state)
         state.patch_position(patch_pos, state.get_position())
         if self.elseblock is not None:
             for item in self.elseblock:
