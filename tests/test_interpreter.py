@@ -213,3 +213,7 @@ class TestInterpreter(BaseTest):
             }
             ''')
         assert self.space.int_w(w_res) == 2
+
+    def test_str(self):
+        w_res = self.interpret_expr('return str(1)')
+        assert self.space.utf8_w(w_res) == '1'

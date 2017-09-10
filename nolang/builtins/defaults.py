@@ -32,7 +32,8 @@ def default_builtins(space):
         # builtins
         magic_print, builtin.len, builtin.builtin_isinstance, buffer,
         buffer_from_utf8,
-        W_Exception, W_ListObject, W_DictObject, W_StrObject, W_IntObject
+        W_Exception, W_ListObject, W_DictObject, W_StrObject, W_IntObject,
+        builtin.builtin_str,
     ], core_module, [
         # non-builtins that need to be wrapped
         W_FrameWrapper,

@@ -15,3 +15,7 @@ def builtin_isinstance(space, w_obj, w_type):
         raise space.apperr(space.w_typeerror, "isinstance right argument is "
             "not a type")
     return space.newbool(space.isinstance(w_obj, w_type))
+
+@parameters(name='str')
+def builtin_str(space, w_obj):
+    return space.newtext(space.str(w_obj))
