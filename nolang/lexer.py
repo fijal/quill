@@ -199,7 +199,7 @@ class QuillLexerStream(object):
                     raise self.parse_error("unterminated string")
                 raise StopIteration
             if self.state.name == 'INITIAL':
-                assert len(self.state.ignore_rules) == 1
+                assert len(self.state.ignore_rules) == 2
                 whitespace_rule = self.state.ignore_rules[0]
                 match = whitespace_rule.matches(self.s, self.idx)
                 if match is not None:
@@ -213,6 +213,10 @@ class QuillLexerStream(object):
                         self._last_token = token
                         return token
                 else:
+                    match = self.state.ignore_rules[1].matches(self.s, self.idx)
+                    if match is not None:
+                        self._update_pos(match.start, match.end)
+                        continue
                     break
             else:
                 for rule in self.state.ignore_rules:
@@ -305,6 +309,7 @@ def get_lexer():
     for name, rule in QUILL_RULES:
         initial.add(name, rule)
     initial.ignore('\s+')
+    initial.ignore('#[^\n]+')
     initial.push_state('ST_DQ_STRING', 'DQ_STRING')
     initial.push_state('ST_SQ_STRING', 'SQ_STRING')
     initial.push_state('ST_INTERP_STRING', 'INTERP_STRING')
@@ -343,6 +348,7 @@ def get_lexer():
     for name, rule in QUILL_RULES:
         interp.add(name, rule)
     interp.ignore('\s+')
+    interp.ignore("#[^n]+")
     interp.push_state('ST_DQ_STRING', 'DQ_STRING')
     interp.push_state('ST_SQ_STRING', 'SQ_STRING')
     interp.push_state('ST_INTERP_STRING', 'INTERP_STRING')

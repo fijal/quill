@@ -328,3 +328,14 @@ class TestFullProgram(BaseTest):
             def main() {
             }
             ''')
+
+    def test_comments(self):
+        self.parse('''
+            # some comment
+
+            def main() { # more comment
+                # comment line
+                1 # even more
+                2
+            }
+            ''')
