@@ -36,7 +36,7 @@ class W_StrObject(W_Root):
         return space.newbool(self.utf8val == other)
 
     def is_frozen(self, space):
-        return space.w_True
+        return True
 
 
 @unwrap_spec(value='utf8')

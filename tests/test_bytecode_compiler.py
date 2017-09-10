@@ -87,7 +87,7 @@ class TestBytecodeCompiler(BaseTest):
             PUSH_RESUME_STACK 7
             POP_RESUME_STACK
             JUMP_ABSOLUTE 17
-            LOAD_GLOBAL 4
+            LOAD_GLOBAL 5
             COMPARE_EXCEPTION 17
             CLEAR_CURRENT_EXC
             JUMP_ABSOLUTE 17
@@ -108,7 +108,7 @@ class TestBytecodeCompiler(BaseTest):
             PUSH_RESUME_STACK 7
             POP_RESUME_STACK
             JUMP_ABSOLUTE 17
-            LOAD_GLOBAL 4
+            LOAD_GLOBAL 5
             COMPARE_EXCEPTION 17
             CLEAR_CURRENT_EXC
             JUMP_ABSOLUTE 17

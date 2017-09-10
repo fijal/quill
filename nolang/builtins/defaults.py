@@ -1,7 +1,7 @@
 from nolang.builtins.io import magic_print
 from nolang.module import create_module
 from nolang.builtins.buffer import buffer, buffer_from_utf8
-from nolang.builtins.builtin import len
+from nolang.builtins import builtin
 from nolang.builtins.exception import W_Exception
 from nolang.builtins.spec import wrap_function, wrap_type
 from nolang.builtins.core.reflect import get_current_frame, W_FrameWrapper
@@ -30,8 +30,9 @@ def default_builtins(space):
 
     return [
         # builtins
-        magic_print, len, buffer, buffer_from_utf8, W_Exception, W_ListObject,
-        W_DictObject, W_StrObject, W_IntObject
+        magic_print, builtin.len, builtin.builtin_isinstance, buffer,
+        buffer_from_utf8,
+        W_Exception, W_ListObject, W_DictObject, W_StrObject, W_IntObject
     ], core_module, [
         # non-builtins that need to be wrapped
         W_FrameWrapper,

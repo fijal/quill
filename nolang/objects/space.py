@@ -96,6 +96,10 @@ class Space(object):
     def issubclass(self, w_left, w_right):
         return w_left.issubclass(w_right)
 
+    def isinstance(self, w_left, w_tp):
+        assert isinstance(w_tp, W_UserType)
+        return self.issubclass(self.type(w_left), w_tp)
+
     def type(self, w_obj):
         # for builtin types we know exactly what type is it based on class
         return w_obj.gettype(self)

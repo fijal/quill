@@ -28,7 +28,10 @@ class W_Module(W_Root):
         self.name2index[element.name] = no
 
     def getattr(self, space, name):
-        return self.functions[self.name2index[name]]  # XXX error handling
+        try:
+            return self.functions[self.name2index[name]]
+        except KeyError:
+            return W_Root.getattr(self, space, name)  # let it raise
 
     def __repr__(self):
         return '<Module %s %d functions>' % (self.name, len(self.functions))

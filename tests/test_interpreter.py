@@ -194,3 +194,12 @@ class TestInterpreter(BaseTest):
             log(foo)
             ''')
         assert self.space.int_w(self.space.log[0]) == 4
+
+    def test_isinstance(self):
+        self.interpret_expr('''
+            log(isinstance(1, Int))
+            log(isinstance(1, List))
+            log(isinstance([], List))
+            ''')
+        exp = [True, False, True]
+        assert [self.space.is_true(w_e) for w_e in self.space.log] == exp

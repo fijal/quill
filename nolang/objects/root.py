@@ -82,7 +82,7 @@ class W_Root(object):
             'how to thaw, this should be an internal error')
 
     def is_frozen(self, space):
-        return space.w_False
+        return False
 
 
 class W_None(W_Root):
@@ -91,4 +91,4 @@ class W_None(W_Root):
         return False
 
     def is_frozen(self, space):
-        return space.w_True
+        return True
