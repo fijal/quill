@@ -18,9 +18,9 @@ class W_ListObject(W_Root):
 
     def contains(self, space, w_obj):
         for w_item in self._items_w:
-            if space.is_true(space.binop_eq(w_obj, w_item)):
-                return space.w_True
-        return space.w_False
+            if space.binop_eq(w_obj, w_item):
+                return True
+        return False
 
     def unwrap_index(self, space, w_index):
         try:

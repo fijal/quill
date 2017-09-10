@@ -4,7 +4,7 @@
 from rpython.rlib.objectmodel import compute_hash
 
 from nolang.error import AppError
-from nolang.objects.root import W_Root
+from nolang.objects.root import W_Root, NotImplementedOp
 from nolang.builtins.spec import TypeSpec, unwrap_spec
 
 
@@ -22,16 +22,16 @@ class W_IntObject(W_Root):
         return self._intval
 
     def lt(self, space, w_other):
-        return space.newbool(self._intval < w_other._intval)
+        return self._intval < w_other._intval
 
     def eq(self, space, w_other):
         try:
             other = space.int_w(w_other)
         except AppError as ae:
             if ae.match(space, space.w_typeerror):
-                return space.w_NotImplemented
+                raise NotImplementedOp
             raise
-        return space.newbool(self._intval == other)
+        return self._intval == other
 
     def add(self, space, w_other):
         return space.newint(self._intval + w_other._intval)
@@ -47,6 +47,9 @@ class W_IntObject(W_Root):
 
     def is_true(self, space):
         return self._intval != 0
+
+    def __repr__(self):
+        return '<Int %d>' % self._intval
 
 
 @unwrap_spec(value='int')

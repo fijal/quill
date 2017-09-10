@@ -3,7 +3,7 @@ on objects
 """
 
 from nolang.error import AppError
-from nolang.objects.root import W_None, W_Root
+from nolang.objects.root import W_None, W_Root, NotImplementedOp
 from nolang.objects.int import W_IntObject
 from nolang.objects.bool import W_BoolObject
 from nolang.objects.buffer import W_BufObject
@@ -87,7 +87,7 @@ class Space(object):
         return w_obj.hash(self)
 
     def key_eq(self, w_one, w_two):
-        return self.is_true(self.binop_eq(w_one, w_two))
+        return self.binop_eq(w_one, w_two)
 
     def is_none(self, w_obj):
         return w_obj is None or w_obj is self.w_None
@@ -154,52 +154,51 @@ class Space(object):
     def unaryop_not(self, w_obj):
         return self.newbool(not self.is_true(w_obj))
 
-    # binary operations
+    # binary operations, comparisons and in returns True/False, the rest w_obj
     def binop_lt(self, w_one, w_two):
         return w_one.lt(self, w_two)
 
     def binop_gt(self, w_one, w_two):
         # Implemented in terms of lt and eq.
-        return self.newbool(not (
-            self.is_true(self.binop_lt(w_one, w_two)) or
-            self.is_true(self.binop_eq(w_one, w_two))))
+        return not (self.binop_lt(w_one, w_two) or
+                    self.binop_eq(w_one, w_two))
 
     def binop_le(self, w_one, w_two):
         # Implemented in terms of lt and eq.
-        return self.newbool(
-            self.is_true(self.binop_lt(w_one, w_two)) or
-            self.is_true(self.binop_eq(w_one, w_two)))
+        return (self.binop_lt(w_one, w_two) or
+                self.binop_eq(w_one, w_two))
 
     def binop_ge(self, w_one, w_two):
         # Implemented in terms of lt and eq.
-        return self.newbool(not self.is_true(self.binop_lt(w_one, w_two)))
+        return not self.binop_lt(w_one, w_two)
 
     def binop_eq(self, w_one, w_two):
-        w_res = w_one.eq(self, w_two)
-        if w_res is not self.w_NotImplemented:
-            return w_res
-        w_res = w_two.eq(self, w_one)
-        if w_res is not self.w_NotImplemented:
-            return w_res
-        return self.w_False
+        try:
+            return w_one.eq(self, w_two)
+        except NotImplementedOp:
+            pass
+        try:
+            return w_two.eq(self, w_one)
+        except NotImplementedOp:
+            return False
 
     def binop_ne(self, w_one, w_two):
         # Implemented in terms of lt and eq.
-        return self.unaryop_not(self.binop_eq(w_one, w_two))
+        return not self.binop_eq(w_one, w_two)
 
     def binop_in(self, w_one, w_two):
         return w_two.contains(self, w_one)
 
-    def binop_add(self, w_one, w_two):
+    def w_binop_add(self, w_one, w_two):
         return w_one.add(self, w_two)
 
-    def binop_sub(self, w_one, w_two):
+    def w_binop_sub(self, w_one, w_two):
         return w_one.sub(self, w_two)
 
-    def binop_mul(self, w_one, w_two):
+    def w_binop_mul(self, w_one, w_two):
         return w_one.mul(self, w_two)
 
-    def binop_truediv(self, w_one, w_two):
+    def w_binop_truediv(self, w_one, w_two):
         return w_one.truediv(self, w_two)
 
     # various calls

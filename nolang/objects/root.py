@@ -5,6 +5,10 @@ objects of everything wrapped and presented to the user
 # XXX add formatting of types, e.g. "expected integer, got %s"
 
 
+class NotImplementedOp(Exception):
+    pass
+
+
 class W_Root(object):
     cls_w_type = None
 
@@ -55,7 +59,11 @@ class W_Root(object):
         raise space.apperr(space.w_typeerror, 'object not comparable')
 
     def eq(self, space, w_other):
-        return space.w_NotImplemented
+        if self is w_other:
+            return True
+        if space.type(self) is not space.type(w_other):
+            raise NotImplementedOp
+        return False
 
     def add(self, space, w_other):
         raise space.apperr(space.w_typeerror, 'no implementation for `+`')

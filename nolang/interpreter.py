@@ -266,57 +266,57 @@ class Interpreter(object):
     def binop_lt(self, space, frame):
         w_right = frame.pop()
         w_left = frame.pop()
-        frame.push(space.binop_lt(w_left, w_right))
+        frame.push(space.newbool(space.binop_lt(w_left, w_right)))
 
     def binop_gt(self, space, frame):
         w_right = frame.pop()
         w_left = frame.pop()
-        frame.push(space.binop_gt(w_left, w_right))
+        frame.push(space.newbool(space.binop_gt(w_left, w_right)))
 
     def binop_le(self, space, frame):
         w_right = frame.pop()
         w_left = frame.pop()
-        frame.push(space.binop_le(w_left, w_right))
+        frame.push(space.newbool(space.binop_le(w_left, w_right)))
 
     def binop_ge(self, space, frame):
         w_right = frame.pop()
         w_left = frame.pop()
-        frame.push(space.binop_ge(w_left, w_right))
+        frame.push(space.newbool(space.binop_ge(w_left, w_right)))
 
     def binop_eq(self, space, frame):
         w_right = frame.pop()
         w_left = frame.pop()
-        frame.push(space.binop_eq(w_left, w_right))
+        frame.push(space.newbool(space.binop_eq(w_left, w_right)))
 
     def binop_ne(self, space, frame):
         w_right = frame.pop()
         w_left = frame.pop()
-        frame.push(space.binop_ne(w_left, w_right))
+        frame.push(space.newbool(space.binop_ne(w_left, w_right)))
 
     def binop_in(self, space, frame):
         w_right = frame.pop()
         w_left = frame.pop()
-        frame.push(space.binop_in(w_left, w_right))
+        frame.push(space.newbool(space.binop_in(w_left, w_right)))
 
     def binop_add(self, space, frame):
         w_right = frame.pop()
         w_left = frame.pop()
-        frame.push(space.binop_add(w_left, w_right))
+        frame.push(space.w_binop_add(w_left, w_right))
 
     def binop_sub(self, space, frame):
         w_right = frame.pop()
         w_left = frame.pop()
-        frame.push(space.binop_sub(w_left, w_right))
+        frame.push(space.w_binop_sub(w_left, w_right))
 
     def binop_mul(self, space, frame):
         w_right = frame.pop()
         w_left = frame.pop()
-        frame.push(space.binop_mul(w_left, w_right))
+        frame.push(space.w_binop_mul(w_left, w_right))
 
     def binop_truediv(self, space, frame):
         w_right = frame.pop()
         w_left = frame.pop()
-        frame.push(space.binop_truediv(w_left, w_right))
+        frame.push(space.w_binop_truediv(w_left, w_right))
 
     def unaryop_not(self, space, frame):
         w_obj = frame.pop()

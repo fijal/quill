@@ -1,7 +1,7 @@
 from rpython.rlib.objectmodel import compute_hash
 
 from nolang.error import AppError
-from nolang.objects.root import W_Root
+from nolang.objects.root import W_Root, NotImplementedOp
 from nolang.builtins.spec import TypeSpec, unwrap_spec
 
 
@@ -31,9 +31,9 @@ class W_StrObject(W_Root):
             other = space.utf8_w(w_other)
         except AppError as ae:
             if space.type(ae.w_exception) is space.w_typeerror:
-                return space.w_NotImplemented
+                raise NotImplementedOp
             raise
-        return space.newbool(self.utf8val == other)
+        return self.utf8val == other
 
     def is_frozen(self, space):
         return True
