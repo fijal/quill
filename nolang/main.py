@@ -2,6 +2,8 @@
 """ Execute:
 
 nolang-c <program.no>
+nolang-c -c <spec to compile>
+nolang-c -s <spec to run>
 """
 
 import os
@@ -45,9 +47,12 @@ def main(argv):
         return run_code(argv[1])
     if len(argv) == 1:
         # run repl here
+        print __doc__
         return 0
     if len(argv) == 3 and argv[1] == '-c':
         return assembly.compile_assembly(space, argv[2])
+    if len(argv) == 3 and argv[2] == '-s':
+        return run_spec(argv[1])
     print __doc__
     return 1
 
@@ -99,6 +104,10 @@ def run_code(fname):
         os.write(2, format_traceback(space, e))
         return 1
     return 0
+
+
+def run_spec(spec_fname):
+    xxx
 
 
 if __name__ == '__main__':
