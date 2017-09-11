@@ -1,6 +1,7 @@
 
 import rply
 from rpython.rlib.runicode import str_decode_utf_8, unicode_encode_utf_8, UNICHR
+from rpython.rlib.objectmodel import we_are_translated
 
 from nolang.lexer import TOKENS, ParseError
 from nolang import astnodes as ast
@@ -45,6 +46,10 @@ def hex_to_utf8(state, token, s):
 
 
 def get_parser(lexer):
+    global _parser
+    if _parser is not None:
+        return _parser
+
     pg = rply.ParserGenerator(TOKENS, precedence=[
         ('left', ['AND']),
         ('left', ['OR']),
@@ -596,4 +601,8 @@ def get_parser(lexer):
     if res.lr_table.sr_conflicts:
         raise Exception("shift reduce conflicts")
     res.lexer = lexer
+
+    _parser = res
     return res
+
+_parser = None

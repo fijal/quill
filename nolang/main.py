@@ -9,6 +9,8 @@ nolang-c -s <spec to run>
 import os
 import sys
 
+from rpython.rlib.objectmodel import we_are_translated
+
 from nolang.interpreter import Interpreter
 from nolang.parser import get_parser, ParsingState, ParseError
 from nolang.compiler import compile_module
@@ -18,7 +20,7 @@ from nolang import assembly
 from nolang.frameobject import format_traceback
 from nolang.importer import Importer
 from nolang.objects.space import Space
-from nolang.error import AppError
+from nolang.error import AppError, InterpreterError
 
 
 def dirname(p):
@@ -43,16 +45,28 @@ def path_split(p):
 
 
 def main(argv):
-    if len(argv) == 2:
-        return run_code(argv[1])
-    if len(argv) == 1:
-        # run repl here
-        print __doc__
-        return 0
-    if len(argv) == 3 and argv[1] == '-c':
-        return assembly.compile_assembly(space, argv[2])
-    if len(argv) == 3 and argv[2] == '-s':
-        return run_spec(argv[1])
+    try:
+        if len(argv) == 2:
+            return run_code(argv[1])
+        if len(argv) == 1:
+            # run repl here
+            print __doc__
+            return 0
+        if len(argv) == 3 and argv[1] == '-c':
+            return assembly.compile_assembly(space, argv[2])
+        if len(argv) == 3 and argv[2] == '-s':
+            return run_spec(argv[1])
+    except InterpreterError as e:
+        print e.repr()
+        if not we_are_translated(): # get a full traceback interpreted
+            raise
+        return 1
+    except ParseError as pe:
+        format_parser_error(pe)
+        return 1
+    except AppError as e:
+        os.write(2, format_traceback(space, e))
+        return 1
     print __doc__
     return 1
 
@@ -87,22 +101,13 @@ def run_code(fname):
     except (OSError, IOError):
         print "Error reading file %s" % fname
         return 1
-    # XXX error handling
-    try:
-        ast = parser.parse(lexer.lex(fname, source), ParsingState(fname,
+    ast = parser.parse(lexer.lex(fname, source), ParsingState(fname,
                            source))
-    except ParseError as pe:
-        format_parser_error(pe)
-        return 1
     importer = Importer(space, dirname(os.path.abspath(fname)))
     dotted_name = parse_name(fname)
     w_mod = compile_module(space, fname, dotted_name, source, ast, importer)
     w_mod.setup(space)
-    try:
-        space.call_method(w_mod, 'main', [], None)
-    except AppError as e:
-        os.write(2, format_traceback(space, e))
-        return 1
+    space.call_method(w_mod, 'main', [], None)
     return 0
 
 

@@ -9,14 +9,15 @@ from nolang.parser import ParsingState
 from nolang.importer import Importer
 from nolang.compiler import compile_module
 from nolang.serializer import Serializer
+from nolang.error import InterpreterError
+from nolang.specreader import read_spec
 
 
-class Error(Exception):
-    def __init__(self, msg):
-        self.msg = msg
+class AssemblyError(InterpreterError):
+    pass
 
 
-def add_package(space, pkg_name, directory):
+def add_package(space, pkg_name, directory, outname):
     importer = Importer(space, directory)
     modules = []
     for k in os.listdir(directory):
@@ -27,39 +28,25 @@ def add_package(space, pkg_name, directory):
                 source = f.read()
                 f.close()
             except (OSError, IOError):
-                raise Error("Error reading file %s" % fname)
-            # XXX errors
+                raise AssemblyError("Error reading file %s" % fname)
             ast = space.parser.parse(space.parser.lexer.lex(fname, source),
                 ParsingState(fname, source))
             w_mod = compile_module(space, fname, "self." + k.strip(".q"),
                 source, ast, importer)
             w_mod.setup(space)
             modules.append(w_mod)
-    f = open("output.asm", "w")
-    s = Serializer(f)
-    for module in modules:
-        module.serialize_module(s)
-    f.close()
+    try:
+        f = open(outname, "w")
+        s = Serializer(f)
+        for module in modules:
+            module.serialize_module(s)
+        f.close()
+    except (OSError, IOError):
+        raise AssemblyError("Cannot write file %s" % outname)
 
 
 def compile_assembly(space, fname):
-    try:
-        source = open(fname).read()
-    except (OSError, IOError):
-        print "Error reading %s" % (fname,)
-        return 1
-    lines = source.split("\n")
-    lines = [line.strip() for line in lines if line.strip()]
-    for line in lines:
-        elems = line.split(':')
-        if len(elems) != 2:
-            print "Unknown line %s" % line
-            return 2
-        package = elems[0]
-        directory = elems[1]
-        try:
-            add_package(space, package, directory)
-        except Error as e:
-            print e.msg
-            return 1
+    spec = read_spec(fname, ["output", "packages"], True)
+    for package, directory in spec['packages'].iteritems():
+        add_package(space, package, directory, spec['output']['output'])
     return 0

@@ -24,3 +24,11 @@ class AppError(Exception):
     def __repr__(self):
         return '<AppError %r>' % (self.w_exception,)
     __str__ = __repr__
+
+
+class InterpreterError(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
+    def repr(self):
+        return "%s: %s" % (self.__class__.__name__, self.msg)

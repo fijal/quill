@@ -1,20 +1,23 @@
 
-class SpecReadingError(Exception):
+from nolang.error import InterpreterError
+
+
+class SpecReadingError(InterpreterError):
     def __init__(self, msg):
         self.msg = msg
 
     def __str__(self):
         return '<SpecReadingError %s>' % self.msg
 
-def read_spec(fname):
+def read_spec(fname, expected_sections=None, exclusive=False):
     try:
         f = open(fname, "r")
-        return _read_spec(fname, f)
+        return _read_spec(fname, f, expected_sections, exclusive)
         f.close()
     except (IOError, OSError):
         raise SpecReadingError("Error reading %s" % fname)
 
-def _read_spec(fname, f):
+def _read_spec(fname, f, expected_sections=None, exclusive=False):
     lines = f.read().splitlines()
     lines = [line.strip() for line in lines if line.strip()]
     current_section = None
@@ -41,8 +44,21 @@ def _read_spec(fname, f):
             if left in current_section:
                 raise SpecReadingError("File %s, line %d, duplicate entry for %s" %
                     (fname, i + 1, left))
-            if not right or not left:
+            if not left:
                 raise SpecReadingError("File %s, line %d, malformed line" %
                     (fname, i + 1))
             current_section[left] = right
+    if expected_sections is not None:
+        for section in expected_sections:
+            if section not in res:
+                raise SpecReadingError("Section %s not found in file %s" % (
+                    section, fname))
+        if exclusive:
+            sec_dic = {}
+            for item in expected_sections:
+                sec_dic[item] = None
+            for k in res.iterkeys():
+                if k not in sec_dic:
+                    raise SpecReadingError("Section %s in file %s unexpected" % (
+                        k, fname))
     return res

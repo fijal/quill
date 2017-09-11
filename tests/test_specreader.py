@@ -20,7 +20,7 @@ class TestReadSpec(object):
         """
         input2 = """
         [sec]
-        a =
+         = 3
         """
         input3 = """
         a = 4
@@ -30,6 +30,19 @@ class TestReadSpec(object):
         a = 1
         a=2
         """
+        input5 = """
+        [a]
+        b = c
+        [b]
+        c = d
+        """
         for inp in [input1, input2, input3, input4]:
             py.test.raises(SpecReadingError, _read_spec, "fname",
                 StringIO(inp))
+        py.test.raises(SpecReadingError, _read_spec, "fname", StringIO(input5),
+            ['d'])
+        py.test.raises(SpecReadingError, _read_spec, "fname", StringIO(input5),
+            ['a'], True)
+        # assert did not explode
+        _read_spec("fname", StringIO(input5), ["a"])
+        _read_spec("fname", StringIO(input5), ["a", "b"], True)
